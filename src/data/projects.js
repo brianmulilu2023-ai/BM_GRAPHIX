@@ -20,7 +20,7 @@ export const INITIAL_PROJECTS = [
       "/assets/projects/music-live.jpeg",
       "/assets/projects/youth-vibes.jpeg"
     ],
-    videoUrl: "https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/ForBiggerBlazes.mp4",
+    videoUrl: "/videos/26th sep 2026 bm.mp4",
     description: "An electrifying multi-format visual campaign for Nairobi's biggest sound and electronic live festival. Developed 3D kinetic typography, animated stage billboard loops, and vibrant social promo sequences with dynamic beat synchronization.",
     tools: ["After Effects", "Cinema 4D", "Photoshop", "Premiere Pro"],
     aspectRatio: "aspect-[4/5]",
@@ -45,7 +45,7 @@ export const INITIAL_PROJECTS = [
       "/assets/projects/paul.jpeg",
       "/assets/projects/event-mb.jpeg"
     ],
-    videoUrl: "https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/ElephantsDream.mp4",
+    videoUrl: "/videos/ECCET INTRO.mp4",
     description: "Complete broadcast graphics overhaul and on-air lower thirds, ident stingers, and title sequences created for Royal Media Services prime programming. Focused on crisp golden metallic reflections and modern TV broadcast fluidity.",
     tools: ["After Effects", "Cinema 4D", "Illustrator", "Audition"],
     aspectRatio: "aspect-[16/9]",
@@ -204,7 +204,7 @@ export const INITIAL_PROJECTS = [
       "/assets/projects/paul.jpeg",
       "/assets/projects/conference-summit.jpeg"
     ],
-    videoUrl: "https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/TearsOfSteel.mp4",
+    videoUrl: "/videos/ENGLISH SERVICE.mp4",
     description: "High-octane opening motion reel and speaker announcement animations rendered for high-resolution stage display screens at the Radisson Blu Nairobi.",
     tools: ["After Effects", "Premiere Pro", "Blender"],
     aspectRatio: "aspect-[16/9]",
@@ -230,6 +230,26 @@ export const INITIAL_PROJECTS = [
     tools: ["Adobe Illustrator", "Photoshop"],
     aspectRatio: "aspect-[4/5]",
     likes: 73,
+    comments: []
+  },
+  {
+    id: "proj-11",
+    slug: "plains-of-hope-cinematic-promo",
+    title: "Plains of Hope — Cinematic Promo Reel",
+    category: "motion",
+    categoryLabel: "Animations & Motion",
+    client: "Plains of Hope",
+    year: "2026",
+    featured: true,
+    thumbnail: "/assets/projects/paul.jpeg",
+    images: [
+      "/assets/projects/paul.jpeg"
+    ],
+    videoUrl: "/videos/PLAINS OF HOPE 4TH OCT 2026.mp4",
+    description: "Cinematic promotional reel produced for Plains of Hope, showcasing high-impact motion graphics and broadcast-quality video editing crafted for maximum audience engagement.",
+    tools: ["After Effects", "Premiere Pro"],
+    aspectRatio: "aspect-[16/9]",
+    likes: 0,
     comments: []
   }
 ];

@@ -1,25 +1,48 @@
-import React from 'react';
-import { motion } from 'framer-motion';
+import React, { useEffect, useRef } from 'react';
 import {
-  ArrowUpRight,
-  Sparkles,
   Layers,
   Palette,
   Film,
   Tv,
   CheckCircle,
-  Award,
   ArrowRight,
-  TrendingUp,
-  Clock,
-  Briefcase
+  ArrowUpRight
 } from 'lucide-react';
 import { useProjects } from '../context/ProjectContext';
 import ProjectCard from '../components/ProjectCard';
+import MarqueeStrip from '../components/MarqueeStrip';
+import HeroSection from '../components/HeroSection';
+
+/* ------------------------------------------------------------------
+   Scroll-reveal hook (inline so we keep one file)
+   ------------------------------------------------------------------ */
+function useReveal() {
+  const ref = useRef(null);
+  useEffect(() => {
+    const el = ref.current;
+    if (!el) return;
+    const targets = el.querySelectorAll('.reveal, .reveal-left, .reveal-right, .reveal-scale');
+    const observer = new IntersectionObserver(
+      (entries) => {
+        entries.forEach((entry) => {
+          if (entry.isIntersecting) {
+            entry.target.classList.add('revealed');
+            observer.unobserve(entry.target);
+          }
+        });
+      },
+      { threshold: 0.12, rootMargin: '0px 0px -40px 0px' }
+    );
+    targets.forEach((t) => observer.observe(t));
+    return () => observer.disconnect();
+  }, []);
+  return ref;
+}
 
 export default function Home({ navigate }) {
   const { projects } = useProjects();
   const featuredProjects = projects.filter((p) => p.featured).slice(0, 6);
+  const pageRef = useReveal();
 
   const services = [
     {
@@ -52,133 +75,59 @@ export default function Home({ navigate }) {
     }
   ];
 
-  const stats = [
-    { number: '5+', label: 'Years Experience', icon: Clock },
-    { number: '150+', label: 'Delivered Projects', icon: Briefcase },
-    { number: '40+', label: 'Happy Brands', icon: Award },
-    { number: '100%', label: 'Kinetic Energy', icon: TrendingUp }
+
+
+  const marqueeItems = [
+    'Motion Graphics', 'Poster Design', 'Brand Identity', 'Video Production',
+    'After Effects', 'Cinema 4D', 'Photoshop', 'Premiere Pro',
+    'Broadcast Graphics', '3D Animation', 'Logo Design', 'Nairobi Kenya'
+  ];
+
+  const processSteps = [
+    {
+      num: '01',
+      title: 'Discovery & Brief',
+      desc: 'We start by understanding your vision, audience, and goals — building a creative brief that becomes the foundation of every design decision.'
+    },
+    {
+      num: '02',
+      title: 'Concept & Ideation',
+      desc: 'Bold initial concepts and mood boards are developed and presented for your feedback. We explore multiple directions before locking in the strongest.'
+    },
+    {
+      num: '03',
+      title: 'Design & Motion',
+      desc: 'Full execution: from static visuals to animated sequences, every pixel is crafted with precision. We obsess over detail so you don\'t have to.'
+    },
+    {
+      num: '04',
+      title: 'Refinement & Delivery',
+      desc: 'Two rounds of revisions ensure your complete satisfaction. Final assets are delivered in all required formats — print, digital, broadcast, and social.'
+    }
   ];
 
   return (
-    <div className="relative z-10 space-y-28 md:space-y-36 pb-24">
-      {/* 1. HERO SECTION */}
-      <section className="relative min-h-[92vh] flex items-center justify-center pt-24 pb-16 px-4 sm:px-6 lg:px-8 overflow-hidden text-center">
-        {/* Ambient Gold Halo in background */}
-        <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[350px] sm:w-[600px] h-[350px] sm:h-[600px] rounded-full bg-gradient-to-tr from-[#D4AF37]/15 via-[#F5D77A]/10 to-transparent blur-[120px] pointer-events-none" />
+    <div ref={pageRef} className="relative z-10 pb-24">
 
-        <div className="relative max-w-5xl mx-auto flex flex-col items-center">
-          {/* Top Badge */}
-          <motion.div
-            initial={{ opacity: 0, y: -15 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.6 }}
-            className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-[#141414] border border-[#D4AF37]/40 shadow-[0_0_15px_rgba(212,175,55,0.2)] mb-8"
-          >
-            <Sparkles className="w-3.5 h-3.5 text-[#F5D77A] animate-pulse" />
-            <span className="text-[11px] sm:text-xs uppercase tracking-[0.25em] font-medium text-[#F5F1E8]">
-              Brian Mulilu • Nairobi, Kenya
-            </span>
-          </motion.div>
+      {/* 1. NEW HERO SECTION */}
+      <HeroSection navigate={navigate} />
 
-          {/* Hero Logo with Subtle Shimmer */}
-          <motion.div
-            initial={{ opacity: 0, scale: 0.9 }}
-            animate={{ opacity: 1, scale: 1 }}
-            transition={{ duration: 0.8, delay: 0.1 }}
-            className="mb-6 relative"
-          >
-            <img
-              src="/assets/BM_BLCK.png"
-              alt="BM Graphix"
-              className="h-20 sm:h-28 md:h-32 w-auto object-contain drop-shadow-[0_0_25px_rgba(212,175,55,0.4)]"
-            />
-          </motion.div>
-
-          {/* Main Headline */}
-          <motion.h1
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.8, delay: 0.2 }}
-            className="font-display font-extrabold text-4xl sm:text-6xl md:text-7xl lg:text-8xl tracking-tight leading-[1.08] mb-6 max-w-4xl"
-          >
-            Designs that <br className="hidden sm:block" />
-            <span className="gold-gradient-text drop-shadow-[0_4px_25px_rgba(212,175,55,0.3)]">
-              move people.
-            </span>
-          </motion.h1>
-
-          {/* Subtext */}
-          <motion.p
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.8, delay: 0.3 }}
-            className="text-base sm:text-lg md:text-xl text-[#8A8A8A] max-w-2xl font-light leading-relaxed mb-10"
-          >
-            Senior graphic designer & motion artist crafting unforgettable visual identities, iconic poster art, and cinema-grade promotional motion graphics for visionary brands.
-          </motion.p>
-
-          {/* CTA Buttons */}
-          <motion.div
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.8, delay: 0.4 }}
-            className="flex flex-col sm:flex-row items-center gap-4 w-full sm:w-auto"
-          >
-            <button
-              onClick={() => navigate('/work')}
-              className="w-full sm:w-auto px-8 py-4 rounded-full text-sm font-bold uppercase tracking-wider text-black bg-gradient-to-r from-[#D4AF37] via-[#F5D77A] to-[#B8860B] shadow-[0_0_25px_rgba(212,175,55,0.4)] hover:shadow-[0_0_40px_rgba(212,175,55,0.6)] hover:scale-105 active:scale-95 transition-all duration-300 flex items-center justify-center gap-2 group"
-            >
-              <span>View Work</span>
-              <ArrowRight className="w-4 h-4 transition-transform group-hover:translate-x-1" />
-            </button>
-
-            <button
-              onClick={() => navigate('/contact')}
-              className="w-full sm:w-auto px-8 py-4 rounded-full text-sm font-semibold uppercase tracking-wider text-[#F5F1E8] bg-[#121212] hover:bg-[#181818] border border-white/15 hover:border-[#D4AF37]/60 shadow-lg transition-all duration-300 flex items-center justify-center gap-2"
-            >
-              <span>Hire Me</span>
-              <ArrowUpRight className="w-4 h-4 text-[#D4AF37]" />
-            </button>
-          </motion.div>
-
-          {/* Stats Bar */}
-          <motion.div
-            initial={{ opacity: 0, y: 30 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.8, delay: 0.5 }}
-            className="mt-20 w-full max-w-4xl grid grid-cols-2 md:grid-cols-4 gap-4 p-6 rounded-2xl glass-card border border-[#D4AF37]/20"
-          >
-            {stats.map((s, idx) => {
-              const Icon = s.icon;
-              return (
-                <div key={idx} className="flex flex-col items-center p-3 text-center">
-                  <span className="font-display font-bold text-3xl sm:text-4xl text-[#F5D77A] mb-1">
-                    {s.number}
-                  </span>
-                  <span className="text-xs uppercase tracking-wider text-[#8A8A8A] flex items-center gap-1">
-                    <Icon className="w-3 h-3 text-[#D4AF37]" />
-                    {s.label}
-                  </span>
-                </div>
-              );
-            })}
-          </motion.div>
-        </div>
-      </section>
+      {/* MARQUEE STRIP */}
+      <div className="mt-0">
+        <MarqueeStrip items={marqueeItems} speed={28} />
+      </div>
 
       {/* 2. FEATURED WORK SECTION */}
-      <section className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-        <div className="flex flex-col md:flex-row md:items-end justify-between mb-12">
+      <section className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 mt-28">
+        <div className="reveal flex flex-col md:flex-row md:items-end justify-between mb-12">
           <div>
-            <div className="flex items-center gap-2 text-[#D4AF37] text-xs font-mono uppercase tracking-[0.2em] mb-3">
-              <Sparkles className="w-3.5 h-3.5" />
-              <span>Selected Portfolio</span>
-            </div>
+            <span className="section-tag">
+              Selected Portfolio
+            </span>
             <h2 className="font-display font-extrabold text-3xl sm:text-4xl md:text-5xl text-[#F5F1E8]">
               Featured <span className="gold-gradient-text">Masterpieces</span>
             </h2>
           </div>
-
           <button
             onClick={() => navigate('/work')}
             className="mt-4 md:mt-0 flex items-center gap-2 text-xs font-semibold uppercase tracking-widest text-[#F5D77A] hover:text-[#D4AF37] transition group"
@@ -188,8 +137,7 @@ export default function Home({ navigate }) {
           </button>
         </div>
 
-        {/* Poster Grid of Featured items: 4 on Laptop, 2 on Phone */}
-        <div className="poster-grid">
+        <div className="poster-grid reveal reveal-delay-2">
           {featuredProjects.map((project, idx) => (
             <div key={project.id} className="h-full">
               <ProjectCard project={project} priority={idx < 2} />
@@ -197,7 +145,7 @@ export default function Home({ navigate }) {
           ))}
         </div>
 
-        <div className="text-center mt-12">
+        <div className="text-center mt-12 reveal reveal-delay-3">
           <button
             onClick={() => navigate('/work')}
             className="px-8 py-3.5 rounded-full text-xs font-bold uppercase tracking-wider text-black bg-gradient-to-r from-[#D4AF37] to-[#F5D77A] shadow-lg shadow-[#D4AF37]/20 hover:scale-105 transition"
@@ -207,12 +155,65 @@ export default function Home({ navigate }) {
         </div>
       </section>
 
-      {/* 3. SERVICES SECTION */}
+      {/* SECOND MARQUEE (reversed) */}
+      <MarqueeStrip
+        items={['Broadcast Design', 'Event Posters', 'Social Content', 'Album Artwork', 'Logo Systems', 'Church Visuals', 'Concert Promos', 'Royal Media', 'Kinetic Type']}
+        direction="right"
+        speed={22}
+      />
+
+      {/* 3. PROCESS TIMELINE */}
+      <section className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8">
+        <div className="text-center mb-14 reveal">
+          <span className="section-tag">The Creative Process</span>
+          <h2 className="font-display font-extrabold text-3xl sm:text-5xl text-[#F5F1E8]">
+            How I <span className="gold-gradient-text">Work</span>
+          </h2>
+          <p className="text-sm sm:text-base text-[#8A8A8A] mt-4 max-w-xl mx-auto">
+            A disciplined four-step framework that turns your vision into a visual masterpiece — on time, every time.
+          </p>
+        </div>
+
+        <div className="process-timeline">
+          {processSteps.map((step, i) => (
+            <div
+              key={i}
+              className={`process-step reveal reveal-delay-${i + 1}`}
+            >
+              <div className="process-dot">{step.num}</div>
+              <div className="process-content">
+                <div className="process-step-num">Step {step.num}</div>
+                <div className="process-step-title">{step.title}</div>
+                <div className="process-step-desc">{step.desc}</div>
+              </div>
+            </div>
+          ))}
+        </div>
+      </section>
+
+      {/* 4. PHILOSOPHY / IMPACT STATEMENT */}
+      <div className="philosophy-section">
+        <div className="max-w-3xl mx-auto reveal">
+          <div className="philosophy-lead">DESIGN IS NEVER JUST DESIGN.</div>
+          <div className="philosophy-points">
+            {[
+              'It commands attention.',
+              'Builds trust.',
+              'Moves people.',
+              'Tells your story.',
+              'Creates opportunity.',
+            ].map((p, i) => (
+              <div key={i} className="philosophy-point">{p}</div>
+            ))}
+          </div>
+          <div className="philosophy-closing">Every pixel counts.</div>
+        </div>
+      </div>
+
+      {/* 5. SERVICES SECTION */}
       <section className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-        <div className="text-center max-w-2xl mx-auto mb-16">
-          <span className="text-xs font-mono uppercase tracking-[0.25em] text-[#D4AF37] mb-3 block">
-            Capabilities & Craft
-          </span>
+        <div className="text-center max-w-2xl mx-auto mb-16 reveal">
+          <span className="section-tag">Capabilities & Craft</span>
           <h2 className="font-display font-extrabold text-3xl sm:text-5xl text-[#F5F1E8]">
             What I <span className="gold-gradient-text">Deliver</span>
           </h2>
@@ -227,7 +228,7 @@ export default function Home({ navigate }) {
             return (
               <div
                 key={idx}
-                className="group relative p-8 rounded-3xl glass-card border border-white/5 hover:border-[#D4AF37]/50 transition-all duration-500 hover:shadow-[0_15px_40px_rgba(212,175,55,0.12)] flex flex-col justify-between"
+                className={`reveal reveal-delay-${idx + 1} group relative p-8 rounded-3xl glass-card border border-white/5 hover:border-[#D4AF37]/50 transition-all duration-500 hover:shadow-[0_15px_40px_rgba(212,175,55,0.12)] flex flex-col justify-between`}
               >
                 <div>
                   <div className="flex items-center justify-between mb-6">
@@ -238,14 +239,10 @@ export default function Home({ navigate }) {
                       {srv.tag}
                     </span>
                   </div>
-
                   <h3 className="font-display font-bold text-2xl text-[#F5F1E8] mb-3 group-hover:text-[#F5D77A] transition-colors">
                     {srv.title}
                   </h3>
-                  <p className="text-sm text-[#8A8A8A] leading-relaxed mb-6">
-                    {srv.desc}
-                  </p>
-
+                  <p className="text-sm text-[#8A8A8A] leading-relaxed mb-6">{srv.desc}</p>
                   <ul className="space-y-2.5 mb-8">
                     {srv.features.map((f, fIdx) => (
                       <li key={fIdx} className="flex items-center gap-2.5 text-xs text-[#E5E1D8]">
@@ -255,7 +252,6 @@ export default function Home({ navigate }) {
                     ))}
                   </ul>
                 </div>
-
                 <div className="pt-4 border-t border-white/5 flex items-center justify-between">
                   <span className="text-xs text-[#8A8A8A]">Tailored Deliverables</span>
                   <button
@@ -271,15 +267,13 @@ export default function Home({ navigate }) {
         </div>
       </section>
 
-      {/* 4. SHORT ABOUT TEASER */}
+      {/* 6. SHORT ABOUT TEASER */}
       <section className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-        <div className="relative rounded-3xl glass-card border border-[#D4AF37]/30 p-8 sm:p-12 lg:p-16 overflow-hidden">
-          {/* Subtle gold glow corner */}
+        <div className="relative rounded-3xl glass-card border border-[#D4AF37]/30 p-8 sm:p-12 lg:p-16 overflow-hidden reveal">
           <div className="absolute top-0 right-0 w-80 h-80 bg-[#D4AF37]/10 rounded-full blur-3xl pointer-events-none" />
-
           <div className="grid grid-cols-1 lg:grid-cols-12 gap-10 items-center">
             {/* Image Col */}
-            <div className="lg:col-span-5 relative">
+            <div className="lg:col-span-5 relative reveal-left">
               <div className="relative mx-auto max-w-sm rounded-2xl overflow-hidden border-2 border-[#D4AF37]/50 shadow-[0_10px_40px_rgba(212,175,55,0.2)] aspect-[3/4]">
                 <img
                   src="/assets/brian-mulilu.jpg"
@@ -287,34 +281,24 @@ export default function Home({ navigate }) {
                   className="w-full h-full object-cover object-[center_18%] filter brightness-100 contrast-105"
                 />
                 <div className="absolute bottom-0 inset-x-0 bg-gradient-to-t from-black via-black/60 to-transparent p-4 text-center">
-                  <span className="text-xs font-bold tracking-widest text-[#F5D77A] uppercase">
-                    Brian Mulilu
-                  </span>
+                  <span className="text-xs font-bold tracking-widest text-[#F5D77A] uppercase">Brian Mulilu</span>
                   <p className="text-[10px] text-[#8A8A8A]">Founder & Creative Director, BM Graphix</p>
                 </div>
               </div>
             </div>
-
             {/* Content Col */}
-            <div className="lg:col-span-7 space-y-6">
-              <div className="flex items-center gap-2 text-xs font-mono uppercase tracking-[0.2em] text-[#D4AF37]">
-                <Sparkles className="w-3.5 h-3.5" />
-                <span>About The Artist</span>
-              </div>
-
+            <div className="lg:col-span-7 space-y-6 reveal-right">
+              <span className="section-tag">About The Artist</span>
               <h2 className="font-display font-extrabold text-3xl sm:text-4xl text-[#F5F1E8] leading-tight">
                 Passion for precision. <br />
                 <span className="gold-gradient-text">Obsession with motion.</span>
               </h2>
-
               <p className="text-sm sm:text-base text-[#8A8A8A] leading-relaxed">
                 With over five years of dedicated experience spanning high-profile entertainment posters, brand visual systems, and broadcast motion graphics (including work with <strong className="text-[#F5F1E8]">Royal Media Services</strong>), I transform abstract ideas into striking visual spectacles.
               </p>
-
               <p className="text-sm text-[#8A8A8A] leading-relaxed">
                 Whether you need a sold-out concert tour campaign or a dynamic 3D kinetic video ident, my mission is simple: design that commands respect and moves people.
               </p>
-
               <div className="pt-4 flex flex-wrap items-center gap-4">
                 <button
                   onClick={() => navigate('/about')}
@@ -322,7 +306,6 @@ export default function Home({ navigate }) {
                 >
                   Read Full Bio & Experience
                 </button>
-
                 <a
                   href="/assets/Brian_Mulilu_CV.pdf"
                   download
@@ -336,13 +319,11 @@ export default function Home({ navigate }) {
         </div>
       </section>
 
-      {/* 5. CALL TO ACTION BANNER */}
+      {/* 7. CALL TO ACTION BANNER */}
       <section className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-        <div className="relative rounded-3xl overflow-hidden bg-gradient-to-r from-[#171717] via-[#1A1812] to-[#171717] border border-[#D4AF37]/40 p-8 sm:p-14 text-center shadow-[0_20px_50px_rgba(0,0,0,0.8)]">
+        <div className="relative rounded-3xl overflow-hidden bg-gradient-to-r from-[#171717] via-[#1A1812] to-[#171717] border border-[#D4AF37]/40 p-8 sm:p-14 text-center shadow-[0_20px_50px_rgba(0,0,0,0.8)] reveal">
           <div className="relative z-10 max-w-2xl mx-auto space-y-6">
-            <span className="text-xs font-mono uppercase tracking-[0.3em] text-[#D4AF37]">
-              Let's Create Magic Together
-            </span>
+            <span className="section-tag mx-auto">Let's Create Magic Together</span>
             <h2 className="font-display font-extrabold text-3xl sm:text-5xl text-[#F5F1E8] leading-tight">
               Have a visionary project in mind?
             </h2>

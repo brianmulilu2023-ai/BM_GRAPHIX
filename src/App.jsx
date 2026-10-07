@@ -1,7 +1,8 @@
 import React, { useState, useEffect } from 'react';
 import { ProjectProvider } from './context/ProjectContext';
 import NairobiBackground from './components/NairobiBackground';
-import GoldCursor from './components/GoldCursor';
+import ScrollProgressBar from './components/ScrollProgressBar';
+import BackToTop from './components/BackToTop';
 import Preloader from './components/Preloader';
 import Navbar from './components/Navbar';
 import Footer from './components/Footer';
@@ -75,11 +76,14 @@ export default function App() {
   return (
     <ProjectProvider>
       <div className="relative min-h-screen bg-[#0A0A0A] text-[#F5F1E8] font-sans overflow-x-hidden selection:bg-[#D4AF37] selection:text-black">
+        {/* Scroll Progress Bar */}
+        <ScrollProgressBar />
+
+        {/* Back To Top */}
+        <BackToTop />
+
         {/* Animated Initial Preloader */}
         <Preloader />
-
-        {/* Custom Gold Cursor (Desktop Only) */}
-        <GoldCursor />
 
         {/* Nairobi Skyline + Atmospheric Parallax Background */}
         <NairobiBackground />
