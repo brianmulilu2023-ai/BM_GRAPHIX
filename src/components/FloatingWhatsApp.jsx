@@ -9,7 +9,7 @@ export default function FloatingWhatsApp() {
   const whatsappUrl = `https://wa.me/${phoneNumber}?text=${encodeURIComponent(defaultMessage)}`;
 
   return (
-    <div className="fixed bottom-6 right-6 z-50 flex flex-col items-end">
+    <div className="fixed bottom-6 left-6 z-50 flex flex-col items-start">
       {/* Mini popup card */}
       <AnimatePresence>
         {isOpen && (

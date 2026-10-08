@@ -16,11 +16,13 @@ export default function Footer({ navigate }) {
           {/* Col 1: Brand Info */}
           <div className="md:col-span-2 space-y-5">
             <div className="flex items-center gap-3">
-              <img
-                src="/assets/BM_BLCK.png"
-                alt="BM Graphix"
-                className="h-10 w-auto object-contain drop-shadow-[0_0_10px_rgba(212,175,55,0.3)]"
-              />
+              <div className="flex items-center justify-center w-12 h-12 rounded-full bg-white shadow-[0_0_16px_rgba(212,175,55,0.4)] overflow-hidden flex-shrink-0">
+                <img
+                  src="/assets/logo/BM_OFFICIAL_LOGO.png"
+                  alt="BM Graphix"
+                  className="w-11 h-11 object-contain"
+                />
+              </div>
               <span className="font-display font-bold text-lg text-[#F5F1E8] tracking-wider">
                 BM GRAPHIX
               </span>

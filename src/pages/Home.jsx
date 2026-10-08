@@ -228,11 +228,11 @@ export default function Home({ navigate }) {
             return (
               <div
                 key={idx}
-                className={`reveal reveal-delay-${idx + 1} group relative p-8 rounded-3xl glass-card border border-white/5 hover:border-[#D4AF37]/50 transition-all duration-500 hover:shadow-[0_15px_40px_rgba(212,175,55,0.12)] flex flex-col justify-between`}
+                className={`reveal reveal-delay-${idx + 1} group relative p-8 rounded-3xl glass-card border border-white/5 hover:border-[#D4AF37]/50 transition-all duration-500 hover:shadow-[0_15px_40px_rgba(212,175,55,0.12)] flex flex-col justify-between mag-card shimmer-hover`}
               >
                 <div>
                   <div className="flex items-center justify-between mb-6">
-                    <div className="w-14 h-14 rounded-2xl bg-[#1C1C1C] border border-[#D4AF37]/30 flex items-center justify-center text-[#F5D77A] group-hover:bg-[#D4AF37] group-hover:text-black transition-colors duration-300 shadow-md">
+                    <div className="w-14 h-14 rounded-2xl bg-[#1C1C1C] border border-[#D4AF37]/30 flex items-center justify-center text-[#F5D77A] group-hover:bg-[#D4AF37] group-hover:text-black transition-colors duration-300 shadow-md icon-glow-badge service-icon-ring">
                       <Icon className="w-7 h-7" />
                     </div>
                     <span className="text-[11px] font-mono uppercase tracking-widest text-[#8A8A8A] px-3 py-1 rounded-full bg-white/5 border border-white/5">
@@ -321,7 +321,7 @@ export default function Home({ navigate }) {
 
       {/* 7. CALL TO ACTION BANNER */}
       <section className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-        <div className="relative rounded-3xl overflow-hidden bg-gradient-to-r from-[#171717] via-[#1A1812] to-[#171717] border border-[#D4AF37]/40 p-8 sm:p-14 text-center shadow-[0_20px_50px_rgba(0,0,0,0.8)] reveal">
+        <div className="relative rounded-3xl overflow-hidden cta-banner-bg border border-[#D4AF37]/40 p-8 sm:p-14 text-center shadow-[0_20px_50px_rgba(0,0,0,0.8)] reveal">
           <div className="relative z-10 max-w-2xl mx-auto space-y-6">
             <span className="section-tag mx-auto">Let's Create Magic Together</span>
             <h2 className="font-display font-extrabold text-3xl sm:text-5xl text-[#F5F1E8] leading-tight">
@@ -333,7 +333,7 @@ export default function Home({ navigate }) {
             <div className="pt-2 flex flex-col sm:flex-row items-center justify-center gap-4">
               <button
                 onClick={() => navigate('/contact')}
-                className="w-full sm:w-auto px-8 py-4 rounded-full text-xs font-bold uppercase tracking-wider text-black bg-gradient-to-r from-[#D4AF37] via-[#F5D77A] to-[#B8860B] shadow-[0_0_25px_rgba(212,175,55,0.4)] hover:scale-105 transition"
+                className="w-full sm:w-auto px-8 py-4 rounded-full text-xs font-bold uppercase tracking-wider text-black bg-gradient-to-r from-[#D4AF37] via-[#F5D77A] to-[#B8860B] shadow-[0_0_25px_rgba(212,175,55,0.4)] hover:scale-105 transition pulse-ring"
               >
                 Start A Project
               </button>

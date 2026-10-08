@@ -9,6 +9,8 @@ import Footer from './components/Footer';
 import Lightbox from './components/Lightbox';
 import FloatingWhatsApp from './components/FloatingWhatsApp';
 import Toast from './components/Toast';
+import PageTransition from './components/PageTransition';
+import GoldParticles from './components/GoldParticles';
 
 // Pages
 import Home from './pages/Home';
@@ -47,7 +49,6 @@ export default function App() {
 
   // Route matching
   const renderPage = () => {
-    // Normalise path
     const normalized = currentPath.toLowerCase().replace(/\/$/, '') || '/';
 
     switch (normalized) {
@@ -85,15 +86,20 @@ export default function App() {
         {/* Animated Initial Preloader */}
         <Preloader />
 
+        {/* Gold dust ambient particles */}
+        <GoldParticles />
+
         {/* Nairobi Skyline + Atmospheric Parallax Background */}
         <NairobiBackground />
 
         {/* Glassmorphism Header & Navigation */}
         <Navbar currentPath={currentPath} navigate={navigate} />
 
-        {/* Main Content Area */}
+        {/* Main Content Area — wrapped in page transition */}
         <main className="relative z-10 min-h-[calc(100vh-200px)]">
-          {renderPage()}
+          <PageTransition routeKey={currentPath}>
+            {renderPage()}
+          </PageTransition>
         </main>
 
         {/* Full-Screen Interactive Lightbox */}

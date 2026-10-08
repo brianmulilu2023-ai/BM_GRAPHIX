@@ -18,12 +18,14 @@ export default function ProjectCard({ project, priority = false }) {
   return (
     <motion.div
       layout
-      initial={{ opacity: 0, y: 20 }}
-      animate={{ opacity: 1, y: 0 }}
-      exit={{ opacity: 0, scale: 0.95 }}
-      transition={{ duration: 0.4 }}
+      initial={{ opacity: 0, y: 24, scale: 0.96 }}
+      animate={{ opacity: 1, y: 0, scale: 1 }}
+      exit={{ opacity: 0, scale: 0.94 }}
+      transition={{ duration: 0.45, ease: [0.34, 1.56, 0.64, 1] }}
+      whileHover={{ y: -6, scale: 1.02, transition: { type: 'spring', stiffness: 300, damping: 20 } }}
       onClick={() => openLightbox(project)}
-      className="group relative rounded-xl sm:rounded-2xl overflow-hidden bg-[#121212] border border-white/10 hover:border-[#D4AF37]/50 shadow-lg hover:shadow-[0_15px_35px_rgba(212,175,55,0.15)] transition-all duration-500 cursor-pointer h-full flex flex-col"
+      className="group relative rounded-xl sm:rounded-2xl overflow-hidden bg-[#121212] border border-white/10 hover:border-[#D4AF37]/50 shadow-lg hover:shadow-[0_20px_45px_rgba(212,175,55,0.18)] transition-all duration-500 cursor-pointer h-full flex flex-col shimmer-hover"
+      style={{ perspective: '1000px' }}
     >
       {/* Media Container with 3:4 Poster Aspect Ratio */}
       <div className="relative overflow-hidden bg-neutral-950 aspect-[3/4] w-full flex-1">

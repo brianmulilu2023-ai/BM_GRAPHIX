@@ -63,14 +63,14 @@ export default function About({ navigate }) {
   ];
 
   return (
-    <div className="relative z-10 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pt-32 pb-28 space-y-24">
+    <div className="relative z-10 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pt-32 pb-28 space-y-24 page-mount">
       {/* Header & Bio Section */}
       <div className="grid grid-cols-1 lg:grid-cols-12 gap-12 items-center">
         {/* Designer Portrait */}
         <motion.div
-          initial={{ opacity: 0, scale: 0.95 }}
-          animate={{ opacity: 1, scale: 1 }}
-          transition={{ duration: 0.6 }}
+          initial={{ opacity: 0, scale: 0.9, y: 20 }}
+          animate={{ opacity: 1, scale: 1, y: 0 }}
+          transition={{ duration: 0.8, ease: [0.34, 1.56, 0.64, 1] }}
           className="lg:col-span-5 relative"
         >
           <div className="relative mx-auto max-w-md rounded-3xl overflow-hidden border-2 border-[#D4AF37]/50 shadow-[0_15px_50px_rgba(212,175,55,0.25)] bg-[#121212] aspect-[3/4]">
@@ -94,9 +94,9 @@ export default function About({ navigate }) {
 
         {/* Bio Content */}
         <motion.div
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.6, delay: 0.1 }}
+          initial={{ opacity: 0, x: 30 }}
+          animate={{ opacity: 1, x: 0 }}
+          transition={{ duration: 0.8, delay: 0.15, ease: [0.22, 1, 0.36, 1] }}
           className="lg:col-span-7 space-y-6"
         >
           <div className="inline-flex items-center gap-2 px-3.5 py-1 rounded-full bg-[#161616] border border-[#D4AF37]/30 text-xs font-mono uppercase tracking-[0.25em] text-[#D4AF37]">
@@ -142,7 +142,7 @@ export default function About({ navigate }) {
       </div>
 
       {/* Skills with Animated Progress Bars */}
-      <div className="p-8 sm:p-12 rounded-3xl glass-card border border-white/10 space-y-10">
+      <div className="p-8 sm:p-12 rounded-3xl glass-card border border-white/10 space-y-10 shimmer-hover">
         <div className="flex flex-col md:flex-row md:items-end justify-between gap-4">
           <div>
             <span className="text-xs font-mono uppercase tracking-[0.25em] text-[#D4AF37] block mb-2">
@@ -191,9 +191,13 @@ export default function About({ navigate }) {
 
         <div className="grid grid-cols-2 sm:grid-cols-4 gap-4 sm:gap-6">
           {tools.map((t, idx) => (
-            <div
+            <motion.div
               key={idx}
-              className="p-5 rounded-2xl bg-[#141414] border border-white/5 hover:border-[#D4AF37]/50 hover:shadow-[0_10px_25px_rgba(212,175,55,0.1)] transition-all duration-300 group"
+              initial={{ opacity: 0, scale: 0.8, y: 15 }}
+              whileInView={{ opacity: 1, scale: 1, y: 0 }}
+              viewport={{ once: true, margin: '-40px' }}
+              transition={{ duration: 0.45, delay: idx * 0.07, ease: [0.34, 1.56, 0.64, 1] }}
+              className="p-5 rounded-2xl bg-[#141414] border border-white/5 hover:border-[#D4AF37]/50 hover:shadow-[0_10px_25px_rgba(212,175,55,0.1)] transition-all duration-300 group mag-card"
             >
               <div className="w-12 h-12 rounded-xl bg-black border border-[#D4AF37]/30 flex items-center justify-center font-display font-bold text-base text-[#F5D77A] mb-3 group-hover:scale-110 transition-transform">
                 {t.icon}
@@ -202,13 +206,13 @@ export default function About({ navigate }) {
                 {t.name}
               </h3>
               <p className="text-[11px] text-[#8A8A8A] mt-1">{t.category}</p>
-            </div>
+            </motion.div>
           ))}
         </div>
       </div>
 
       {/* Experience Timeline (including Royal Media Services) */}
-      <div className="p-8 sm:p-12 rounded-3xl glass-card border border-white/10 space-y-12">
+      <div className="p-8 sm:p-12 rounded-3xl glass-card border border-white/10 space-y-12 shimmer-hover">
         <div className="flex flex-col md:flex-row md:items-end justify-between gap-4">
           <div>
             <span className="text-xs font-mono uppercase tracking-[0.25em] text-[#D4AF37] block mb-2">
@@ -223,7 +227,14 @@ export default function About({ navigate }) {
 
         <div className="relative pl-6 sm:pl-8 border-l-2 border-[#D4AF37]/30 space-y-12">
           {timeline.map((item, idx) => (
-            <div key={idx} className="relative group">
+            <motion.div
+              key={idx}
+              initial={{ opacity: 0, x: -20 }}
+              whileInView={{ opacity: 1, x: 0 }}
+              viewport={{ once: true, margin: '-40px' }}
+              transition={{ duration: 0.55, delay: idx * 0.12, ease: [0.22, 1, 0.36, 1] }}
+              className="relative group"
+            >
               {/* Timeline marker */}
               <div className="absolute -left-[31px] sm:-left-[39px] top-1.5 w-4 h-4 rounded-full bg-[#0A0A0A] border-2 border-[#D4AF37] flex items-center justify-center">
                 {item.current && (
@@ -250,7 +261,7 @@ export default function About({ navigate }) {
                   {item.description}
                 </p>
               </div>
-            </div>
+            </motion.div>
           ))}
         </div>
       </div>

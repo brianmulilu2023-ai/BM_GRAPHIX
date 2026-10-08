@@ -102,7 +102,7 @@ export default function Services({ navigate }) {
   ];
 
   return (
-    <div className="relative z-10 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pt-32 pb-28 space-y-24">
+    <div className="relative z-10 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pt-32 pb-28 space-y-24 page-mount">
       {/* Header */}
       <div className="text-center max-w-3xl mx-auto">
         <div className="inline-flex items-center gap-2 px-3.5 py-1 rounded-full bg-[#161616] border border-[#D4AF37]/30 text-xs font-mono uppercase tracking-[0.25em] text-[#D4AF37] mb-4">
@@ -128,7 +128,7 @@ export default function Services({ navigate }) {
               whileInView={{ opacity: 1, y: 0 }}
               viewport={{ once: true }}
               transition={{ duration: 0.5, delay: idx * 0.1 }}
-              className={`relative rounded-3xl p-8 sm:p-10 glass-card border flex flex-col justify-between transition-all duration-300 ${
+              className={`relative rounded-3xl p-8 sm:p-10 glass-card border flex flex-col justify-between transition-all duration-300 mag-card shimmer-hover ${
                 service.popular
                   ? 'border-[#D4AF37]/60 shadow-[0_10px_35px_rgba(212,175,55,0.15)] bg-gradient-to-b from-[#141414] to-[#0F0F0F]'
                   : 'border-white/10 hover:border-[#D4AF37]/40'
@@ -141,7 +141,7 @@ export default function Services({ navigate }) {
               )}
 
               <div>
-                <div className="w-14 h-14 rounded-2xl bg-[#1A1A1A] border border-[#D4AF37]/40 flex items-center justify-center text-[#F5D77A] mb-6 shadow-inner">
+                <div className="w-14 h-14 rounded-2xl bg-[#1A1A1A] border border-[#D4AF37]/40 flex items-center justify-center text-[#F5D77A] mb-6 shadow-inner icon-glow-badge service-icon-ring">
                   <Icon className="w-7 h-7" />
                 </div>
 
@@ -203,7 +203,7 @@ export default function Services({ navigate }) {
 
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
           {workflowSteps.map((ws, i) => (
-            <div key={i} className="p-6 rounded-2xl bg-[#141414] border border-white/5 space-y-3">
+            <div key={i} className="p-6 rounded-2xl bg-[#141414] border border-white/5 space-y-3 mag-card shimmer-hover">
               <span className="font-display font-extrabold text-3xl text-[#D4AF37]/50 block">
                 {ws.step}
               </span>

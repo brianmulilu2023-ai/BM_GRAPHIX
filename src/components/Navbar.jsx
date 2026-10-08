@@ -47,11 +47,11 @@ export default function Navbar({ currentPath, navigate }) {
               className="flex items-center gap-3 group text-left focus:outline-none"
               aria-label="BM Graphix Home"
             >
-              <div className="relative">
+              <div className="relative flex items-center justify-center w-10 h-10 sm:w-12 sm:h-12 rounded-full bg-white shadow-[0_0_16px_rgba(212,175,55,0.5)] transition-transform duration-300 group-hover:scale-105 group-hover:shadow-[0_0_24px_rgba(212,175,55,0.7)] overflow-hidden">
                 <img
-                  src="/assets/BM_BLCK.png"
+                  src="/assets/logo/BM_OFFICIAL_LOGO.png"
                   alt="BM Graphix Logo"
-                  className="h-9 sm:h-11 w-auto object-contain transition-transform duration-300 group-hover:scale-105 drop-shadow-[0_0_12px_rgba(212,175,55,0.3)]"
+                  className="w-9 h-9 sm:w-11 sm:h-11 object-contain"
                 />
               </div>
               <div className="hidden sm:block">
