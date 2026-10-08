@@ -2,8 +2,23 @@ import React from 'react';
 import { ArrowUp, Heart, Lock, Mail, Phone, MessageCircle } from 'lucide-react';
 
 export default function Footer({ navigate }) {
+  const [secretClicks, setSecretClicks] = React.useState(0);
+
   const scrollToTop = () => {
     window.scrollTo({ top: 0, behavior: 'smooth' });
+  };
+
+  const handleSecretDotClick = () => {
+    setSecretClicks((prev) => {
+      const next = prev + 1;
+      if (next >= 3) {
+        navigate('/admin');
+        return 0;
+      }
+      return next;
+    });
+    // Reset clicks after 2.5s
+    setTimeout(() => setSecretClicks(0), 2500);
   };
 
   return (
@@ -136,22 +151,19 @@ export default function Footer({ navigate }) {
         <div className="pt-8 border-t border-white/5 flex flex-col sm:flex-row items-center justify-between gap-4 text-xs">
           <p className="flex items-center gap-1.5 text-[#8A8A8A]">
             <span>&copy; {new Date().getFullYear()} BM Graphix. All rights reserved.</span>
-            <span className="inline-block mx-1">•</span>
-            <span className="text-[#8A8A8A]">Crafted with</span>
+            <span
+              onClick={handleSecretDotClick}
+              className="inline-block mx-1 select-none cursor-default text-[#8A8A8A]/60 hover:text-[#D4AF37] transition"
+              title=""
+            >
+              •
+            </span>
+            <span>Crafted with</span>
             <Heart className="w-3.5 h-3.5 text-[#D4AF37] fill-[#D4AF37]" />
             <span>in Nairobi</span>
           </p>
 
-          <div className="flex items-center gap-6">
-            <button
-              onClick={() => navigate('/admin/login')}
-              className="text-[#8A8A8A]/40 hover:text-[#D4AF37] transition flex items-center gap-1"
-              title="Admin Portal"
-            >
-              <Lock className="w-3 h-3" />
-              <span>Admin</span>
-            </button>
-
+          <div className="flex items-center gap-4">
             <button
               onClick={scrollToTop}
               className="w-8 h-8 rounded-full bg-white/5 hover:bg-[#D4AF37]/20 hover:text-[#F5D77A] flex items-center justify-center transition border border-white/10"

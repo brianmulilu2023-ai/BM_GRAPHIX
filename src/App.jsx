@@ -29,14 +29,27 @@ export default function App() {
     return '/';
   });
 
-  // Handle browser back/forward buttons
+  // Handle browser back/forward buttons & secret shortcut
   useEffect(() => {
     const handlePopState = () => {
       setCurrentPath(window.location.pathname || '/');
     };
+
+    // Secret shortcut: Ctrl + Shift + A (or Cmd + Shift + A)
+    const handleKeyDown = (e) => {
+      if ((e.ctrlKey || e.metaKey) && e.shiftKey && (e.key === 'A' || e.key === 'a')) {
+        e.preventDefault();
+        navigate('/admin');
+      }
+    };
+
     window.addEventListener('popstate', handlePopState);
-    return () => window.removeEventListener('popstate', handlePopState);
-  }, []);
+    window.addEventListener('keydown', handleKeyDown);
+    return () => {
+      window.removeEventListener('popstate', handlePopState);
+      window.removeEventListener('keydown', handleKeyDown);
+    };
+  }, [currentPath]);
 
   // Client side routing navigation function
   const navigate = (path) => {
