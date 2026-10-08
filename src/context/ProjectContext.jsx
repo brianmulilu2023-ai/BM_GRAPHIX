@@ -1,9 +1,10 @@
 import React, { createContext, useContext, useState, useEffect } from 'react';
 import { projectService } from '../services/projectService';
+import { adminService } from '../services/adminService';
+import { mediaService } from '../services/mediaService';
+import { inquiryService } from '../services/inquiryService';
 
 const ProjectContext = createContext(null);
-
-const ADMIN_STORAGE_KEY = 'bm_admin_authenticated';
 
 export function ProjectProvider({ children }) {
   const [projects, setProjects] = useState([]);
@@ -12,15 +13,20 @@ export function ProjectProvider({ children }) {
   const [searchQuery, setSearchQuery] = useState('');
   const [lightboxProject, setLightboxProject] = useState(null);
   const [isAdminLoggedIn, setIsAdminLoggedIn] = useState(false);
+  const [adminUser, setAdminUser] = useState(() => adminService.getAdminAccount());
+  const [siteSettings, setSiteSettings] = useState(() => adminService.getSiteSettings());
+  const [mediaItems, setMediaItems] = useState(() => mediaService.getAllMedia());
+  const [inquiries, setInquiries] = useState(() => inquiryService.getInquiries());
   const [toast, setToast] = useState(null);
 
-  // Load projects and admin auth state
+  // Load projects, media, inquiries, and admin auth state
   useEffect(() => {
     loadProjects();
-    const storedAuth = localStorage.getItem(ADMIN_STORAGE_KEY);
-    if (storedAuth === 'true') {
-      setIsAdminLoggedIn(true);
-    }
+    setIsAdminLoggedIn(adminService.isAuthenticated());
+    setAdminUser(adminService.getAdminAccount());
+    setSiteSettings(adminService.getSiteSettings());
+    setMediaItems(mediaService.getAllMedia());
+    setInquiries(inquiryService.getInquiries());
   }, []);
 
   const showToast = (message, type = 'gold') => {
@@ -166,26 +172,117 @@ export function ProjectProvider({ children }) {
     showToast('Reset to default portfolio projects', 'gold');
   };
 
+  // --- Admin Authentication & Account Actions ---
   const adminLogin = (email, password) => {
-    // Front-end mock auth for BM Graphix admin
-    if (
-      (email === 'admin@bmgraphix.com' && password === 'admin123') ||
-      (email === 'brianmulilu2023@gmail.com' && password === 'admin123') ||
-      password === 'admin123'
-    ) {
-      localStorage.setItem(ADMIN_STORAGE_KEY, 'true');
+    const result = adminService.login(email, password);
+    if (result.success) {
       setIsAdminLoggedIn(true);
-      showToast('Welcome back, Brian! Admin unlocked.', 'gold');
+      setAdminUser(result.admin);
+      showToast(`Welcome back, ${result.admin.name}! Admin unlocked.`, 'gold');
       return true;
     }
-    showToast('Invalid admin credentials', 'error');
+    showToast(result.error || 'Invalid admin credentials', 'error');
     return false;
   };
 
   const adminLogout = () => {
-    localStorage.removeItem(ADMIN_STORAGE_KEY);
+    adminService.logout();
     setIsAdminLoggedIn(false);
-    showToast('Logged out from admin', 'gold');
+    showToast('Logged out from admin portal', 'gold');
+  };
+
+  const handleUpdateAdminProfile = (profileData) => {
+    try {
+      const updated = adminService.updateAdminAccount(profileData);
+      setAdminUser(updated);
+      showToast('Admin profile updated!', 'success');
+      return updated;
+    } catch (err) {
+      showToast(err.message || 'Error updating profile', 'error');
+      throw err;
+    }
+  };
+
+  const handleUpdateAdminPassword = (newPass) => {
+    try {
+      adminService.updatePassword(newPass);
+      setAdminUser(adminService.getAdminAccount());
+      showToast('Admin password updated successfully!', 'success');
+      return true;
+    } catch (err) {
+      showToast(err.message || 'Error updating password', 'error');
+      throw err;
+    }
+  };
+
+  const handleUpdateSiteSettings = (settingsData) => {
+    try {
+      const updated = adminService.updateSiteSettings(settingsData);
+      setSiteSettings(updated);
+      showToast('Website settings updated!', 'success');
+      return updated;
+    } catch (err) {
+      showToast(err.message || 'Error updating settings', 'error');
+      throw err;
+    }
+  };
+
+  // --- Media Vault Actions ---
+  const handleAddMediaItem = (item) => {
+    try {
+      const created = mediaService.addMediaItem(item);
+      setMediaItems(mediaService.getAllMedia());
+      showToast(`Media "${created.title}" added to vault!`, 'success');
+      return created;
+    } catch (err) {
+      console.error(err);
+      showToast('Error adding media', 'error');
+      throw err;
+    }
+  };
+
+  const handleDeleteMediaItem = (id) => {
+    try {
+      mediaService.deleteMediaItem(id);
+      setMediaItems(mediaService.getAllMedia());
+      showToast('Custom media removed from vault', 'gold');
+    } catch (err) {
+      console.error(err);
+      showToast('Error removing media item', 'error');
+    }
+  };
+
+  // --- Inquiries Actions ---
+  const handleAddInquiry = (formData) => {
+    try {
+      const created = inquiryService.addInquiry(formData);
+      setInquiries(inquiryService.getInquiries());
+      return created;
+    } catch (err) {
+      console.error(err);
+      throw err;
+    }
+  };
+
+  const handleMarkInquiryStatus = (id, status) => {
+    try {
+      const updated = inquiryService.markStatus(id, status);
+      setInquiries(updated);
+      showToast(`Inquiry marked as ${status}`, 'gold');
+    } catch (err) {
+      console.error(err);
+    }
+  };
+
+  const handleDeleteInquiry = (id) => {
+    try {
+      const updated = inquiryService.deleteInquiry(id);
+      setInquiries(updated);
+      showToast('Inquiry removed', 'gold');
+    } catch (err) {
+      console.error(err);
+      showToast('Error deleting inquiry', 'error');
+    }
   };
 
   // Filtered and searched projects
@@ -226,9 +323,31 @@ export function ProjectProvider({ children }) {
         deleteProject: handleDeleteProject,
         resetDefaults: handleResetDefaults,
         isProjectLiked: (id) => projectService.isProjectLiked(id),
+
+        // Admin Auth & Profile
         isAdminLoggedIn,
+        adminUser,
         adminLogin,
         adminLogout,
+        updateAdminProfile: handleUpdateAdminProfile,
+        updateAdminPassword: handleUpdateAdminPassword,
+
+        // Site Settings
+        siteSettings,
+        updateSiteSettings: handleUpdateSiteSettings,
+
+        // Media Vault
+        mediaItems,
+        addMediaItem: handleAddMediaItem,
+        deleteMediaItem: handleDeleteMediaItem,
+
+        // Inquiries & Client Leads
+        inquiries,
+        addInquiry: handleAddInquiry,
+        markInquiryStatus: handleMarkInquiryStatus,
+        deleteInquiry: handleDeleteInquiry,
+
+        // Toast Feedback
         toast,
         showToast
       }}

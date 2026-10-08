@@ -15,7 +15,7 @@ import confetti from 'canvas-confetti';
 import { useProjects } from '../context/ProjectContext';
 
 export default function Contact() {
-  const { showToast } = useProjects();
+  const { showToast, addInquiry } = useProjects();
   const [formData, setFormData] = useState({
     name: '',
     email: '',
@@ -46,6 +46,14 @@ export default function Contact() {
     if (!validate()) return;
 
     setIsSubmitting(true);
+    try {
+      if (addInquiry) {
+        addInquiry(formData);
+      }
+    } catch (err) {
+      console.error(err);
+    }
+
     setTimeout(() => {
       setIsSubmitting(false);
       setIsSubmitted(true);

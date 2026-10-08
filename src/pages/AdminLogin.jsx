@@ -1,13 +1,15 @@
 import React, { useState } from 'react';
 import { motion } from 'framer-motion';
-import { Lock, Mail, Key, ShieldCheck, ArrowRight, ArrowLeft } from 'lucide-react';
+import { Lock, Mail, Key, ShieldCheck, ArrowLeft, Eye, EyeOff, Sparkles } from 'lucide-react';
 import { useProjects } from '../context/ProjectContext';
 
 export default function AdminLogin({ navigate }) {
-  const { adminLogin, isAdminLoggedIn } = useProjects();
-  const [email, setEmail] = useState('admin@bmgraphix.com');
+  const { adminLogin, isAdminLoggedIn, adminUser } = useProjects();
+  const [email, setEmail] = useState(adminUser?.email || 'admin@bmgraphix.com');
   const [password, setPassword] = useState('admin123');
+  const [showPassword, setShowPassword] = useState(false);
   const [error, setError] = useState('');
+  const [isSubmitting, setIsSubmitting] = useState(false);
 
   // If already logged in, redirect directly to dashboard
   if (isAdminLoggedIn) {
@@ -18,115 +20,157 @@ export default function AdminLogin({ navigate }) {
   const handleLogin = (e) => {
     e.preventDefault();
     setError('');
-    const success = adminLogin(email, password);
-    if (success) {
-      navigate('/admin/dashboard');
-    } else {
-      setError('Invalid credentials. Try: admin@bmgraphix.com / admin123');
-    }
+    setIsSubmitting(true);
+
+    setTimeout(() => {
+      const success = adminLogin(email, password);
+      setIsSubmitting(false);
+      if (success) {
+        navigate('/admin/dashboard');
+      } else {
+        setError('Invalid credentials. Check your email and password, or use the demo login.');
+      }
+    }, 400);
   };
 
   const handleQuickDemo = () => {
-    setEmail('admin@bmgraphix.com');
-    setPassword('admin123');
-    const success = adminLogin('admin@bmgraphix.com', 'admin123');
+    const demoEmail = adminUser?.email || 'admin@bmgraphix.com';
+    const demoPass = adminUser?.passwordHash || 'admin123';
+    setEmail(demoEmail);
+    setPassword(demoPass);
+    const success = adminLogin(demoEmail, demoPass);
     if (success) {
       navigate('/admin/dashboard');
     }
   };
 
   return (
-    <div className="relative z-10 min-h-[85vh] flex items-center justify-center px-4 pt-24 pb-16">
+    <div className="relative z-10 min-h-[85vh] flex items-center justify-center px-4 pt-28 pb-20">
+      {/* Background glow orbs */}
+      <div className="absolute top-1/3 left-1/2 -translate-x-1/2 w-96 h-96 rounded-full bg-[#D4AF37]/10 blur-3xl pointer-events-none" />
+
       <motion.div
         initial={{ opacity: 0, y: 20 }}
         animate={{ opacity: 1, y: 0 }}
-        className="w-full max-w-md p-8 sm:p-10 rounded-3xl glass-card border border-[#D4AF37]/40 shadow-2xl relative overflow-hidden bg-[#121212]/90 backdrop-blur-2xl"
+        transition={{ duration: 0.5, ease: [0.16, 1, 0.3, 1] }}
+        className="w-full max-w-md p-8 sm:p-10 rounded-3xl glass-card border border-[#D4AF37]/40 shadow-[0_20px_50px_rgba(0,0,0,0.8)] relative overflow-hidden bg-[#121212]/95 backdrop-blur-2xl"
       >
-        {/* Top Gold Accent */}
+        {/* Top Gold Accent Bar */}
         <div className="absolute top-0 inset-x-0 h-1 bg-gradient-to-r from-[#D4AF37] via-[#F5D77A] to-[#B8860B]" />
 
         <div className="text-center mb-8">
-          <div className="w-14 h-14 rounded-2xl bg-black border border-[#D4AF37]/50 flex items-center justify-center mx-auto mb-4 shadow-lg shadow-[#D4AF37]/15">
-            <Lock className="w-7 h-7 text-[#F5D77A]" />
+          <div className="relative inline-block mb-4">
+            <div className="w-16 h-16 rounded-2xl bg-black border border-[#D4AF37]/50 flex items-center justify-center mx-auto shadow-lg shadow-[#D4AF37]/20">
+              <Lock className="w-8 h-8 text-[#F5D77A]" />
+            </div>
+            <div className="absolute -bottom-1 -right-1 w-6 h-6 rounded-full bg-[#D4AF37] flex items-center justify-center text-black shadow">
+              <Sparkles className="w-3.5 h-3.5" />
+            </div>
           </div>
-          <h1 className="font-display font-bold text-2xl text-[#F5F1E8]">Admin Authentication</h1>
-          <p className="text-xs text-[#8A8A8A] mt-1">
-            BM Graphix Content Management Portal
+          <h1 className="font-display font-extrabold text-2xl sm:text-3xl text-[#F5F1E8]">
+            Admin Portal
+          </h1>
+          <p className="text-xs text-[#8A8A8A] mt-1.5">
+            BM Graphix Content & Media Management Hub
           </p>
         </div>
 
         {error && (
-          <div className="mb-6 p-3 rounded-xl bg-red-900/30 border border-red-500/40 text-xs text-red-300 text-center">
+          <motion.div
+            initial={{ opacity: 0, y: -8 }}
+            animate={{ opacity: 1, y: 0 }}
+            className="mb-6 p-3.5 rounded-xl bg-red-950/40 border border-red-500/50 text-xs text-red-300 text-center leading-relaxed"
+          >
             {error}
-          </div>
+          </motion.div>
         )}
 
         <form onSubmit={handleLogin} className="space-y-4">
-          <div className="space-y-1">
-            <label className="block text-xs uppercase tracking-wider text-[#8A8A8A] font-medium">
-              Admin Email
+          <div className="space-y-1.5">
+            <label className="block text-xs uppercase tracking-wider text-[#A0A0A0] font-medium">
+              Admin Email / Username
             </label>
             <div className="relative">
               <div className="absolute inset-y-0 left-0 pl-3.5 flex items-center pointer-events-none text-[#8A8A8A]">
                 <Mail className="w-4 h-4" />
               </div>
               <input
-                type="email"
+                type="text"
                 required
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
-                className="w-full pl-10 pr-4 py-3 rounded-xl bg-[#181818] border border-white/10 focus:border-[#D4AF37] focus:outline-none text-xs text-[#F5F1E8]"
+                className="w-full pl-10 pr-4 py-3 rounded-xl bg-[#181818] border border-white/10 focus:border-[#D4AF37] focus:ring-1 focus:ring-[#D4AF37] focus:outline-none text-xs text-[#F5F1E8] transition placeholder:text-[#555]"
                 placeholder="admin@bmgraphix.com"
               />
             </div>
           </div>
 
-          <div className="space-y-1">
-            <label className="block text-xs uppercase tracking-wider text-[#8A8A8A] font-medium">
-              Security Key / Password
-            </label>
+          <div className="space-y-1.5">
+            <div className="flex items-center justify-between">
+              <label className="block text-xs uppercase tracking-wider text-[#A0A0A0] font-medium">
+                Security Password
+              </label>
+            </div>
             <div className="relative">
               <div className="absolute inset-y-0 left-0 pl-3.5 flex items-center pointer-events-none text-[#8A8A8A]">
                 <Key className="w-4 h-4" />
               </div>
               <input
-                type="password"
+                type={showPassword ? 'text' : 'password'}
                 required
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
-                className="w-full pl-10 pr-4 py-3 rounded-xl bg-[#181818] border border-white/10 focus:border-[#D4AF37] focus:outline-none text-xs text-[#F5F1E8]"
+                className="w-full pl-10 pr-10 py-3 rounded-xl bg-[#181818] border border-white/10 focus:border-[#D4AF37] focus:ring-1 focus:ring-[#D4AF37] focus:outline-none text-xs text-[#F5F1E8] transition placeholder:text-[#555]"
                 placeholder="••••••••"
               />
+              <button
+                type="button"
+                onClick={() => setShowPassword(!showPassword)}
+                className="absolute inset-y-0 right-0 pr-3 flex items-center text-[#8A8A8A] hover:text-[#F5F1E8]"
+                aria-label={showPassword ? 'Hide password' : 'Show password'}
+              >
+                {showPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
+              </button>
             </div>
           </div>
 
           <button
             type="submit"
-            className="w-full py-3.5 rounded-xl text-xs font-bold uppercase tracking-wider text-black bg-gradient-to-r from-[#D4AF37] via-[#F5D77A] to-[#B8860B] shadow-lg shadow-[#D4AF37]/25 hover:brightness-110 active:scale-95 transition"
+            disabled={isSubmitting}
+            className="w-full mt-2 py-3.5 rounded-xl text-xs font-bold uppercase tracking-wider text-black bg-gradient-to-r from-[#D4AF37] via-[#F5D77A] to-[#B8860B] shadow-lg shadow-[#D4AF37]/25 hover:brightness-110 active:scale-95 transition flex items-center justify-center gap-2"
           >
-            Access Dashboard &rarr;
+            {isSubmitting ? (
+              <span>Authenticating...</span>
+            ) : (
+              <>
+                <ShieldCheck className="w-4 h-4" />
+                <span>Access Management Portal &rarr;</span>
+              </>
+            )}
           </button>
         </form>
 
         {/* Demo Quick Button */}
         <div className="mt-6 pt-6 border-t border-white/10 text-center space-y-3">
           <p className="text-[11px] text-[#8A8A8A]">
-            Demo Credentials: <span className="text-[#F5D77A] font-mono">admin@bmgraphix.com / admin123</span>
+            Default Login: <span className="text-[#F5D77A] font-mono">admin@bmgraphix.com / admin123</span>
           </p>
           <button
+            type="button"
             onClick={handleQuickDemo}
-            className="w-full py-2 px-3 rounded-lg text-xs font-medium text-[#F5D77A] bg-[#D4AF37]/10 border border-[#D4AF37]/30 hover:bg-[#D4AF37]/20 transition flex items-center justify-center gap-1.5"
+            className="w-full py-2.5 px-3 rounded-xl text-xs font-medium text-[#F5D77A] bg-[#D4AF37]/10 border border-[#D4AF37]/30 hover:bg-[#D4AF37]/20 transition flex items-center justify-center gap-1.5"
           >
             <ShieldCheck className="w-4 h-4" />
-            <span>One-Click Demo Sign In</span>
+            <span>One-Click Admin Demo Login</span>
           </button>
 
           <button
+            type="button"
             onClick={() => navigate('/')}
             className="text-xs text-[#8A8A8A] hover:text-[#F5F1E8] flex items-center justify-center gap-1 mx-auto pt-2"
           >
             <ArrowLeft className="w-3.5 h-3.5" />
-            <span>Return to Portfolio</span>
+            <span>Return to Portfolio Website</span>
           </button>
         </div>
       </motion.div>
