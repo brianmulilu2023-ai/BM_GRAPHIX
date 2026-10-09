@@ -4,6 +4,8 @@
  * and custom uploaded assets stored in local persistence.
  */
 
+import { storageDB } from '../utils/storageDB';
+
 const CUSTOM_MEDIA_KEY = 'bm_custom_media_vault_v2';
 
 // Master catalog of all existing website media assets
@@ -477,14 +479,24 @@ class MediaService {
     };
 
     const updated = [newMedia, ...custom];
-    localStorage.setItem(CUSTOM_MEDIA_KEY, JSON.stringify(updated));
+    storageDB.set(CUSTOM_MEDIA_KEY, updated);
+    try {
+      localStorage.setItem(CUSTOM_MEDIA_KEY, JSON.stringify(updated));
+    } catch {
+      // Safely stored in IndexedDB
+    }
     return newMedia;
   }
 
   deleteMediaItem(id) {
     const custom = this.getCustomMedia();
     const filtered = custom.filter(m => m.id !== id);
-    localStorage.setItem(CUSTOM_MEDIA_KEY, JSON.stringify(filtered));
+    storageDB.set(CUSTOM_MEDIA_KEY, filtered);
+    try {
+      localStorage.setItem(CUSTOM_MEDIA_KEY, JSON.stringify(filtered));
+    } catch {
+      // ignore
+    }
     return true;
   }
 

@@ -30,17 +30,22 @@ export default function Footer({ navigate }) {
         <div className="grid grid-cols-1 md:grid-cols-4 gap-12 mb-16">
           {/* Col 1: Brand Info */}
           <div className="md:col-span-2 space-y-5">
-            <div className="flex items-center gap-3">
-              <div className="flex items-center justify-center w-12 h-12 rounded-full bg-white shadow-[0_0_16px_rgba(212,175,55,0.4)] overflow-hidden flex-shrink-0">
+            <div className="flex items-center gap-3.5">
+              <div className="flex items-center justify-center w-20 h-20 sm:w-24 sm:h-24 md:w-28 md:h-28 flex-shrink-0">
                 <img
                   src="/assets/logo/BM_OFFICIAL_LOGO.png"
                   alt="BM Graphix"
-                  className="w-11 h-11 object-contain"
+                  className="w-full h-full object-contain filter drop-shadow-[0_6px_22px_rgba(212,175,55,0.35)]"
                 />
               </div>
-              <span className="font-display font-bold text-lg text-[#F5F1E8] tracking-wider">
-                BM GRAPHIX
-              </span>
+              <div>
+                <span className="block font-display font-extrabold text-2xl sm:text-3xl text-[#F5F1E8] tracking-wider leading-tight">
+                  BM GRAPHIX
+                </span>
+                <span className="block text-xs uppercase tracking-[0.25em] text-[#D4AF37] font-semibold mt-1">
+                  Motion & Visual Art
+                </span>
+              </div>
             </div>
             <p className="text-sm leading-relaxed max-w-md text-[#8A8A8A]">
               Designs that move people. Crafting bespoke visual identities, dynamic event posters, high-energy promotional campaigns, and broadcast motion graphics in Nairobi, Kenya.

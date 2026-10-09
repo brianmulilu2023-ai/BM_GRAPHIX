@@ -51,14 +51,14 @@ export default function Preloader() {
             className="relative mb-8 text-center"
           >
             <div className="relative inline-block">
-              <div className="relative flex items-center justify-center w-36 md:w-44 h-36 md:h-44 rounded-full bg-white shadow-[0_0_40px_rgba(212,175,55,0.5)] overflow-hidden">
+              <div className="relative flex items-center justify-center w-52 md:w-64 h-52 md:h-64 overflow-hidden">
                 <img
                   src="/assets/logo/BM_OFFICIAL_LOGO.png"
                   alt="BM Graphix"
-                  className="w-32 md:w-40 h-32 md:h-40 object-contain"
+                  className="w-full h-full object-contain filter drop-shadow-[0_8px_30px_rgba(212,175,55,0.4)]"
                 />
                 <motion.div
-                  className="absolute inset-0 bg-gradient-to-r from-transparent via-[#F5D77A]/30 to-transparent pointer-events-none"
+                  className="absolute inset-0 bg-gradient-to-r from-transparent via-[#F5D77A]/20 to-transparent pointer-events-none"
                   animate={{ x: ['-100%', '100%'] }}
                   transition={{ duration: 1.5, repeat: Infinity, ease: 'easeInOut' }}
                 />

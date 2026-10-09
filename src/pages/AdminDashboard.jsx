@@ -1,4 +1,5 @@
 import React, { useState, useRef } from 'react';
+import { compressImage, compressMultipleImages, generateVideoThumbnail } from '../utils/imageCompressor';
 import { motion, AnimatePresence } from 'framer-motion';
 import {
   Upload,
@@ -80,6 +81,9 @@ export default function AdminDashboard({ navigate }) {
   const [description, setDescription] = useState('');
   const [toolsInput, setToolsInput] = useState('Photoshop, Illustrator');
   const [videoUrl, setVideoUrl] = useState('');
+  const [uploadedVideoDataUrl, setUploadedVideoDataUrl] = useState(null);
+  const [videoFileName, setVideoFileName] = useState('');
+  const [isProcessingVideo, setIsProcessingVideo] = useState(false);
   const [featured, setFeatured] = useState(false);
 
   // Multi-image upload state for Project Creator
@@ -141,45 +145,132 @@ export default function AdminDashboard({ navigate }) {
     );
   }
 
-  // --- Handlers for Project Files ---
-  const handleProjectFiles = (files) => {
+  // --- Handler for Video File Upload (MP4, WebM, MOV) ---
+  const handleVideoFileUpload = async (file) => {
+    if (!file) return;
+    const isVideoFile = file.type.startsWith('video/') || /\.(mp4|webm|mov|m4v)$/i.test(file.name);
+    if (!isVideoFile) {
+      showToast('Please select a valid video file (MP4, WebM, MOV)', 'error');
+      return;
+    }
+    if (file.size > 80 * 1024 * 1024) {
+      showToast('Large video detected (>80MB). Processing may take a few moments...', 'gold');
+    }
+    setIsProcessingVideo(true);
+    setVideoFileName(file.name);
+
+    try {
+      const videoDataUrl = await new Promise((resolve, reject) => {
+        const reader = new FileReader();
+        reader.onload = (ev) => resolve(ev.target.result);
+        reader.onerror = reject;
+        reader.readAsDataURL(file);
+      });
+
+      setUploadedVideoDataUrl(videoDataUrl);
+      setVideoUrl(''); // clear manual URL
+
+      // Auto-extract high quality poster thumbnail from the video
+      const autoThumb = await generateVideoThumbnail(file, 1);
+      if (autoThumb) {
+        setUploadedImages((prev) => (prev.length === 0 ? [autoThumb] : prev));
+      }
+
+      if (category === 'posters') {
+        setCategory('videos');
+      }
+
+      setIsProcessingVideo(false);
+      showToast(`MP4 Video "${file.name}" loaded with preview thumbnail!`, 'success');
+    } catch (err) {
+      setIsProcessingVideo(false);
+      showToast('Error reading video file', 'error');
+      console.error(err);
+    }
+  };
+
+  // --- Handlers for Project Files (JPG, PNG, JPEG, MP4) ---
+  const handleProjectFiles = async (files) => {
     if (!files || files.length === 0) return;
+
     const fileList = Array.from(files);
+    const videoFiles = fileList.filter(
+      (f) => f.type.startsWith('video/') || /\.(mp4|webm|mov|m4v)$/i.test(f.name)
+    );
+    const imageFiles = fileList.filter(
+      (f) => f.type.startsWith('image/') || /\.(jpg|jpeg|png|webp|avif|gif)$/i.test(f.name)
+    );
+
+    if (videoFiles.length === 0 && imageFiles.length === 0) {
+      showToast('Please select valid JPG, PNG, JPEG, or MP4 files', 'error');
+      return;
+    }
 
     setIsProcessingFiles(true);
     setUploadProgress(10);
 
-    const readers = fileList.map((file) => {
-      return new Promise((resolve, reject) => {
-        const reader = new FileReader();
-        reader.onload = (e) => resolve(e.target.result);
-        reader.onerror = (e) => reject(e);
-        reader.readAsDataURL(file);
-      });
-    });
+    try {
+      let addedVideoName = null;
 
-    const interval = setInterval(() => {
-      setUploadProgress((p) => Math.min(p + 20, 90));
-    }, 100);
+      // 1. Process Video Files (e.g. MP4)
+      if (videoFiles.length > 0) {
+        const videoFile = videoFiles[0];
+        addedVideoName = videoFile.name;
+        setVideoFileName(videoFile.name);
 
-    Promise.all(readers)
-      .then((dataUrls) => {
-        clearInterval(interval);
-        setUploadProgress(100);
-        setTimeout(() => {
-          setUploadedImages((prev) => [...prev, ...dataUrls]);
-          setIsProcessingFiles(false);
-          setUploadProgress(0);
-          showToast(`Added ${dataUrls.length} ${dataUrls.length === 1 ? 'image' : 'images'} to project draft!`, 'success');
-        }, 300);
-      })
-      .catch((err) => {
-        clearInterval(interval);
+        const videoDataUrl = await new Promise((resolve, reject) => {
+          const reader = new FileReader();
+          reader.onload = (e) => resolve(e.target.result);
+          reader.onerror = reject;
+          reader.readAsDataURL(videoFile);
+        });
+
+        setUploadedVideoDataUrl(videoDataUrl);
+        setVideoUrl('');
+
+        if (category === 'posters') {
+          setCategory('videos');
+        }
+
+        // Auto-extract thumbnail frame from the MP4 video
+        const autoThumb = await generateVideoThumbnail(videoFile, 1);
+        if (autoThumb) {
+          setUploadedImages((prev) => (prev.length === 0 ? [autoThumb] : prev));
+        }
+      }
+
+      // 2. Process Image Files (JPG, PNG, JPEG)
+      let compressedImages = [];
+      if (imageFiles.length > 0) {
+        setUploadProgress(30);
+        compressedImages = await compressMultipleImages(imageFiles, (pct) => {
+          setUploadProgress(Math.round(30 + pct * 0.65));
+        });
+
+        if (compressedImages.length > 0) {
+          setUploadedImages((prev) => [...prev, ...compressedImages]);
+        }
+      }
+
+      setUploadProgress(100);
+      setTimeout(() => {
         setIsProcessingFiles(false);
         setUploadProgress(0);
-        showToast('Error reading uploaded files', 'error');
-        console.error(err);
-      });
+
+        if (addedVideoName && compressedImages.length > 0) {
+          showToast(`Added ${compressedImages.length} image(s) + MP4 video "${addedVideoName}"!`, 'success');
+        } else if (addedVideoName) {
+          showToast(`MP4 video "${addedVideoName}" loaded with preview poster!`, 'success');
+        } else {
+          showToast(`Added ${compressedImages.length} ${compressedImages.length === 1 ? 'image' : 'images'} (JPG/PNG) to draft!`, 'success');
+        }
+      }, 300);
+    } catch (err) {
+      setIsProcessingFiles(false);
+      setUploadProgress(0);
+      showToast('Error processing uploaded files', 'error');
+      console.error(err);
+    }
   };
 
   const removeUploadedImage = (indexToRemove) => {
@@ -197,13 +288,16 @@ export default function AdminDashboard({ navigate }) {
       return;
     }
 
-    if (uploadedImages.length === 0 && !videoUrl.trim()) {
-      showToast('Please upload at least one image or provide a video URL', 'error');
+    const resolvedVideoUrl = uploadedVideoDataUrl || videoUrl.trim() || null;
+    if (uploadedImages.length === 0 && !resolvedVideoUrl) {
+      showToast('Please upload at least one image (JPG, PNG) or video (MP4)', 'error');
       return;
     }
 
     try {
-      const selectedThumbnail = uploadedImages[thumbnailIndex] || uploadedImages[0] || '/assets/logo/BM_OFFICIAL_LOGO.png';
+      const selectedThumbnail =
+        uploadedImages[thumbnailIndex] || uploadedImages[0] || '/assets/BM_BLCK.png';
+
       await addProject({
         title,
         category,
@@ -213,8 +307,8 @@ export default function AdminDashboard({ navigate }) {
         tools: toolsInput,
         featured,
         thumbnail: selectedThumbnail,
-        images: uploadedImages.length > 0 ? uploadedImages : [selectedThumbnail],
-        videoUrl: videoUrl.trim() || null
+        images: uploadedImages.length > 0 ? uploadedImages : (resolvedVideoUrl ? [selectedThumbnail] : [selectedThumbnail]),
+        videoUrl: resolvedVideoUrl
       });
 
       // Reset form
@@ -222,12 +316,14 @@ export default function AdminDashboard({ navigate }) {
       setClient('');
       setDescription('');
       setVideoUrl('');
+      setUploadedVideoDataUrl(null);
+      setVideoFileName('');
       setUploadedImages([]);
       setThumbnailIndex(0);
       setFeatured(false);
       setActiveTab('projects');
-    } catch {
-      // Handled in context
+    } catch (err) {
+      console.error(err);
     }
   };
 
@@ -255,7 +351,7 @@ export default function AdminDashboard({ navigate }) {
   };
 
   // --- Handlers for Media Vault Uploads ---
-  const handleMediaUploadSubmit = (e) => {
+  const handleMediaUploadSubmit = async (e) => {
     e.preventDefault();
     if (mediaUploadFiles.length === 0) {
       showToast('Please select at least one media file to upload', 'error');
@@ -263,38 +359,48 @@ export default function AdminDashboard({ navigate }) {
     }
 
     setMediaUploadProcessing(true);
-    const readers = mediaUploadFiles.map((file) => {
-      return new Promise((resolve, reject) => {
-        const reader = new FileReader();
-        reader.onload = (e) => resolve({ name: file.name, type: file.type, dataUrl: e.target.result });
-        reader.onerror = (e) => reject(e);
-        reader.readAsDataURL(file);
-      });
-    });
 
-    Promise.all(readers)
-      .then((results) => {
-        results.forEach((item, idx) => {
-          addMediaItem({
-            title: results.length === 1 && mediaUploadTitle.trim() ? mediaUploadTitle : item.name.replace(/\.[^/.]+$/, ''),
-            category: mediaUploadCategory,
-            type: item.type.includes('video') ? 'video' : 'image',
-            path: item.dataUrl,
-            tags: mediaUploadTags ? mediaUploadTags.split(',').map(s => s.trim()) : ['custom', mediaUploadCategory]
-          });
+    try {
+      const results = await Promise.all(
+        mediaUploadFiles.map(async (file) => {
+          const isVideo = file.type.includes('video');
+          let dataUrl;
+          if (isVideo) {
+            // Videos: read as-is (no canvas compression for video)
+            dataUrl = await new Promise((resolve, reject) => {
+              const reader = new FileReader();
+              reader.onload = (ev) => resolve(ev.target.result);
+              reader.onerror = reject;
+              reader.readAsDataURL(file);
+            });
+          } else {
+            dataUrl = await compressImage(file, 1400, 0.82);
+          }
+          return { name: file.name, type: file.type, dataUrl, isVideo };
+        })
+      );
+
+      results.forEach((item) => {
+        addMediaItem({
+          title: results.length === 1 && mediaUploadTitle.trim() ? mediaUploadTitle : item.name.replace(/\.[^/.]+$/, ''),
+          category: mediaUploadCategory,
+          type: item.isVideo ? 'video' : 'image',
+          path: item.dataUrl,
+          tags: mediaUploadTags ? mediaUploadTags.split(',').map(s => s.trim()) : ['custom', mediaUploadCategory]
         });
-        setMediaUploadProcessing(false);
-        setMediaUploadFiles([]);
-        setMediaUploadTitle('');
-        setMediaUploadTags('');
-        setShowMediaUploadModal(false);
-        showToast(`Successfully uploaded ${results.length} assets to Media Vault!`, 'success');
-      })
-      .catch((err) => {
-        setMediaUploadProcessing(false);
-        showToast('Error uploading media files', 'error');
-        console.error(err);
       });
+
+      setMediaUploadProcessing(false);
+      setMediaUploadFiles([]);
+      setMediaUploadTitle('');
+      setMediaUploadTags('');
+      setShowMediaUploadModal(false);
+      showToast(`Successfully uploaded ${results.length} assets to Media Vault!`, 'success');
+    } catch (err) {
+      setMediaUploadProcessing(false);
+      showToast('Error uploading media files', 'error');
+      console.error(err);
+    }
   };
 
   const copyMediaLink = (path, id) => {
@@ -304,9 +410,27 @@ export default function AdminDashboard({ navigate }) {
     setTimeout(() => setCopiedId(null), 2000);
   };
 
-  const useMediaInProjectDraft = (mediaItem) => {
-    setUploadedImages((prev) => [...prev, mediaItem.path]);
-    showToast(`Added "${mediaItem.title}" to project draft!`, 'success');
+  const useMediaInProjectDraft = async (mediaItem) => {
+    const isVideo =
+      mediaItem.type === 'video' ||
+      (mediaItem.path && (mediaItem.path.startsWith('data:video') || /\.(mp4|webm|mov)$/i.test(mediaItem.path)));
+
+    if (isVideo) {
+      setUploadedVideoDataUrl(mediaItem.path);
+      setVideoFileName(mediaItem.title || 'Vault Video');
+      setVideoUrl('');
+      if (category === 'posters') setCategory('videos');
+      
+      // Also generate poster if none exists
+      const thumb = await generateVideoThumbnail(mediaItem.path, 1);
+      if (thumb) {
+        setUploadedImages((prev) => (prev.length === 0 ? [thumb] : prev));
+      }
+      showToast(`Set "${mediaItem.title}" as project video!`, 'success');
+    } else {
+      setUploadedImages((prev) => [...prev, mediaItem.path]);
+      showToast(`Added "${mediaItem.title}" to project draft!`, 'success');
+    }
     setActiveTab('upload');
   };
 
@@ -891,22 +1015,95 @@ export default function AdminDashboard({ navigate }) {
                 />
               </div>
 
-              <div className="space-y-1.5">
-                <label className="block text-xs uppercase tracking-wider text-[#A0A0A0] font-medium">
-                  Video File Path or Embedded URL (Optional)
+              {/* Video Upload Section */}
+              <div className="space-y-2">
+                <label className="block text-xs uppercase tracking-wider text-[#A0A0A0] font-medium flex items-center gap-1.5">
+                  <Film className="w-3.5 h-3.5 text-[#D4AF37]" />
+                  Video (Optional)
                 </label>
-                <div className="relative">
-                  <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none text-[#8A8A8A]">
-                    <Film className="w-4 h-4" />
+
+                {/* Upload Video File Button */}
+                <label className={`flex items-center gap-3 px-4 py-3 rounded-xl border cursor-pointer transition-all ${
+                  uploadedVideoDataUrl
+                    ? 'border-[#D4AF37]/60 bg-[#D4AF37]/8'
+                    : 'border-dashed border-white/20 bg-[#161616]/60 hover:border-[#D4AF37]/50'
+                }`}>
+                  <div className="w-8 h-8 rounded-lg bg-[#D4AF37]/15 flex items-center justify-center flex-shrink-0">
+                    {isProcessingVideo ? (
+                      <RefreshCw className="w-4 h-4 text-[#F5D77A] animate-spin" />
+                    ) : uploadedVideoDataUrl ? (
+                      <CheckCircle2 className="w-4 h-4 text-emerald-400" />
+                    ) : (
+                      <Film className="w-4 h-4 text-[#F5D77A]" />
+                    )}
                   </div>
+                  <div className="flex-1 min-w-0">
+                    {uploadedVideoDataUrl ? (
+                      <>
+                        <p className="text-xs font-semibold text-emerald-400">Video ready</p>
+                        <p className="text-[11px] text-[#8A8A8A] truncate">{videoFileName}</p>
+                      </>
+                    ) : (
+                      <>
+                        <p className="text-xs font-semibold text-[#F5F1E8]">
+                          {isProcessingVideo ? 'Loading video...' : 'Upload Video File'}
+                        </p>
+                        <p className="text-[11px] text-[#8A8A8A]">MP4, WebM, MOV · max 50MB recommended</p>
+                      </>
+                    )}
+                  </div>
+                  {uploadedVideoDataUrl && (
+                    <button
+                      type="button"
+                      onClick={(e) => { e.preventDefault(); setUploadedVideoDataUrl(null); setVideoFileName(''); }}
+                      className="flex-shrink-0 p-1 rounded-full hover:bg-red-500/20 text-[#8A8A8A] hover:text-red-400 transition"
+                      title="Remove video"
+                    >
+                      <X className="w-3.5 h-3.5" />
+                    </button>
+                  )}
                   <input
-                    type="text"
-                    placeholder="/videos/PLAINS OF HOPE 4TH OCT 2026.mp4 or YouTube / Vimeo URL"
-                    value={videoUrl}
-                    onChange={(e) => setVideoUrl(e.target.value)}
-                    className="w-full pl-10 pr-4 py-3 rounded-xl bg-[#161616] border border-white/10 focus:border-[#D4AF37] focus:outline-none text-xs text-[#F5F1E8]"
+                    type="file"
+                    accept=".mp4,.webm,.mov,video/mp4,video/webm,video/quicktime,video/*"
+                    onChange={(e) => handleVideoFileUpload(e.target.files?.[0])}
+                    className="hidden"
                   />
-                </div>
+                </label>
+
+                {/* Inline video preview after upload */}
+                {uploadedVideoDataUrl && (
+                  <video
+                    src={uploadedVideoDataUrl}
+                    controls
+                    playsInline
+                    className="w-full rounded-xl border border-[#D4AF37]/30 max-h-44 bg-black"
+                  />
+                )}
+
+                {/* Divider */}
+                {!uploadedVideoDataUrl && (
+                  <div className="flex items-center gap-2 text-[10px] text-[#555] uppercase tracking-widest">
+                    <div className="flex-1 h-px bg-white/8" />
+                    <span>or paste URL</span>
+                    <div className="flex-1 h-px bg-white/8" />
+                  </div>
+                )}
+
+                {/* Manual URL input — hidden when a file is uploaded */}
+                {!uploadedVideoDataUrl && (
+                  <div className="relative">
+                    <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none text-[#8A8A8A]">
+                      <Film className="w-4 h-4" />
+                    </div>
+                    <input
+                      type="text"
+                      placeholder="YouTube URL, Vimeo URL, or /videos/file.mp4"
+                      value={videoUrl}
+                      onChange={(e) => setVideoUrl(e.target.value)}
+                      className="w-full pl-10 pr-4 py-3 rounded-xl bg-[#161616] border border-white/10 focus:border-[#D4AF37] focus:outline-none text-xs text-[#F5F1E8]"
+                    />
+                  </div>
+                )}
               </div>
 
               <div className="space-y-1.5">
@@ -983,11 +1180,17 @@ export default function AdminDashboard({ navigate }) {
                   <Upload className="w-6 h-6 text-[#F5D77A]" />
                 </div>
                 <h4 className="font-display font-semibold text-sm text-[#F5F1E8]">
-                  Drag & Drop Project Artwork Here
+                  Drag & Drop Project Media Here
                 </h4>
-                <p className="text-xs text-[#8A8A8A] mt-1 mb-4">
-                  Supports multiple JPEG, PNG, WEBP, and poster files
+                <p className="text-xs text-[#8A8A8A] mt-1 mb-3">
+                  Upload artworks & motion videos in JPG, PNG, JPEG, or MP4
                 </p>
+                <div className="flex items-center justify-center gap-1.5 mb-4">
+                  <span className="px-2 py-0.5 rounded bg-white/5 border border-white/10 text-[10px] font-mono text-[#F5D77A]">JPG</span>
+                  <span className="px-2 py-0.5 rounded bg-white/5 border border-white/10 text-[10px] font-mono text-[#F5D77A]">PNG</span>
+                  <span className="px-2 py-0.5 rounded bg-white/5 border border-white/10 text-[10px] font-mono text-[#F5D77A]">JPEG</span>
+                  <span className="px-2 py-0.5 rounded bg-[#D4AF37]/15 border border-[#D4AF37]/30 text-[10px] font-mono text-[#F5D77A]">MP4</span>
+                </div>
 
                 <label className="inline-flex items-center gap-2 px-5 py-2.5 rounded-full text-xs font-bold text-black bg-gradient-to-r from-[#D4AF37] to-[#F5D77A] hover:brightness-110 cursor-pointer shadow-md shadow-[#D4AF37]/20 transition">
                   <Upload className="w-3.5 h-3.5" />
@@ -995,7 +1198,7 @@ export default function AdminDashboard({ navigate }) {
                   <input
                     type="file"
                     multiple
-                    accept="image/*"
+                    accept=".jpg,.jpeg,.png,.mp4,image/jpeg,image/png,image/jpg,image/webp,video/mp4,video/quicktime,video/webm"
                     onChange={(e) => handleProjectFiles(e.target.files)}
                     className="hidden"
                   />
@@ -2112,7 +2315,7 @@ export default function AdminDashboard({ navigate }) {
                   <input
                     type="file"
                     multiple
-                    accept="image/*,video/mp4"
+                    accept=".jpg,.jpeg,.png,.mp4,image/jpeg,image/png,image/jpg,image/webp,video/mp4,video/*"
                     required
                     onChange={(e) => setMediaUploadFiles(Array.from(e.target.files || []))}
                     className="w-full px-4 py-2.5 rounded-xl bg-[#181818] border border-white/10 focus:border-[#D4AF37] focus:outline-none text-xs text-[#F5F1E8] file:mr-4 file:py-1 file:px-3 file:rounded-lg file:border-0 file:text-xs file:bg-[#D4AF37] file:text-black file:font-semibold"

@@ -225,16 +225,30 @@ export default function HeroSection({ navigate }) {
         {/* ── LEFT COLUMN ── */}
         <div className="hero-left">
 
-          {/* Availability badge */}
-          <motion.div
-            initial={{ opacity: 0, y: -14 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.55 }}
-            className="hero-avail-badge"
-          >
-            <span className="hero-avail-dot" />
-            Available for Projects
-          </motion.div>
+          {/* Brand Crest & Availability badge */}
+          <div className="flex items-center gap-3.5">
+            <motion.div
+              initial={{ opacity: 0, scale: 0.8 }}
+              animate={{ opacity: 1, scale: 1 }}
+              transition={{ duration: 0.6 }}
+              className="flex items-center justify-center w-14 h-14 sm:w-16 sm:h-16 shrink-0"
+            >
+              <img
+                src="/assets/logo/BM_OFFICIAL_LOGO.png"
+                alt="BM Graphix Official Logo"
+                className="w-full h-full object-contain filter drop-shadow-[0_4px_16px_rgba(212,175,55,0.3)]"
+              />
+            </motion.div>
+            <motion.div
+              initial={{ opacity: 0, y: -14 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.55 }}
+              className="hero-avail-badge"
+            >
+              <span className="hero-avail-dot" />
+              Available for Projects
+            </motion.div>
+          </div>
 
 
 

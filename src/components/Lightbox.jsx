@@ -43,9 +43,29 @@ export default function Lightbox() {
   const touchEndX = useRef(0);
 
   const images = lightboxProject?.images || (lightboxProject?.thumbnail ? [lightboxProject.thumbnail] : []);
-  const currentImage = images[activeImageIndex] || lightboxProject?.thumbnail;
   const liked = lightboxProject ? isProjectLiked(lightboxProject.id) : false;
-  const isVideo = Boolean(lightboxProject?.videoUrl);
+  const videoUrl = lightboxProject?.videoUrl || null;
+  const isVideo = Boolean(videoUrl);
+
+  // Detect embed vs native video
+  const isYouTube = videoUrl && (videoUrl.includes('youtube.com') || videoUrl.includes('youtu.be'));
+  const isVimeo = videoUrl && videoUrl.includes('vimeo.com');
+  const isEmbedUrl = isYouTube || isVimeo;
+
+  // When video exists it occupies tab index 0; images are offset by 1
+  const imageSlideIndex = isVideo ? activeImageIndex - 1 : activeImageIndex;
+  const currentImage = images[Math.max(0, imageSlideIndex)] || lightboxProject?.thumbnail;
+
+  const getEmbedUrl = (url) => {
+    if (!url) return '';
+    // YouTube
+    const ytMatch = url.match(/(?:v=|youtu\.be\/)([\w-]{11})/);
+    if (ytMatch) return `https://www.youtube.com/embed/${ytMatch[1]}?autoplay=1&rel=0`;
+    // Vimeo
+    const vimeoMatch = url.match(/vimeo\.com\/(\d+)/);
+    if (vimeoMatch) return `https://player.vimeo.com/video/${vimeoMatch[1]}?autoplay=1`;
+    return url;
+  };
 
   // Reset image index and zoom whenever project changes
   useEffect(() => {
@@ -73,16 +93,18 @@ export default function Lightbox() {
 
   if (!lightboxProject) return null;
 
+  const totalSlides = (isVideo ? 1 : 0) + images.length;
+
   const handleNextImage = () => {
-    if (images.length > 1) {
-      setActiveImageIndex((prev) => (prev + 1) % images.length);
+    if (totalSlides > 1) {
+      setActiveImageIndex((prev) => (prev + 1) % totalSlides);
       setZoomLevel(1);
     }
   };
 
   const handlePrevImage = () => {
-    if (images.length > 1) {
-      setActiveImageIndex((prev) => (prev - 1 + images.length) % images.length);
+    if (totalSlides > 1) {
+      setActiveImageIndex((prev) => (prev - 1 + totalSlides) % totalSlides);
       setZoomLevel(1);
     }
   };
@@ -179,14 +201,29 @@ export default function Lightbox() {
             <div className="relative w-full h-full flex items-center justify-center p-4 md:p-8 overflow-hidden">
               {isVideo && activeImageIndex === 0 ? (
                 <div className="w-full max-w-4xl max-h-full flex items-center justify-center">
-                  <video
-                    src={lightboxProject.videoUrl}
-                    poster={lightboxProject.thumbnail}
-                    controls
-                    autoPlay
-                    playsInline
-                    className="max-h-[75vh] w-auto max-w-full rounded-xl shadow-2xl border border-white/10"
-                  />
+                  {isEmbedUrl ? (
+                    // YouTube / Vimeo — render as responsive iframe
+                    <div className="w-full" style={{ aspectRatio: '16/9' }}>
+                      <iframe
+                        src={getEmbedUrl(videoUrl)}
+                        title={lightboxProject.title}
+                        allow="autoplay; fullscreen; picture-in-picture"
+                        allowFullScreen
+                        className="w-full h-full rounded-xl shadow-2xl border border-white/10"
+                      />
+                    </div>
+                  ) : (
+                    // Base64 / data URL / local MP4 — native video player
+                    <video
+                      key={videoUrl}
+                      src={videoUrl}
+                      poster={lightboxProject.thumbnail || undefined}
+                      controls
+                      autoPlay
+                      playsInline
+                      className="max-h-[75vh] w-auto max-w-full rounded-xl shadow-2xl border border-white/10 bg-black"
+                    />
+                  )}
                 </div>
               ) : (
                 <motion.div
@@ -255,25 +292,43 @@ export default function Lightbox() {
               </>
             )}
 
-            {/* Bottom thumbnail strip if multi-image */}
-            {images.length > 1 && (
+            {/* Bottom thumbnail strip: video tab + image thumbnails */}
+            {(isVideo || images.length > 1) && (
               <div className="absolute bottom-4 left-4 z-20 hidden md:flex items-center gap-2 max-w-sm overflow-x-auto p-1 bg-black/60 backdrop-blur-md rounded-xl border border-white/10">
-                {images.map((img, idx) => (
+                {/* Video tab (index 0 when video exists) */}
+                {isVideo && (
                   <button
-                    key={idx}
-                    onClick={() => {
-                      setActiveImageIndex(idx);
-                      setZoomLevel(1);
-                    }}
-                    className={`relative w-12 h-12 rounded-lg overflow-hidden border-2 transition ${
-                      activeImageIndex === idx
+                    onClick={() => { setActiveImageIndex(0); setZoomLevel(1); }}
+                    className={`relative w-12 h-12 rounded-lg overflow-hidden border-2 transition flex items-center justify-center bg-black/80 ${
+                      activeImageIndex === 0
                         ? 'border-[#D4AF37] shadow-[0_0_10px_#D4AF37]'
                         : 'border-transparent opacity-60 hover:opacity-100'
                     }`}
+                    title="Play video"
                   >
-                    <img src={img} alt="" className="w-full h-full object-cover" />
+                    <svg className="w-5 h-5 text-[#F5D77A] fill-[#F5D77A]" viewBox="0 0 24 24"><path d="M8 5v14l11-7z"/></svg>
                   </button>
-                ))}
+                )}
+                {/* Image thumbnails (offset index by 1 when video exists) */}
+                {images.map((img, idx) => {
+                  const tabIndex = isVideo ? idx + 1 : idx;
+                  return (
+                    <button
+                      key={idx}
+                      onClick={() => {
+                        setActiveImageIndex(tabIndex);
+                        setZoomLevel(1);
+                      }}
+                      className={`relative w-12 h-12 rounded-lg overflow-hidden border-2 transition ${
+                        activeImageIndex === tabIndex
+                          ? 'border-[#D4AF37] shadow-[0_0_10px_#D4AF37]'
+                          : 'border-transparent opacity-60 hover:opacity-100'
+                      }`}
+                    >
+                      <img src={img} alt="" className="w-full h-full object-cover" />
+                    </button>
+                  );
+                })}
               </div>
             )}
           </div>

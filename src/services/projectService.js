@@ -1,4 +1,5 @@
 import { INITIAL_PROJECTS } from '../data/projects';
+import { storageDB } from '../utils/storageDB';
 
 const STORAGE_KEY = 'bm_graphix_projects_v1';
 const LIKES_KEY = 'bm_graphix_user_likes_v1';
@@ -6,7 +7,8 @@ const LIKES_KEY = 'bm_graphix_user_likes_v1';
 /**
  * Project Service Layer
  * Decouples the UI from the persistence layer.
- * Ready to be swapped with an API client (REST / Supabase / Firebase / GraphQL).
+ * Uses IndexedDB as primary high-capacity storage for high-resolution artworks & MP4 videos,
+ * with graceful localStorage sync.
  */
 
 class ProjectService {
@@ -14,23 +16,65 @@ class ProjectService {
     this.initStorage();
   }
 
-  initStorage() {
+  async initStorage() {
     if (typeof window === 'undefined') return;
-    const existing = localStorage.getItem(STORAGE_KEY);
-    if (!existing) {
-      localStorage.setItem(STORAGE_KEY, JSON.stringify(INITIAL_PROJECTS));
+    try {
+      const dbProjects = await storageDB.get(STORAGE_KEY);
+      const local = localStorage.getItem(STORAGE_KEY);
+      if (!dbProjects && !local) {
+        await storageDB.set(STORAGE_KEY, INITIAL_PROJECTS);
+        try {
+          localStorage.setItem(STORAGE_KEY, JSON.stringify(INITIAL_PROJECTS));
+        } catch {
+          // ignore
+        }
+      } else if (local && !dbProjects) {
+        try {
+          const parsed = JSON.parse(local);
+          await storageDB.set(STORAGE_KEY, parsed);
+        } catch {
+          // ignore
+        }
+      }
+
+      const likes = localStorage.getItem(LIKES_KEY);
+      if (!likes) {
+        localStorage.setItem(LIKES_KEY, JSON.stringify([]));
+      }
+    } catch (e) {
+      console.warn('initStorage notice:', e);
     }
-    const likes = localStorage.getItem(LIKES_KEY);
-    if (!likes) {
-      localStorage.setItem(LIKES_KEY, JSON.stringify([]));
+  }
+
+  async saveProjects(projects) {
+    // 1. Save to high-capacity IndexedDB (stores 50MB+ MP4 videos and images smoothly)
+    await storageDB.set(STORAGE_KEY, projects);
+
+    // 2. Best-effort mirror to localStorage
+    try {
+      localStorage.setItem(STORAGE_KEY, JSON.stringify(projects));
+    } catch (e) {
+      // Quota reached on localStorage is safely handled because IndexedDB has the data
+      console.info('Media safely stored in IndexedDB store');
     }
   }
 
   // Get all projects
   async getProjects() {
     try {
+      const dbProjects = await storageDB.get(STORAGE_KEY);
+      if (Array.isArray(dbProjects) && dbProjects.length > 0) {
+        return dbProjects;
+      }
       const data = localStorage.getItem(STORAGE_KEY);
-      return data ? JSON.parse(data) : INITIAL_PROJECTS;
+      if (data) {
+        const parsed = JSON.parse(data);
+        if (Array.isArray(parsed) && parsed.length > 0) {
+          storageDB.set(STORAGE_KEY, parsed);
+          return parsed;
+        }
+      }
+      return INITIAL_PROJECTS;
     } catch (e) {
       console.error('Error fetching projects from storage:', e);
       return INITIAL_PROJECTS;
@@ -77,7 +121,7 @@ class ProjectService {
     };
 
     const updated = [newProject, ...projects];
-    localStorage.setItem(STORAGE_KEY, JSON.stringify(updated));
+    await this.saveProjects(updated);
     return newProject;
   }
 
@@ -98,7 +142,7 @@ class ProjectService {
     };
 
     projects[index] = updated;
-    localStorage.setItem(STORAGE_KEY, JSON.stringify(projects));
+    await this.saveProjects(projects);
     return updated;
   }
 
@@ -106,7 +150,7 @@ class ProjectService {
   async deleteProject(id) {
     const projects = await this.getProjects();
     const filtered = projects.filter(p => p.id !== id);
-    localStorage.setItem(STORAGE_KEY, JSON.stringify(filtered));
+    await this.saveProjects(filtered);
     return true;
   }
 
@@ -117,7 +161,6 @@ class ProjectService {
     const hasLiked = likedIds.includes(projectId);
 
     let updatedLikedIds;
-    let newLikeCount;
 
     const projectIndex = projects.findIndex(p => p.id === projectId);
     if (projectIndex === -1) return { likes: 0, userHasLiked: false };
@@ -130,8 +173,12 @@ class ProjectService {
       projects[projectIndex].likes = (projects[projectIndex].likes || 0) + 1;
     }
 
-    localStorage.setItem(LIKES_KEY, JSON.stringify(updatedLikedIds));
-    localStorage.setItem(STORAGE_KEY, JSON.stringify(projects));
+    try {
+      localStorage.setItem(LIKES_KEY, JSON.stringify(updatedLikedIds));
+    } catch {
+      // ignore
+    }
+    await this.saveProjects(projects);
 
     return {
       likes: projects[projectIndex].likes,
@@ -172,7 +219,7 @@ class ProjectService {
     }
 
     projects[projectIndex].comments.unshift(newComment);
-    localStorage.setItem(STORAGE_KEY, JSON.stringify(projects));
+    await this.saveProjects(projects);
     return newComment;
   }
 
@@ -183,13 +230,13 @@ class ProjectService {
     if (projectIndex === -1) throw new Error('Project not found');
 
     projects[projectIndex].comments = (projects[projectIndex].comments || []).filter(c => c.id !== commentId);
-    localStorage.setItem(STORAGE_KEY, JSON.stringify(projects));
+    await this.saveProjects(projects);
     return true;
   }
 
   // Reset to initial mock data
   async resetToDefaults() {
-    localStorage.setItem(STORAGE_KEY, JSON.stringify(INITIAL_PROJECTS));
+    await this.saveProjects(INITIAL_PROJECTS);
     return INITIAL_PROJECTS;
   }
 

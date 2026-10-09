@@ -49,11 +49,12 @@ export default function AdminLogin({ navigate }) {
 
         <div className="text-center mb-8">
           <div className="relative inline-block mb-4">
-            <div className="w-16 h-16 rounded-2xl bg-black border border-[#D4AF37]/40 flex items-center justify-center mx-auto shadow-lg shadow-[#D4AF37]/15">
-              <Lock className="w-8 h-8 text-[#F5D77A]" />
-            </div>
-            <div className="absolute -bottom-1 -right-1 w-6 h-6 rounded-full bg-[#D4AF37] flex items-center justify-center text-black shadow">
-              <Sparkles className="w-3.5 h-3.5" />
+            <div className="w-24 h-24 rounded-2xl flex items-center justify-center mx-auto">
+              <img
+                src="/assets/logo/BM_OFFICIAL_LOGO.png"
+                alt="BM Graphix"
+                className="w-full h-full object-contain filter drop-shadow-[0_6px_22px_rgba(212,175,55,0.45)]"
+              />
             </div>
           </div>
           <h1 className="font-display font-extrabold text-2xl sm:text-3xl text-[#F5F1E8]">
