@@ -5,6 +5,11 @@
  */
 
 import { storageDB } from '../utils/storageDB';
+import {
+  fetchServerMedia,
+  saveServerMedia,
+  uploadMediaToServer
+} from '../utils/apiSync';
 
 const CUSTOM_MEDIA_KEY = 'bm_custom_media_vault_v2';
 
@@ -437,17 +442,51 @@ export const SYSTEM_MEDIA_ASSETS = [
 
 class MediaService {
   constructor() {
+    this.customCache = [];
+    this.isLoaded = false;
     this.init();
   }
 
-  init() {
+  async init() {
     if (typeof window === 'undefined') return;
-    if (!localStorage.getItem(CUSTOM_MEDIA_KEY)) {
-      localStorage.setItem(CUSTOM_MEDIA_KEY, JSON.stringify([]));
+    try {
+      // 1. Try server first so mobile device gets media uploaded on Windows
+      const serverMedia = await fetchServerMedia();
+      if (Array.isArray(serverMedia) && serverMedia.length > 0) {
+        this.customCache = serverMedia;
+        this.isLoaded = true;
+        await storageDB.set(CUSTOM_MEDIA_KEY, serverMedia);
+        return;
+      }
+
+      // 2. Try IndexedDB
+      const dbMedia = await storageDB.get(CUSTOM_MEDIA_KEY);
+      if (Array.isArray(dbMedia) && dbMedia.length > 0) {
+        this.customCache = dbMedia;
+        this.isLoaded = true;
+        return;
+      }
+
+      // 3. Fallback to localStorage
+      const local = localStorage.getItem(CUSTOM_MEDIA_KEY);
+      if (local) {
+        const parsed = JSON.parse(local);
+        if (Array.isArray(parsed)) {
+          this.customCache = parsed;
+          this.isLoaded = true;
+          await storageDB.set(CUSTOM_MEDIA_KEY, parsed);
+          return;
+        }
+      }
+    } catch (e) {
+      console.warn('MediaService init notice:', e);
     }
   }
 
   getCustomMedia() {
+    if (this.customCache && this.customCache.length > 0) {
+      return this.customCache;
+    }
     try {
       const data = localStorage.getItem(CUSTOM_MEDIA_KEY);
       return data ? JSON.parse(data) : [];
@@ -461,16 +500,31 @@ class MediaService {
     return [...custom, ...SYSTEM_MEDIA_ASSETS];
   }
 
-  addMediaItem(item) {
+  async getAllMediaAsync() {
+    if (!this.isLoaded) {
+      await this.init();
+    }
+    return this.getAllMedia();
+  }
+
+  async addMediaItem(item) {
     const custom = this.getCustomMedia();
+    let finalPath = item.path;
+
+    // Upload base64 media to server to avoid mobile quota issues & safari video refusal
+    if (finalPath && finalPath.startsWith('data:')) {
+      const safeName = (item.title || 'media-item').toLowerCase().replace(/[^a-z0-9]+/g, '-');
+      finalPath = await uploadMediaToServer(finalPath, safeName);
+    }
+
     const newMedia = {
       id: `custom-media-${Date.now()}-${Math.floor(Math.random() * 1000)}`,
       title: item.title || 'Uploaded Media Asset',
       category: item.category || 'posters',
       categoryLabel: item.categoryLabel || this.getCategoryLabel(item.category),
-      type: item.type || (item.path.includes('.mp4') || item.path.includes('video') ? 'video' : 'image'),
-      format: item.format || (item.path.startsWith('data:image/png') ? 'PNG' : item.path.startsWith('data:video') ? 'MP4' : 'JPEG'),
-      path: item.path,
+      type: item.type || (finalPath.includes('.mp4') || finalPath.includes('video') ? 'video' : 'image'),
+      format: item.format || (finalPath.startsWith('data:image/png') || finalPath.endsWith('.png') ? 'PNG' : finalPath.includes('.mp4') || finalPath.startsWith('data:video') ? 'MP4' : 'JPEG'),
+      path: finalPath,
       dimensions: item.dimensions || 'Uploaded Custom',
       description: item.description || 'Uploaded via BM Graphix Media Vault',
       tags: Array.isArray(item.tags) ? item.tags : (item.tags ? item.tags.split(',').map(t => t.trim()) : ['custom', 'upload']),
@@ -479,24 +533,42 @@ class MediaService {
     };
 
     const updated = [newMedia, ...custom];
-    storageDB.set(CUSTOM_MEDIA_KEY, updated);
+    this.customCache = updated;
+    await storageDB.set(CUSTOM_MEDIA_KEY, updated);
+
     try {
       localStorage.setItem(CUSTOM_MEDIA_KEY, JSON.stringify(updated));
     } catch {
       // Safely stored in IndexedDB
     }
+
+    try {
+      await saveServerMedia(updated);
+    } catch {
+      // ignore
+    }
+
     return newMedia;
   }
 
-  deleteMediaItem(id) {
+  async deleteMediaItem(id) {
     const custom = this.getCustomMedia();
     const filtered = custom.filter(m => m.id !== id);
-    storageDB.set(CUSTOM_MEDIA_KEY, filtered);
+    this.customCache = filtered;
+    await storageDB.set(CUSTOM_MEDIA_KEY, filtered);
+
     try {
       localStorage.setItem(CUSTOM_MEDIA_KEY, JSON.stringify(filtered));
     } catch {
       // ignore
     }
+
+    try {
+      await saveServerMedia(filtered);
+    } catch {
+      // ignore
+    }
+
     return true;
   }
 

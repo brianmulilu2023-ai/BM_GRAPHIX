@@ -7,8 +7,13 @@
 
 export function compressImage(fileOrDataUrl, maxWidth = 1400, quality = 0.82) {
   return new Promise((resolve, reject) => {
-    // If it's already a static asset path or http link, return as is
-    if (typeof fileOrDataUrl === 'string' && (fileOrDataUrl.startsWith('/assets') || fileOrDataUrl.startsWith('http'))) {
+    // If it's already a static asset path, uploads path, or http link, return as is
+    if (
+      typeof fileOrDataUrl === 'string' &&
+      (fileOrDataUrl.startsWith('/assets') ||
+        fileOrDataUrl.startsWith('/uploads') ||
+        fileOrDataUrl.startsWith('http'))
+    ) {
       return resolve(fileOrDataUrl);
     }
 
@@ -29,6 +34,18 @@ export function compressImage(fileOrDataUrl, maxWidth = 1400, quality = 0.82) {
 
     const img = new Image();
     img.crossOrigin = 'anonymous';
+
+    let objectUrlToRevoke = null;
+    const cleanup = () => {
+      if (objectUrlToRevoke) {
+        try {
+          URL.revokeObjectURL(objectUrlToRevoke);
+        } catch {
+          // ignore
+        }
+        objectUrlToRevoke = null;
+      }
+    };
 
     img.onload = () => {
       try {
@@ -52,6 +69,7 @@ export function compressImage(fileOrDataUrl, maxWidth = 1400, quality = 0.82) {
         const ctx = canvas.getContext('2d');
 
         if (!ctx) {
+          cleanup();
           return resolve(typeof fileOrDataUrl === 'string' ? fileOrDataUrl : '');
         }
 
@@ -61,26 +79,37 @@ export function compressImage(fileOrDataUrl, maxWidth = 1400, quality = 0.82) {
         // For PNGs with transparency, export as PNG to avoid black backgrounds; for JPG/JPEG, export as JPEG
         const mimeType = isPng ? 'image/png' : 'image/jpeg';
         const compressedDataUrl = canvas.toDataURL(mimeType, isPng ? undefined : quality);
+        cleanup();
         resolve(compressedDataUrl);
       } catch (err) {
+        cleanup();
         console.warn('Image compression fallback:', err);
         resolve(typeof fileOrDataUrl === 'string' ? fileOrDataUrl : '');
       }
     };
 
     img.onerror = () => {
+      cleanup();
       resolve(typeof fileOrDataUrl === 'string' ? fileOrDataUrl : '');
     };
 
     if (typeof fileOrDataUrl === 'string') {
       img.src = fileOrDataUrl;
     } else if (fileOrDataUrl instanceof Blob || fileOrDataUrl instanceof File) {
-      const reader = new FileReader();
-      reader.onload = (e) => {
-        img.src = e.target.result;
-      };
-      reader.onerror = () => reject(new Error('Failed to read image file'));
-      reader.readAsDataURL(fileOrDataUrl);
+      try {
+        objectUrlToRevoke = URL.createObjectURL(fileOrDataUrl);
+        img.src = objectUrlToRevoke;
+      } catch {
+        const reader = new FileReader();
+        reader.onload = (e) => {
+          img.src = e.target.result;
+        };
+        reader.onerror = () => {
+          cleanup();
+          reject(new Error('Failed to read image file'));
+        };
+        reader.readAsDataURL(fileOrDataUrl);
+      }
     } else {
       resolve('');
     }
@@ -127,6 +156,9 @@ export function generateVideoThumbnail(fileOrUrl, seekTime = 1) {
       video.preload = 'metadata';
       video.muted = true;
       video.playsInline = true;
+      video.setAttribute('playsinline', 'true');
+      video.setAttribute('webkit-playsinline', 'true');
+      video.setAttribute('muted', 'true');
 
       let objectUrl = null;
       if (typeof fileOrUrl === 'string') {

@@ -25,8 +25,13 @@ export function ProjectProvider({ children }) {
     setIsAdminLoggedIn(adminService.isAuthenticated());
     setAdminUser(adminService.getAdminAccount());
     setSiteSettings(adminService.getSiteSettings());
-    setMediaItems(mediaService.getAllMedia());
     setInquiries(inquiryService.getInquiries());
+
+    mediaService.getAllMediaAsync().then((items) => {
+      if (Array.isArray(items)) setMediaItems(items);
+    }).catch(() => {
+      setMediaItems(mediaService.getAllMedia());
+    });
   }, []);
 
   const showToast = (message, type = 'gold') => {
@@ -228,9 +233,9 @@ export function ProjectProvider({ children }) {
   };
 
   // --- Media Vault Actions ---
-  const handleAddMediaItem = (item) => {
+  const handleAddMediaItem = async (item) => {
     try {
-      const created = mediaService.addMediaItem(item);
+      const created = await mediaService.addMediaItem(item);
       setMediaItems(mediaService.getAllMedia());
       showToast(`Media "${created.title}" added to vault!`, 'success');
       return created;
@@ -241,9 +246,9 @@ export function ProjectProvider({ children }) {
     }
   };
 
-  const handleDeleteMediaItem = (id) => {
+  const handleDeleteMediaItem = async (id) => {
     try {
-      mediaService.deleteMediaItem(id);
+      await mediaService.deleteMediaItem(id);
       setMediaItems(mediaService.getAllMedia());
       showToast('Custom media removed from vault', 'gold');
     } catch (err) {

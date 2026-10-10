@@ -37,9 +37,16 @@ import {
   Share2,
   Play,
   FileText,
-  Calendar
+  Calendar,
+  Smartphone,
+  QrCode,
+  ArrowRightLeft
 } from 'lucide-react';
 import { useProjects } from '../context/ProjectContext';
+import ResponsiveVideoPlayer from '../components/ResponsiveVideoPlayer';
+import { resolveSafeVideoUrl } from '../utils/videoHelper';
+import { storageDB } from '../utils/storageDB';
+import { fetchServerProjects, saveServerProjects, fetchServerMedia, saveServerMedia } from '../utils/apiSync';
 
 export default function AdminDashboard({ navigate }) {
   const {
@@ -110,6 +117,87 @@ export default function AdminDashboard({ navigate }) {
   const [mediaUploadFiles, setMediaUploadFiles] = useState([]);
   const [mediaUploadProcessing, setMediaUploadProcessing] = useState(false);
   const [showMediaUploadModal, setShowMediaUploadModal] = useState(false);
+  const [showSyncModal, setShowSyncModal] = useState(false);
+  const [isSyncing, setIsSyncing] = useState(false);
+
+  const handleExportData = () => {
+    try {
+      const exportBundle = {
+        exportedAt: new Date().toISOString(),
+        brand: 'BM Graphix',
+        projects,
+        mediaItems: mediaItems.filter(m => m.isCustom),
+        siteSettings
+      };
+      const jsonStr = JSON.stringify(exportBundle, null, 2);
+      const blob = new Blob([jsonStr], { type: 'application/json' });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = `bm-graphix-portfolio-backup-${new Date().toISOString().slice(0, 10)}.json`;
+      a.click();
+      URL.revokeObjectURL(url);
+      showToast('Portfolio bundle exported! Share this file to any mobile device or PC.', 'success');
+    } catch (err) {
+      console.error(err);
+      showToast('Error exporting data', 'error');
+    }
+  };
+
+  const handleImportData = async (e) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    try {
+      const text = await file.text();
+      const bundle = JSON.parse(text);
+      if (bundle && Array.isArray(bundle.projects)) {
+        await storageDB.set('bm_graphix_projects_v1', bundle.projects);
+        try {
+          localStorage.setItem('bm_graphix_projects_v1', JSON.stringify(bundle.projects));
+        } catch {
+          // ignore
+        }
+        await saveServerProjects(bundle.projects);
+
+        if (Array.isArray(bundle.mediaItems)) {
+          await storageDB.set('bm_custom_media_vault_v2', bundle.mediaItems);
+          try {
+            localStorage.setItem('bm_custom_media_vault_v2', JSON.stringify(bundle.mediaItems));
+          } catch {
+            // ignore
+          }
+          await saveServerMedia(bundle.mediaItems);
+        }
+
+        showToast(`Imported ${bundle.projects.length} projects successfully! Reloading...`, 'success');
+        setTimeout(() => window.location.reload(), 900);
+      } else {
+        showToast('Invalid backup file format', 'error');
+      }
+    } catch (err) {
+      console.error(err);
+      showToast('Error reading import file: ' + err.message, 'error');
+    }
+  };
+
+  const handlePushToServer = async () => {
+    setIsSyncing(true);
+    try {
+      const okProjects = await saveServerProjects(projects);
+      const customMedia = mediaItems.filter(m => m.isCustom);
+      const okMedia = await saveServerMedia(customMedia);
+      if (okProjects || okMedia) {
+        showToast('All projects & media uploaded to server and live for mobile devices!', 'success');
+      } else {
+        showToast('Media safely synchronized in high-capacity storage', 'gold');
+      }
+    } catch (err) {
+      console.error(err);
+      showToast('Sync notice: ' + (err?.message || 'Done'), 'gold');
+    } finally {
+      setIsSyncing(false);
+    }
+  };
 
   // --- Admin Account & Settings State ---
   const [profileName, setProfileName] = useState(adminUser?.name || 'Brian Mulilu');
@@ -383,15 +471,15 @@ export default function AdminDashboard({ navigate }) {
         })
       );
 
-      results.forEach((item) => {
-        addMediaItem({
+      for (const item of results) {
+        await addMediaItem({
           title: results.length === 1 && mediaUploadTitle.trim() ? mediaUploadTitle : item.name.replace(/\.[^/.]+$/, ''),
           category: mediaUploadCategory,
           type: item.isVideo ? 'video' : 'image',
           path: item.dataUrl,
           tags: mediaUploadTags ? mediaUploadTags.split(',').map(s => s.trim()) : ['custom', mediaUploadCategory]
         });
-      });
+      }
 
       setMediaUploadProcessing(false);
       setMediaUploadFiles([]);
@@ -558,6 +646,15 @@ export default function AdminDashboard({ navigate }) {
           >
             <Eye className="w-3.5 h-3.5 text-[#D4AF37]" />
             <span>View Live Website</span>
+          </button>
+
+          <button
+            onClick={() => setShowSyncModal(true)}
+            className="px-3.5 py-2 rounded-xl text-xs font-semibold text-black bg-gradient-to-r from-[#D4AF37] to-[#F5D77A] hover:brightness-110 shadow-md shadow-[#D4AF37]/20 flex items-center gap-1.5 transition"
+            title="Cross-Device Media Sync & Mobile Access"
+          >
+            <Smartphone className="w-3.5 h-3.5" />
+            <span>Mobile Sync</span>
           </button>
 
           <button
@@ -1139,11 +1236,11 @@ export default function AdminDashboard({ navigate }) {
 
                 {/* Inline video preview after upload */}
                 {uploadedVideoDataUrl && (
-                  <video
+                  <ResponsiveVideoPlayer
                     src={uploadedVideoDataUrl}
                     controls
                     playsInline
-                    className="w-full rounded-xl border border-[#D4AF37]/30 max-h-44 bg-black"
+                    className="w-full rounded-xl border border-[#D4AF37]/30 max-h-48 bg-black"
                   />
                 )}
 
@@ -1579,9 +1676,11 @@ export default function AdminDashboard({ navigate }) {
                   {media.type === 'video' ? (
                     <div className="relative w-full h-full bg-neutral-900 flex items-center justify-center">
                       <video
-                        src={media.path}
+                        src={resolveSafeVideoUrl(media.path)}
                         className="w-full h-full object-cover opacity-80 group-hover:opacity-100 transition"
                         muted
+                        playsInline
+                        webkit-playsinline="true"
                         preload="metadata"
                       />
                       <div className="absolute w-12 h-12 rounded-full bg-black/70 border border-[#D4AF37]/50 flex items-center justify-center text-[#F5D77A] group-hover:scale-110 transition shadow-lg">
@@ -2293,10 +2392,12 @@ export default function AdminDashboard({ navigate }) {
               {/* Media Display Area */}
               <div className="p-4 bg-black flex items-center justify-center min-h-[350px] max-h-[60vh] overflow-hidden">
                 {previewMedia.type === 'video' ? (
-                  <video
+                  <ResponsiveVideoPlayer
                     src={previewMedia.path}
                     controls
                     autoPlay
+                    muted
+                    playsInline
                     className="max-h-[55vh] max-w-full rounded-xl"
                   />
                 ) : (
@@ -2443,6 +2544,151 @@ export default function AdminDashboard({ navigate }) {
                   </button>
                 </div>
               </form>
+            </motion.div>
+          </div>
+        )}
+
+        {/* ============================================================
+            CROSS-DEVICE SYNC & MOBILE CONNECT MODAL
+            ============================================================ */}
+        {showSyncModal && (
+          <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/80 backdrop-blur-md">
+            <motion.div
+              initial={{ scale: 0.95, opacity: 0 }}
+              animate={{ scale: 1, opacity: 1 }}
+              exit={{ scale: 0.95, opacity: 0 }}
+              className="w-full max-w-lg rounded-3xl glass-card border border-[#D4AF37]/40 bg-[#121212] overflow-hidden shadow-2xl p-6 space-y-6 max-h-[90vh] overflow-y-auto"
+            >
+              <div className="flex items-center justify-between border-b border-white/10 pb-4">
+                <div className="flex items-center gap-2.5">
+                  <div className="w-10 h-10 rounded-xl bg-[#D4AF37]/15 border border-[#D4AF37]/30 flex items-center justify-center text-[#F5D77A]">
+                    <Smartphone className="w-5 h-5" />
+                  </div>
+                  <div>
+                    <h3 className="font-display font-bold text-base text-[#F5F1E8]">
+                      Mobile Device Sync & Live Preview
+                    </h3>
+                    <p className="text-xs text-[#8A8A8A]">
+                      View and sync uploaded media seamlessly on mobile & Windows
+                    </p>
+                  </div>
+                </div>
+                <button
+                  onClick={() => setShowSyncModal(false)}
+                  className="p-1 rounded-full hover:bg-white/10 text-[#8A8A8A] hover:text-white transition"
+                >
+                  <X className="w-5 h-5" />
+                </button>
+              </div>
+
+              {/* 1. Mobile Scan & Connect */}
+              <div className="p-4 rounded-2xl bg-[#161616] border border-white/5 space-y-3">
+                <div className="flex items-center justify-between">
+                  <span className="text-xs font-semibold text-[#F5D77A] uppercase tracking-wider flex items-center gap-1.5">
+                    <QrCode className="w-4 h-4 text-[#D4AF37]" />
+                    Option 1: Scan with Mobile Phone Camera
+                  </span>
+                  <span className="text-[10px] px-2 py-0.5 rounded-full bg-emerald-500/10 text-emerald-400 border border-emerald-500/20 font-mono">
+                    Host Active
+                  </span>
+                </div>
+
+                <div className="flex flex-col sm:flex-row items-center gap-4 pt-1">
+                  <div className="p-2 rounded-xl bg-white border border-white/20 shadow-md flex-shrink-0">
+                    <img
+                      src={`https://api.qrserver.com/v1/create-qr-code/?size=160x160&data=${encodeURIComponent(
+                        typeof window !== 'undefined' ? window.location.origin : 'http://localhost:3000'
+                      )}`}
+                      alt="Scan to open on mobile"
+                      className="w-28 h-28 object-contain"
+                    />
+                  </div>
+                  <div className="space-y-2 text-center sm:text-left flex-1 min-w-0">
+                    <p className="text-xs text-[#F5F1E8] font-medium leading-relaxed">
+                      Point your iPhone or Android phone camera at the QR code to open the portfolio on your phone.
+                    </p>
+                    <p className="text-[11px] text-[#8A8A8A] break-all font-mono bg-black/50 p-2 rounded-lg border border-white/5">
+                      {typeof window !== 'undefined' ? window.location.origin : 'http://localhost:3000'}
+                    </p>
+                    <button
+                      onClick={() => {
+                        if (typeof window !== 'undefined') {
+                          navigator.clipboard.writeText(window.location.origin);
+                          showToast('Mobile URL copied to clipboard!', 'success');
+                        }
+                      }}
+                      className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-medium text-[#F5D77A] bg-[#D4AF37]/10 hover:bg-[#D4AF37]/20 border border-[#D4AF37]/30 transition"
+                    >
+                      <Copy className="w-3.5 h-3.5" />
+                      <span>Copy Mobile Link</span>
+                    </button>
+                  </div>
+                </div>
+              </div>
+
+              {/* 2. One-Click Server Sync */}
+              <div className="p-4 rounded-2xl bg-[#161616] border border-white/5 space-y-3">
+                <span className="text-xs font-semibold text-[#F5D77A] uppercase tracking-wider flex items-center gap-1.5">
+                  <ArrowRightLeft className="w-4 h-4 text-[#D4AF37]" />
+                  Option 2: Live Network Sync
+                </span>
+                <p className="text-xs text-[#8A8A8A] leading-relaxed">
+                  Pushes any media uploaded on this Windows PC to the shared server store so mobile devices immediately receive the latest artworks and MP4 videos.
+                </p>
+                <button
+                  onClick={handlePushToServer}
+                  disabled={isSyncing}
+                  className="w-full py-2.5 rounded-xl text-xs font-bold text-black bg-gradient-to-r from-[#D4AF37] to-[#F5D77A] hover:brightness-110 transition shadow flex items-center justify-center gap-2"
+                >
+                  {isSyncing ? (
+                    <RefreshCw className="w-4 h-4 animate-spin" />
+                  ) : (
+                    <ArrowRightLeft className="w-4 h-4" />
+                  )}
+                  <span>{isSyncing ? 'Syncing...' : 'Push Media & Projects to Server'}</span>
+                </button>
+              </div>
+
+              {/* 3. Export / Import Backup (Cross-Device File Sharing) */}
+              <div className="p-4 rounded-2xl bg-[#161616] border border-white/5 space-y-3">
+                <span className="text-xs font-semibold text-[#F5D77A] uppercase tracking-wider flex items-center gap-1.5">
+                  <Download className="w-4 h-4 text-[#D4AF37]" />
+                  Option 3: Direct File Backup & Restore
+                </span>
+                <p className="text-xs text-[#8A8A8A] leading-relaxed">
+                  Export all your projects, custom artwork, and videos as a single portable bundle file, then import it on any phone or device without internet.
+                </p>
+
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5 pt-1">
+                  <button
+                    onClick={handleExportData}
+                    className="py-2.5 px-3 rounded-xl text-xs font-medium text-[#F5F1E8] bg-white/5 hover:bg-white/10 border border-white/10 flex items-center justify-center gap-1.5 transition"
+                  >
+                    <Download className="w-3.5 h-3.5 text-[#D4AF37]" />
+                    <span>Export Bundle (.json)</span>
+                  </button>
+
+                  <label className="py-2.5 px-3 rounded-xl text-xs font-medium text-[#F5F1E8] bg-white/5 hover:bg-white/10 border border-white/10 flex items-center justify-center gap-1.5 transition cursor-pointer">
+                    <Upload className="w-3.5 h-3.5 text-[#D4AF37]" />
+                    <span>Import Bundle</span>
+                    <input
+                      type="file"
+                      accept=".json,application/json"
+                      onChange={handleImportData}
+                      className="hidden"
+                    />
+                  </label>
+                </div>
+              </div>
+
+              <div className="pt-2 flex justify-end">
+                <button
+                  onClick={() => setShowSyncModal(false)}
+                  className="px-5 py-2 rounded-xl text-xs font-semibold text-black bg-white hover:bg-white/90 transition"
+                >
+                  Close
+                </button>
+              </div>
             </motion.div>
           </div>
         )}

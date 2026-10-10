@@ -1,5 +1,10 @@
 import { INITIAL_PROJECTS } from '../data/projects';
 import { storageDB } from '../utils/storageDB';
+import {
+  fetchServerProjects,
+  saveServerProjects,
+  uploadMediaToServer
+} from '../utils/apiSync';
 
 const STORAGE_KEY = 'bm_graphix_projects_v1';
 const LIKES_KEY = 'bm_graphix_user_likes_v1';
@@ -7,8 +12,8 @@ const LIKES_KEY = 'bm_graphix_user_likes_v1';
 /**
  * Project Service Layer
  * Decouples the UI from the persistence layer.
- * Uses IndexedDB as primary high-capacity storage for high-resolution artworks & MP4 videos,
- * with graceful localStorage sync.
+ * Uses Server API + IndexedDB as primary high-capacity storage for high-resolution artworks & MP4 videos,
+ * syncing seamlessly across Windows desktop and mobile devices.
  */
 
 class ProjectService {
@@ -19,6 +24,18 @@ class ProjectService {
   async initStorage() {
     if (typeof window === 'undefined') return;
     try {
+      // Check server first for cross-device synchronization
+      const serverProjects = await fetchServerProjects();
+      if (Array.isArray(serverProjects) && serverProjects.length > 0) {
+        await storageDB.set(STORAGE_KEY, serverProjects);
+        try {
+          localStorage.setItem(STORAGE_KEY, JSON.stringify(serverProjects));
+        } catch {
+          // ignore
+        }
+        return;
+      }
+
       const dbProjects = await storageDB.get(STORAGE_KEY);
       const local = localStorage.getItem(STORAGE_KEY);
       if (!dbProjects && !local) {
@@ -57,11 +74,25 @@ class ProjectService {
       // Quota reached on localStorage is safely handled because IndexedDB has the data
       console.info('Media safely stored in IndexedDB store');
     }
+
+    // 3. Mirror to server API so mobile devices and Windows desktop stay synchronized!
+    try {
+      await saveServerProjects(projects);
+    } catch {
+      // ignore
+    }
   }
 
   // Get all projects
   async getProjects() {
     try {
+      // Check server first so mobile device gets what was uploaded on Windows!
+      const serverProjects = await fetchServerProjects();
+      if (Array.isArray(serverProjects) && serverProjects.length > 0) {
+        await storageDB.set(STORAGE_KEY, serverProjects);
+        return serverProjects;
+      }
+
       const dbProjects = await storageDB.get(STORAGE_KEY);
       if (Array.isArray(dbProjects) && dbProjects.length > 0) {
         return dbProjects;
@@ -87,7 +118,7 @@ class ProjectService {
     return projects.find((p) => p.id === id || p.slug === id) || null;
   }
 
-  // Add project (supports multiple images and video)
+  // Add project (supports multiple images and video, uploaded cleanly to server)
   async addProject(projectData) {
     const projects = await this.getProjects();
     const newId = `proj-${Date.now()}`;
@@ -95,6 +126,30 @@ class ProjectService {
       .toLowerCase()
       .replace(/[^a-z0-9]+/g, '-')
       .replace(/^-|-$/g, '');
+
+    // Process media: upload to server to get real static URLs for mobile compatibility
+    let finalThumbnail = projectData.thumbnail;
+    if (finalThumbnail && finalThumbnail.startsWith('data:')) {
+      finalThumbnail = await uploadMediaToServer(finalThumbnail, `${slug}-thumb`);
+    }
+
+    let finalImages = [];
+    const sourceImages = Array.isArray(projectData.images) && projectData.images.length > 0
+      ? projectData.images
+      : [finalThumbnail || '/assets/BM_BLCK.png'];
+
+    for (let i = 0; i < sourceImages.length; i++) {
+      let img = sourceImages[i];
+      if (img && img.startsWith('data:')) {
+        img = await uploadMediaToServer(img, `${slug}-img-${i}`);
+      }
+      finalImages.push(img);
+    }
+
+    let finalVideoUrl = projectData.videoUrl || null;
+    if (finalVideoUrl && finalVideoUrl.startsWith('data:')) {
+      finalVideoUrl = await uploadMediaToServer(finalVideoUrl, `${slug}-video.mp4`);
+    }
 
     const newProject = {
       id: newId,
@@ -105,11 +160,9 @@ class ProjectService {
       client: projectData.client || 'Commissioned Project',
       year: projectData.year || new Date().getFullYear().toString(),
       featured: Boolean(projectData.featured),
-      thumbnail: projectData.thumbnail || (projectData.images && projectData.images[0]) || '/assets/BM_BLCK.png',
-      images: Array.isArray(projectData.images) && projectData.images.length > 0 
-        ? projectData.images 
-        : [projectData.thumbnail || '/assets/BM_BLCK.png'],
-      videoUrl: projectData.videoUrl || null,
+      thumbnail: finalThumbnail || finalImages[0] || '/assets/BM_BLCK.png',
+      images: finalImages,
+      videoUrl: finalVideoUrl,
       description: projectData.description || '',
       tools: Array.isArray(projectData.tools) 
         ? projectData.tools 

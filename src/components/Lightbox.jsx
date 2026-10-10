@@ -18,6 +18,7 @@ import {
   Check
 } from 'lucide-react';
 import { useProjects } from '../context/ProjectContext';
+import ResponsiveVideoPlayer from './ResponsiveVideoPlayer';
 
 export default function Lightbox() {
   const {
@@ -214,12 +215,13 @@ export default function Lightbox() {
                     </div>
                   ) : (
                     // Base64 / data URL / local MP4 — native video player
-                    <video
+                    <ResponsiveVideoPlayer
                       key={videoUrl}
                       src={videoUrl}
                       poster={lightboxProject.thumbnail || undefined}
                       controls
                       autoPlay
+                      muted
                       playsInline
                       className="max-h-[75vh] w-auto max-w-full rounded-xl shadow-2xl border border-white/10 bg-black"
                     />
@@ -292,9 +294,9 @@ export default function Lightbox() {
               </>
             )}
 
-            {/* Bottom thumbnail strip: video tab + image thumbnails */}
+            {/* Bottom thumbnail strip: video tab + image thumbnails (accessible on both mobile and desktop) */}
             {(isVideo || images.length > 1) && (
-              <div className="absolute bottom-4 left-4 z-20 hidden md:flex items-center gap-2 max-w-sm overflow-x-auto p-1 bg-black/60 backdrop-blur-md rounded-xl border border-white/10">
+              <div className="absolute bottom-3 sm:bottom-4 left-3 sm:left-4 z-20 flex items-center gap-1.5 sm:gap-2 max-w-[85vw] sm:max-w-sm overflow-x-auto p-1 bg-black/75 backdrop-blur-md rounded-xl border border-white/15 scrollbar-none shadow-lg">
                 {/* Video tab (index 0 when video exists) */}
                 {isVideo && (
                   <button
