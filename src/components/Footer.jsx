@@ -1,5 +1,4 @@
-import React from 'react';
-import { ArrowUp, Heart, Lock, Mail, Phone, MessageCircle } from 'lucide-react';
+import { ArrowUp, Heart, Lock, Mail, Phone, MessageCircle, Sparkles } from 'lucide-react';
 
 export default function Footer({ navigate }) {
   const [secretClicks, setSecretClicks] = React.useState(0);
@@ -153,8 +152,8 @@ export default function Footer({ navigate }) {
         </div>
 
         {/* Bottom bar */}
-        <div className="pt-8 border-t border-white/5 flex flex-col sm:flex-row items-center justify-between gap-4 text-xs">
-          <p className="flex items-center gap-1.5 text-[#8A8A8A]">
+        <div className="pt-8 border-t border-white/5 flex flex-col md:flex-row items-center justify-between gap-4 text-xs">
+          <p className="flex items-center gap-1.5 text-[#8A8A8A] flex-wrap justify-center md:justify-start">
             <span>&copy; {new Date().getFullYear()} BM Graphix. All rights reserved.</span>
             <span
               onClick={handleSecretDotClick}
@@ -168,7 +167,16 @@ export default function Footer({ navigate }) {
             <span>in Nairobi</span>
           </p>
 
-          <div className="flex items-center gap-4">
+          <div className="flex items-center gap-4 flex-wrap justify-center">
+            {/* Powered by Computer Wizard */}
+            <div className="inline-flex items-center gap-1.5 px-3.5 py-1.5 rounded-full bg-[#121212] border border-[#D4AF37]/30 hover:border-[#D4AF37] text-xs transition group">
+              <Sparkles className="w-3.5 h-3.5 text-[#D4AF37] group-hover:rotate-12 transition-transform duration-300" />
+              <span className="text-[#8A8A8A]">Powered by</span>
+              <span className="font-semibold text-[#F5D77A] group-hover:text-white transition-colors tracking-wide">
+                Computer Wizard
+              </span>
+            </div>
+
             <button
               onClick={scrollToTop}
               className="w-8 h-8 rounded-full bg-white/5 hover:bg-[#D4AF37]/20 hover:text-[#F5D77A] flex items-center justify-center transition border border-white/10"
