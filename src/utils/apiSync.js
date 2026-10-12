@@ -47,7 +47,8 @@ export async function uploadMediaToServer(dataUrl, filename = 'media-file') {
 export async function fetchServerProjects() {
   try {
     const res = await fetch('/api/projects');
-    if (res.ok) {
+    const contentType = res.headers.get('content-type') || '';
+    if (res.ok && contentType.includes('application/json')) {
       const data = await res.json();
       if (Array.isArray(data) && data.length > 0) {
         return data;
@@ -75,7 +76,8 @@ export async function saveServerProjects(projects) {
 export async function fetchServerMedia() {
   try {
     const res = await fetch('/api/media');
-    if (res.ok) {
+    const contentType = res.headers.get('content-type') || '';
+    if (res.ok && contentType.includes('application/json')) {
       const data = await res.json();
       if (Array.isArray(data) && data.length > 0) {
         return data;

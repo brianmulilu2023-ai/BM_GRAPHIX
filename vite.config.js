@@ -151,6 +151,7 @@ function portfolioBackendPlugin() {
 }
 
 export default defineConfig({
+  base: '/',
   plugins: [react(), portfolioBackendPlugin()],
   server: {
     host: true, // Listen on all network addresses (0.0.0.0) so mobile devices on LAN can connect!
@@ -158,3 +159,4 @@ export default defineConfig({
     open: false
   }
 });
+

@@ -38,11 +38,15 @@ class AdminService {
 
   init() {
     if (typeof window === 'undefined') return;
-    if (!localStorage.getItem(ADMIN_ACCOUNT_KEY)) {
-      localStorage.setItem(ADMIN_ACCOUNT_KEY, JSON.stringify(DEFAULT_ADMIN));
-    }
-    if (!localStorage.getItem(SITE_SETTINGS_KEY)) {
-      localStorage.setItem(SITE_SETTINGS_KEY, JSON.stringify(DEFAULT_SITE_SETTINGS));
+    try {
+      if (!localStorage.getItem(ADMIN_ACCOUNT_KEY)) {
+        localStorage.setItem(ADMIN_ACCOUNT_KEY, JSON.stringify(DEFAULT_ADMIN));
+      }
+      if (!localStorage.getItem(SITE_SETTINGS_KEY)) {
+        localStorage.setItem(SITE_SETTINGS_KEY, JSON.stringify(DEFAULT_SITE_SETTINGS));
+      }
+    } catch {
+      // localStorage restricted or disabled
     }
   }
 

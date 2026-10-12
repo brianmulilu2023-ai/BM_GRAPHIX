@@ -7,10 +7,14 @@ export default function Preloader() {
 
   useEffect(() => {
     // Only show once per session to avoid annoying user on page changes
-    const hasLoaded = sessionStorage.getItem('bm_has_preloaded');
-    if (hasLoaded) {
-      setLoading(false);
-      return;
+    try {
+      const hasLoaded = sessionStorage.getItem('bm_has_preloaded');
+      if (hasLoaded) {
+        setLoading(false);
+        return;
+      }
+    } catch {
+      // sessionStorage restricted / unavailable
     }
 
     const interval = setInterval(() => {
@@ -19,7 +23,11 @@ export default function Preloader() {
           clearInterval(interval);
           setTimeout(() => {
             setLoading(false);
-            sessionStorage.setItem('bm_has_preloaded', 'true');
+            try {
+              sessionStorage.setItem('bm_has_preloaded', 'true');
+            } catch {
+              // ignore
+            }
           }, 400);
           return 100;
         }

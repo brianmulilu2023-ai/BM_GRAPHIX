@@ -54,8 +54,12 @@ class InquiryService {
 
   init() {
     if (typeof window === 'undefined') return;
-    if (!localStorage.getItem(INQUIRIES_KEY)) {
-      localStorage.setItem(INQUIRIES_KEY, JSON.stringify(INITIAL_INQUIRIES));
+    try {
+      if (!localStorage.getItem(INQUIRIES_KEY)) {
+        localStorage.setItem(INQUIRIES_KEY, JSON.stringify(INITIAL_INQUIRIES));
+      }
+    } catch {
+      // localStorage restricted or disabled
     }
   }
 
