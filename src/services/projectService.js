@@ -2,10 +2,10 @@ import { INITIAL_PROJECTS } from '../data/projects';
 import { storageDB } from '../utils/storageDB';
 import { mediaService } from './mediaService';
 import {
-  fetchServerProjects,
-  saveServerProjects,
-  uploadMediaToServer
-} from '../utils/apiSync';
+  fetchCloudProjects,
+  saveCloudProjects,
+  uploadFileToCloud
+} from '../utils/cloudSync';
 
 const STORAGE_KEY = 'bm_graphix_projects_v1';
 const LIKES_KEY = 'bm_graphix_user_likes_v1';
@@ -25,15 +25,11 @@ class ProjectService {
   async initStorage() {
     if (typeof window === 'undefined') return;
     try {
-      // Check server first for cross-device synchronization
-      const serverProjects = await fetchServerProjects();
-      if (Array.isArray(serverProjects) && serverProjects.length > 0) {
-        await storageDB.set(STORAGE_KEY, serverProjects);
-        try {
-          localStorage.setItem(STORAGE_KEY, JSON.stringify(serverProjects));
-        } catch {
-          // ignore
-        }
+      // Try Supabase cloud first for cross-device synchronization
+      const cloudProjects = await fetchCloudProjects();
+      if (Array.isArray(cloudProjects) && cloudProjects.length > 0) {
+        await storageDB.set(STORAGE_KEY, cloudProjects);
+        try { localStorage.setItem(STORAGE_KEY, JSON.stringify(cloudProjects)); } catch { /* ignore */ }
         return;
       }
 
@@ -41,18 +37,12 @@ class ProjectService {
       const local = localStorage.getItem(STORAGE_KEY);
       if (!dbProjects && !local) {
         await storageDB.set(STORAGE_KEY, INITIAL_PROJECTS);
-        try {
-          localStorage.setItem(STORAGE_KEY, JSON.stringify(INITIAL_PROJECTS));
-        } catch {
-          // ignore
-        }
+        try { localStorage.setItem(STORAGE_KEY, JSON.stringify(INITIAL_PROJECTS)); } catch { /* ignore */ }
       } else if (local && !dbProjects) {
         try {
           const parsed = JSON.parse(local);
           await storageDB.set(STORAGE_KEY, parsed);
-        } catch {
-          // ignore
-        }
+        } catch { /* ignore */ }
       }
 
       const likes = localStorage.getItem(LIKES_KEY);
@@ -65,33 +55,28 @@ class ProjectService {
   }
 
   async saveProjects(projects) {
-    // 1. Save to high-capacity IndexedDB (stores 50MB+ MP4 videos and images smoothly)
+    // 1. Save to high-capacity IndexedDB
     await storageDB.set(STORAGE_KEY, projects);
 
     // 2. Best-effort mirror to localStorage
     try {
       localStorage.setItem(STORAGE_KEY, JSON.stringify(projects));
     } catch (e) {
-      // Quota reached on localStorage is safely handled because IndexedDB has the data
       console.info('Media safely stored in IndexedDB store');
     }
 
-    // 3. Mirror to server API so mobile devices and Windows desktop stay synchronized!
-    try {
-      await saveServerProjects(projects);
-    } catch {
-      // ignore
-    }
+    // 3. Sync to Supabase so all browsers/devices stay synchronized
+    saveCloudProjects(projects).catch(e => console.warn('[ProjectService] Cloud sync failed:', e));
   }
 
   // Get all projects
   async getProjects() {
     try {
-      // Check server first so mobile device gets what was uploaded on Windows!
-      const serverProjects = await fetchServerProjects();
-      if (Array.isArray(serverProjects) && serverProjects.length > 0) {
-        await storageDB.set(STORAGE_KEY, serverProjects);
-        return serverProjects;
+      // Check Supabase first so all browsers get the same data
+      const cloudProjects = await fetchCloudProjects();
+      if (Array.isArray(cloudProjects) && cloudProjects.length > 0) {
+        await storageDB.set(STORAGE_KEY, cloudProjects);
+        return cloudProjects;
       }
 
       const dbProjects = await storageDB.get(STORAGE_KEY);
@@ -128,10 +113,10 @@ class ProjectService {
       .replace(/[^a-z0-9]+/g, '-')
       .replace(/^-|-$/g, '');
 
-    // Process media: upload to server to get real static URLs for mobile compatibility
+    // Process media: upload to Supabase Storage to get real permanent URLs for cross-browser visibility
     let finalThumbnail = projectData.thumbnail;
     if (finalThumbnail && finalThumbnail.startsWith('data:')) {
-      finalThumbnail = await uploadMediaToServer(finalThumbnail, `${slug}-thumb`);
+      finalThumbnail = await uploadFileToCloud(finalThumbnail, `${slug}-thumb`);
     }
 
     let finalImages = [];
@@ -142,14 +127,14 @@ class ProjectService {
     for (let i = 0; i < sourceImages.length; i++) {
       let img = sourceImages[i];
       if (img && img.startsWith('data:')) {
-        img = await uploadMediaToServer(img, `${slug}-img-${i}`);
+        img = await uploadFileToCloud(img, `${slug}-img-${i}`);
       }
       finalImages.push(img);
     }
 
     let finalVideoUrl = projectData.videoUrl || null;
     if (finalVideoUrl && finalVideoUrl.startsWith('data:')) {
-      finalVideoUrl = await uploadMediaToServer(finalVideoUrl, `${slug}-video.mp4`);
+      finalVideoUrl = await uploadFileToCloud(finalVideoUrl, `${slug}-video.mp4`);
     }
 
     const newProject = {

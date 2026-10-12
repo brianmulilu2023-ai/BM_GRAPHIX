@@ -1,16 +1,22 @@
 /**
  * Media Vault Service
  * Manages all media assets across the website (Images, Videos, Logos, Artwork, Documents)
- * and custom uploaded assets stored in local persistence.
+ * and custom uploaded assets stored in local persistence + Supabase cloud sync.
+ *
+ * Cross-browser/cross-device sync:
+ *   1. Supabase Storage  → hosts actual media files (public permanent URLs)
+ *   2. Supabase DB table → stores media list so all browsers read the same data
+ *   3. IndexedDB         → local high-capacity cache
+ *   4. localStorage      → secondary fallback
  */
 
 import { storageDB } from '../utils/storageDB';
 import customMediaData from '../data/custom_media.json';
 import {
-  fetchServerMedia,
-  saveServerMedia,
-  uploadMediaToServer
-} from '../utils/apiSync';
+  uploadFileToCloud,
+  fetchCloudMedia,
+  saveCloudMedia
+} from '../utils/cloudSync';
 
 const CUSTOM_MEDIA_KEY = 'bm_custom_media_vault_v2';
 const INITIAL_BUNDLED_MEDIA = Array.isArray(customMediaData) ? customMediaData : [];
@@ -452,31 +458,35 @@ class MediaService {
   async init() {
     if (typeof window === 'undefined') return;
     try {
-      // 1. Try server first so mobile device gets media uploaded on Windows
-      const serverMedia = await fetchServerMedia();
-      if (Array.isArray(serverMedia) && serverMedia.length > 0) {
-        this.customCache = serverMedia;
+      // 1. Supabase cloud — primary cross-browser source of truth
+      const cloudMedia = await fetchCloudMedia();
+      if (Array.isArray(cloudMedia) && cloudMedia.length > 0) {
+        this.customCache = cloudMedia;
         this.isLoaded = true;
-        await storageDB.set(CUSTOM_MEDIA_KEY, serverMedia);
+        await storageDB.set(CUSTOM_MEDIA_KEY, cloudMedia);
+        try { localStorage.setItem(CUSTOM_MEDIA_KEY, JSON.stringify(cloudMedia)); } catch { /* ignore */ }
         return;
       }
 
-      // 2. Try IndexedDB
+      // 2. IndexedDB local cache
       const dbMedia = await storageDB.get(CUSTOM_MEDIA_KEY);
       if (Array.isArray(dbMedia) && dbMedia.length > 0) {
         this.customCache = dbMedia;
         this.isLoaded = true;
+        // Push local data up to cloud for future cross-browser access
+        saveCloudMedia(dbMedia).catch(() => {});
         return;
       }
 
-      // 3. Fallback to localStorage
+      // 3. localStorage fallback
       const local = localStorage.getItem(CUSTOM_MEDIA_KEY);
       if (local) {
         const parsed = JSON.parse(local);
-        if (Array.isArray(parsed)) {
+        if (Array.isArray(parsed) && parsed.length > 0) {
           this.customCache = parsed;
           this.isLoaded = true;
           await storageDB.set(CUSTOM_MEDIA_KEY, parsed);
+          saveCloudMedia(parsed).catch(() => {});
           return;
         }
       }
@@ -517,19 +527,22 @@ class MediaService {
     const custom = this.getCustomMedia();
     let finalPath = item.path;
 
-    // Upload base64 media to server to avoid mobile quota issues & safari video refusal
+    // Upload base64 to Supabase Storage → get permanent public URL visible on all browsers
     if (finalPath && finalPath.startsWith('data:')) {
       const safeName = (item.title || 'media-item').toLowerCase().replace(/[^a-z0-9]+/g, '-');
-      finalPath = await uploadMediaToServer(finalPath, safeName);
+      finalPath = await uploadFileToCloud(finalPath, safeName);
     }
+
+    const isVideo = finalPath?.includes('.mp4') || finalPath?.includes('.webm') || finalPath?.includes('video') || item.type === 'video';
+    const isPng = finalPath?.startsWith('data:image/png') || finalPath?.endsWith('.png');
 
     const newMedia = {
       id: `custom-media-${Date.now()}-${Math.floor(Math.random() * 1000)}`,
       title: item.title || 'Uploaded Media Asset',
       category: item.category || 'posters',
       categoryLabel: item.categoryLabel || this.getCategoryLabel(item.category),
-      type: item.type || (finalPath.includes('.mp4') || finalPath.includes('video') ? 'video' : 'image'),
-      format: item.format || (finalPath.startsWith('data:image/png') || finalPath.endsWith('.png') ? 'PNG' : finalPath.includes('.mp4') || finalPath.startsWith('data:video') ? 'MP4' : 'JPEG'),
+      type: item.type || (isVideo ? 'video' : 'image'),
+      format: item.format || (isPng ? 'PNG' : isVideo ? 'MP4' : 'JPEG'),
       path: finalPath,
       dimensions: item.dimensions || 'Uploaded Custom',
       description: item.description || 'Uploaded via BM Graphix Media Vault',
@@ -540,19 +553,13 @@ class MediaService {
 
     const updated = [newMedia, ...custom];
     this.customCache = updated;
+
+    // Save locally
     await storageDB.set(CUSTOM_MEDIA_KEY, updated);
+    try { localStorage.setItem(CUSTOM_MEDIA_KEY, JSON.stringify(updated)); } catch { /* ignore */ }
 
-    try {
-      localStorage.setItem(CUSTOM_MEDIA_KEY, JSON.stringify(updated));
-    } catch {
-      // Safely stored in IndexedDB
-    }
-
-    try {
-      await saveServerMedia(updated);
-    } catch {
-      // ignore
-    }
+    // Save to Supabase so other browsers can see it immediately
+    saveCloudMedia(updated).catch(e => console.warn('[MediaService] Cloud save failed:', e));
 
     return newMedia;
   }
@@ -561,19 +568,13 @@ class MediaService {
     const custom = this.getCustomMedia();
     const filtered = custom.filter(m => m.id !== id);
     this.customCache = filtered;
+
+    // Save locally
     await storageDB.set(CUSTOM_MEDIA_KEY, filtered);
+    try { localStorage.setItem(CUSTOM_MEDIA_KEY, JSON.stringify(filtered)); } catch { /* ignore */ }
 
-    try {
-      localStorage.setItem(CUSTOM_MEDIA_KEY, JSON.stringify(filtered));
-    } catch {
-      // ignore
-    }
-
-    try {
-      await saveServerMedia(filtered);
-    } catch {
-      // ignore
-    }
+    // Sync deletion to Supabase so other browsers reflect it
+    saveCloudMedia(filtered).catch(e => console.warn('[MediaService] Cloud delete sync failed:', e));
 
     return true;
   }
