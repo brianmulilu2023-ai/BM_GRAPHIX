@@ -1,7 +1,8 @@
+import React, { useState } from 'react';
 import { ArrowUp, Heart, Lock, Mail, Phone, MessageCircle, Sparkles } from 'lucide-react';
 
 export default function Footer({ navigate }) {
-  const [secretClicks, setSecretClicks] = React.useState(0);
+  const [secretClicks, setSecretClicks] = useState(0);
 
   const scrollToTop = () => {
     window.scrollTo({ top: 0, behavior: 'smooth' });
