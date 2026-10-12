@@ -5,6 +5,7 @@
  */
 
 import { storageDB } from '../utils/storageDB';
+import customMediaData from '../data/custom_media.json';
 import {
   fetchServerMedia,
   saveServerMedia,
@@ -12,6 +13,7 @@ import {
 } from '../utils/apiSync';
 
 const CUSTOM_MEDIA_KEY = 'bm_custom_media_vault_v2';
+const INITIAL_BUNDLED_MEDIA = Array.isArray(customMediaData) ? customMediaData : [];
 
 // Master catalog of all existing website media assets
 export const SYSTEM_MEDIA_ASSETS = [
@@ -489,10 +491,14 @@ class MediaService {
     }
     try {
       const data = localStorage.getItem(CUSTOM_MEDIA_KEY);
-      return data ? JSON.parse(data) : [];
+      if (data) {
+        const parsed = JSON.parse(data);
+        if (Array.isArray(parsed) && parsed.length > 0) return parsed;
+      }
     } catch {
-      return [];
+      // ignore
     }
+    return INITIAL_BUNDLED_MEDIA;
   }
 
   getAllMedia() {

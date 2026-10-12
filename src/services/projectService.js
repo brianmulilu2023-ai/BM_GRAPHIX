@@ -1,5 +1,6 @@
 import { INITIAL_PROJECTS } from '../data/projects';
 import { storageDB } from '../utils/storageDB';
+import { mediaService } from './mediaService';
 import {
   fetchServerProjects,
   saveServerProjects,
@@ -175,6 +176,29 @@ class ProjectService {
 
     const updated = [newProject, ...projects];
     await this.saveProjects(updated);
+
+    // Auto-register uploaded media into the Media Vault so it appears on all platforms
+    try {
+      if (finalThumbnail && !finalThumbnail.startsWith('/assets/')) {
+        mediaService.addMediaItem({
+          title: `${projectData.title} (Artwork)`,
+          category: projectData.category === 'motion' || projectData.category === 'videos' ? 'videos' : 'posters',
+          path: finalThumbnail,
+          type: 'image'
+        });
+      }
+      if (finalVideoUrl && !finalVideoUrl.startsWith('/videos/')) {
+        mediaService.addMediaItem({
+          title: `${projectData.title} (Video)`,
+          category: 'videos',
+          path: finalVideoUrl,
+          type: 'video'
+        });
+      }
+    } catch {
+      // ignore
+    }
+
     return newProject;
   }
 

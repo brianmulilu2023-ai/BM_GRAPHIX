@@ -3,8 +3,9 @@
  * Single Source of Truth for projects.
  * Easily swappable for a REST or GraphQL backend.
  */
+import customProjectsData from './custom_projects.json';
 
-export const INITIAL_PROJECTS = [
+const BASE_PROJECTS = [
   {
     id: "proj-1",
     slug: "zenia-sound-fest-motion-billboard",
@@ -252,6 +253,11 @@ export const INITIAL_PROJECTS = [
     likes: 0,
     comments: []
   }
+];
+
+export const INITIAL_PROJECTS = [
+  ...(Array.isArray(customProjectsData) ? customProjectsData : []),
+  ...BASE_PROJECTS
 ];
 
 export const CATEGORIES = [
