@@ -1,12 +1,10 @@
 import React, { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Menu, X, ArrowUpRight, ShieldCheck, Sparkles } from 'lucide-react';
-import { useProjects } from '../context/ProjectContext';
+import { Menu, X, ArrowUpRight, Sparkles } from 'lucide-react';
 
 export default function Navbar({ currentPath, navigate }) {
   const [isScrolled, setIsScrolled] = useState(false);
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
-  const { isAdminLoggedIn } = useProjects();
 
   useEffect(() => {
     const handleScroll = () => {
@@ -125,19 +123,8 @@ export default function Navbar({ currentPath, navigate }) {
               })}
             </nav>
 
-            {/* Right Action: Admin link if logged in + Hire Me button */}
+            {/* Right Action: Hire Me button */}
             <div className="hidden md:flex items-center gap-4">
-              {isAdminLoggedIn && (
-                <button
-                  onClick={() => handleNavClick('/admin/dashboard')}
-                  className="flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-medium text-[#D4AF37] border border-[#D4AF37]/40 bg-[#D4AF37]/10 hover:bg-[#D4AF37]/20 transition"
-                  title="Admin Dashboard"
-                >
-                  <ShieldCheck className="w-3.5 h-3.5 text-[#F5D77A]" />
-                  <span>Admin</span>
-                </button>
-              )}
-
               <button
                 onClick={() => handleNavClick('/contact')}
                 className="relative group overflow-hidden px-5 py-2.5 rounded-full text-xs font-semibold uppercase tracking-wider text-black bg-gradient-to-r from-[#D4AF37] via-[#F5D77A] to-[#B8860B] shadow-[0_0_20px_rgba(212,175,55,0.3)] hover:shadow-[0_0_30px_rgba(212,175,55,0.5)] transition-all duration-300 active:scale-95"
@@ -152,15 +139,6 @@ export default function Navbar({ currentPath, navigate }) {
 
             {/* Mobile Menu Button */}
             <div className="flex md:hidden items-center gap-3">
-              {isAdminLoggedIn && (
-                <button
-                  onClick={() => handleNavClick('/admin/dashboard')}
-                  className="p-2 text-[#D4AF37] rounded-lg"
-                  aria-label="Admin Dashboard"
-                >
-                  <ShieldCheck className="w-5 h-5" />
-                </button>
-              )}
               <button
                 onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
                 className="p-2 text-[#F5F1E8] hover:text-[#F5D77A] focus:outline-none"
@@ -206,22 +184,6 @@ export default function Navbar({ currentPath, navigate }) {
                 >
                   Hire Me Now
                 </button>
-
-                {isAdminLoggedIn ? (
-                  <button
-                    onClick={() => handleNavClick('/admin/dashboard')}
-                    className="w-full py-2.5 rounded-xl text-xs font-medium text-[#D4AF37] border border-[#D4AF37]/30 text-center"
-                  >
-                    Admin Dashboard
-                  </button>
-                ) : (
-                  <button
-                    onClick={() => handleNavClick('/admin/login')}
-                    className="w-full py-2 text-[11px] text-[#8A8A8A] hover:text-[#D4AF37] text-center"
-                  >
-                    Admin Portal
-                  </button>
-                )}
               </div>
             </div>
           </motion.div>
