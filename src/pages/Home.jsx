@@ -1,4 +1,5 @@
-import React, { useEffect, useRef } from 'react';
+import React, { useEffect, useRef, useState, useMemo } from 'react';
+import { motion, AnimatePresence } from 'framer-motion';
 import {
   Layers,
   Palette,
@@ -6,7 +7,12 @@ import {
   Tv,
   CheckCircle,
   ArrowRight,
-  ArrowUpRight
+  ArrowUpRight,
+  RotateCw,
+  ChevronLeft,
+  ChevronRight,
+  Sparkles,
+  SlidersHorizontal
 } from 'lucide-react';
 import { useProjects } from '../context/ProjectContext';
 import ProjectCard from '../components/ProjectCard';
@@ -41,8 +47,65 @@ function useReveal() {
 
 export default function Home({ navigate }) {
   const { projects } = useProjects();
-  const featuredProjects = projects.filter((p) => p.featured).slice(0, 6);
   const pageRef = useReveal();
+
+  // ─── MASTERPIECE ALTERNATING & CATEGORY FILTER STATE ────────────────────────
+  const [activeCategory, setActiveCategory] = useState('all');
+  const [pageIndex, setPageIndex] = useState(0);
+  const [isRotating, setIsRotating] = useState(false);
+  const pageSize = 8; // Forms a clean 4x2 grid on desktop, 2x4 on mobile
+
+  const categories = useMemo(() => [
+    { id: 'all', label: 'All Masterpieces', count: projects.length },
+    {
+      id: 'posters',
+      label: 'Posters & Artwork',
+      count: projects.filter((p) => p.category === 'posters').length
+    },
+    {
+      id: 'motion',
+      label: 'Motion & Promo',
+      count: projects.filter((p) => p.category === 'motion' || p.category === 'videos').length
+    },
+    {
+      id: 'branding',
+      label: 'Logos & Identity',
+      count: projects.filter((p) => p.category === 'branding').length
+    }
+  ], [projects]);
+
+  const availableProjects = useMemo(() => {
+    if (activeCategory === 'all') return projects;
+    if (activeCategory === 'motion') {
+      return projects.filter((p) => p.category === 'motion' || p.category === 'videos');
+    }
+    return projects.filter((p) => p.category === activeCategory);
+  }, [projects, activeCategory]);
+
+  const totalPages = Math.max(1, Math.ceil(availableProjects.length / pageSize));
+  const currentPage = Math.min(pageIndex, totalPages - 1);
+
+  const currentMasterpieces = useMemo(() => {
+    const start = currentPage * pageSize;
+    return availableProjects.slice(start, start + pageSize);
+  }, [availableProjects, currentPage, pageSize]);
+
+  const handleNextSet = () => {
+    setIsRotating(true);
+    setPageIndex((prev) => (prev + 1) % totalPages);
+    setTimeout(() => setIsRotating(false), 400);
+  };
+
+  const handlePrevSet = () => {
+    setIsRotating(true);
+    setPageIndex((prev) => (prev - 1 + totalPages) % totalPages);
+    setTimeout(() => setIsRotating(false), 400);
+  };
+
+  const handleCategoryChange = (catId) => {
+    setActiveCategory(catId);
+    setPageIndex(0);
+  };
 
   const services = [
     {
@@ -117,41 +180,142 @@ export default function Home({ navigate }) {
         <MarqueeStrip items={marqueeItems} speed={28} />
       </div>
 
-      {/* 2. FEATURED WORK SECTION */}
-      <section className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 mt-28">
-        <div className="reveal flex flex-col md:flex-row md:items-end justify-between mb-12">
+      {/* 2. FEATURED WORK SECTION WITH DYNAMIC ALTERNATING SHOWCASE */}
+      <section className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 mt-24 sm:mt-28">
+        {/* Header + Link to Work Section */}
+        <div className="reveal flex flex-col md:flex-row md:items-end justify-between mb-8 gap-4">
           <div>
-            <span className="section-tag">
-              Selected Portfolio
-            </span>
+            <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-[#161616] border border-[#D4AF37]/30 text-[10px] sm:text-xs font-mono uppercase tracking-[0.25em] text-[#D4AF37] mb-3">
+              <Sparkles className="w-3.5 h-3.5 text-[#D4AF37]" />
+              <span>Curated Works</span>
+            </div>
             <h2 className="font-display font-extrabold text-3xl sm:text-4xl md:text-5xl text-[#F5F1E8]">
               Featured <span className="gold-gradient-text">Masterpieces</span>
             </h2>
+            <p className="text-xs sm:text-sm text-[#8A8A8A] mt-2 max-w-xl">
+              Hand-crafted visual campaigns, kinetic broadcast animations, and brand systems. Click any masterpiece to view full high-res details, tools, and client history.
+            </p>
           </div>
-          <button
-            onClick={() => navigate('/work')}
-            className="mt-4 md:mt-0 flex items-center gap-2 text-xs font-semibold uppercase tracking-widest text-[#F5D77A] hover:text-[#D4AF37] transition group"
-          >
-            <span>Explore All Projects ({projects.length})</span>
-            <ArrowRight className="w-4 h-4 transition-transform group-hover:translate-x-1" />
-          </button>
+
+          <div className="flex items-center gap-3">
+            <button
+              onClick={() => navigate('/work')}
+              className="flex items-center gap-2 text-xs font-semibold uppercase tracking-widest text-[#F5D77A] hover:text-[#D4AF37] transition group px-4 py-2.5 rounded-full bg-white/5 border border-white/10 hover:border-[#D4AF37]/40"
+            >
+              <span>Explore All Projects ({projects.length})</span>
+              <ArrowRight className="w-4 h-4 transition-transform group-hover:translate-x-1" />
+            </button>
+          </div>
         </div>
 
-        <div className="poster-grid reveal reveal-delay-2">
-          {featuredProjects.map((project, idx) => (
-            <div key={project.id} className="h-full">
-              <ProjectCard project={project} priority={idx < 2} />
+        {/* Interactive Controls: Category Tabs + Alternate / Shuffle Showcase */}
+        <div className="reveal reveal-delay-1 flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-3 mb-8 pb-4 border-b border-white/5">
+          {/* Category Tabs */}
+          <div className="flex items-center gap-1.5 sm:gap-2 overflow-x-auto pb-1 sm:pb-0 scrollbar-none">
+            {categories.map((cat) => {
+              const isActive = activeCategory === cat.id;
+              return (
+                <button
+                  key={cat.id}
+                  onClick={() => handleCategoryChange(cat.id)}
+                  className={`relative px-3.5 sm:px-4 py-2 rounded-full text-xs font-medium whitespace-nowrap transition-all duration-300 ${
+                    isActive
+                      ? 'text-black font-semibold shadow-md shadow-[#D4AF37]/20'
+                      : 'text-[#8A8A8A] hover:text-[#F5F1E8] bg-[#141414] border border-white/5 hover:border-white/15'
+                  }`}
+                >
+                  {isActive && (
+                    <motion.div
+                      layoutId="activeMasterpieceTab"
+                      className="absolute inset-0 bg-gradient-to-r from-[#D4AF37] via-[#F5D77A] to-[#B8860B] rounded-full"
+                      transition={{ type: 'spring', stiffness: 400, damping: 30 }}
+                    />
+                  )}
+                  <span className="relative z-10 flex items-center gap-1.5">
+                    <span>{cat.label}</span>
+                    <span className={`text-[10px] px-1.5 py-0.2 rounded-full ${isActive ? 'bg-black/20 text-black' : 'bg-white/10 text-[#8A8A8A]'}`}>
+                      {cat.count}
+                    </span>
+                  </span>
+                </button>
+              );
+            })}
+          </div>
+
+          {/* Alternate / Rotate Showcase Controls */}
+          {totalPages > 1 && (
+            <div className="flex items-center justify-between sm:justify-end gap-2.5 pt-1 sm:pt-0">
+              <span className="text-[11px] text-[#8A8A8A] font-mono">
+                Set <span className="text-[#F5D77A] font-semibold">{currentPage + 1}</span> of {totalPages}
+                <span className="hidden md:inline text-white/30 ml-1">({availableProjects.length} total)</span>
+              </span>
+
+              {/* Alternate / Shuffle Button */}
+              <button
+                onClick={handleNextSet}
+                className="flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-semibold text-[#F5D77A] bg-[#161616] border border-[#D4AF37]/35 hover:border-[#D4AF37] hover:bg-[#D4AF37]/10 transition active:scale-95 shadow-sm"
+                title="Alternate showcase with other projects from work section"
+              >
+                <RotateCw className={`w-3.5 h-3.5 transition-transform duration-500 ${isRotating ? 'rotate-180 text-[#D4AF37]' : ''}`} />
+                <span>Alternate Works</span>
+              </button>
+
+              {/* Prev / Next Arrows */}
+              <div className="flex items-center gap-1">
+                <button
+                  onClick={handlePrevSet}
+                  aria-label="Previous set of masterpieces"
+                  className="w-7 h-7 rounded-full bg-[#141414] border border-white/10 hover:border-[#D4AF37] text-white flex items-center justify-center transition active:scale-90"
+                >
+                  <ChevronLeft className="w-4 h-4" />
+                </button>
+                <button
+                  onClick={handleNextSet}
+                  aria-label="Next set of masterpieces"
+                  className="w-7 h-7 rounded-full bg-[#141414] border border-white/10 hover:border-[#D4AF37] text-white flex items-center justify-center transition active:scale-90"
+                >
+                  <ChevronRight className="w-4 h-4" />
+                </button>
+              </div>
             </div>
-          ))}
+          )}
         </div>
 
-        <div className="text-center mt-12 reveal reveal-delay-3">
+        {/* Masterpieces Grid with Smooth Motion Layout */}
+        <AnimatePresence mode="wait">
+          <motion.div
+            key={`${activeCategory}-${currentPage}`}
+            initial={{ opacity: 0, y: 15 }}
+            animate={{ opacity: 1, y: 0 }}
+            exit={{ opacity: 0, y: -15 }}
+            transition={{ duration: 0.35, ease: 'easeOut' }}
+            className="poster-grid"
+          >
+            {currentMasterpieces.map((project, idx) => (
+              <div key={project.id} className="h-full">
+                <ProjectCard project={project} priority={idx < 4} />
+              </div>
+            ))}
+          </motion.div>
+        </AnimatePresence>
+
+        {/* Bottom CTAs */}
+        <div className="flex flex-col sm:flex-row items-center justify-center gap-4 mt-12 reveal reveal-delay-3">
           <button
             onClick={() => navigate('/work')}
-            className="px-8 py-3.5 rounded-full text-xs font-bold uppercase tracking-wider text-black bg-gradient-to-r from-[#D4AF37] to-[#F5D77A] shadow-lg shadow-[#D4AF37]/20 hover:scale-105 transition"
+            className="w-full sm:w-auto px-8 py-3.5 rounded-full text-xs font-bold uppercase tracking-wider text-black bg-gradient-to-r from-[#D4AF37] via-[#F5D77A] to-[#B8860B] shadow-lg shadow-[#D4AF37]/25 hover:scale-105 active:scale-95 transition"
           >
-            View Full Portfolio Gallery &rarr;
+            Explore Complete Portfolio Gallery ({projects.length}) &rarr;
           </button>
+          {totalPages > 1 && (
+            <button
+              onClick={handleNextSet}
+              className="w-full sm:w-auto px-6 py-3.5 rounded-full text-xs font-semibold uppercase tracking-wider text-[#F5F1E8] bg-[#141414] border border-white/15 hover:border-[#D4AF37]/50 hover:bg-white/5 transition flex items-center justify-center gap-2"
+            >
+              <RotateCw className="w-3.5 h-3.5 text-[#D4AF37]" />
+              <span>Alternate Masterpieces</span>
+            </button>
+          )}
         </div>
       </section>
 

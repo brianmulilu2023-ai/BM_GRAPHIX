@@ -68,8 +68,25 @@ export default function ProjectCard({ project, priority = false }) {
           <span className="text-[10px] sm:text-[11px] font-medium">{project.likes || 0}</span>
         </button>
 
-        {/* Cinematic Gradient Hover Overlay */}
-        <div className="absolute inset-0 bg-gradient-to-t from-[#0A0A0A] via-[#0A0A0A]/50 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300 flex flex-col justify-end p-3 sm:p-5">
+        {/* Mobile Persistent Footer (ensures mobile users always see title & category without needing hover) */}
+        <div className="absolute inset-x-0 bottom-0 p-2.5 bg-gradient-to-t from-black/90 via-black/60 to-transparent sm:hidden pointer-events-none group-hover:opacity-0 transition-opacity">
+          <div className="flex items-end justify-between gap-1.5">
+            <div className="min-w-0 flex-1">
+              <span className="text-[9px] font-mono uppercase tracking-wider text-[#D4AF37] block truncate">
+                {project.categoryLabel || project.category}
+              </span>
+              <h4 className="font-display font-bold text-xs text-[#F5F1E8] leading-tight truncate">
+                {project.title}
+              </h4>
+            </div>
+            <div className="w-5 h-5 rounded-full bg-[#D4AF37]/25 border border-[#D4AF37]/50 flex items-center justify-center text-[#F5D77A] shrink-0">
+              <ArrowUpRight className="w-2.5 h-2.5" />
+            </div>
+          </div>
+        </div>
+
+        {/* Cinematic Gradient Hover / Tap Overlay */}
+        <div className="absolute inset-0 bg-gradient-to-t from-[#0A0A0A] via-[#0A0A0A]/60 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300 flex flex-col justify-end p-3 sm:p-5">
           <div className="transform translate-y-2 group-hover:translate-y-0 transition-transform duration-300">
             <span className="inline-block text-[9px] sm:text-[10px] font-mono uppercase tracking-[0.2em] text-[#D4AF37] mb-0.5 sm:mb-1">
               {project.categoryLabel || project.category}
@@ -77,15 +94,19 @@ export default function ProjectCard({ project, priority = false }) {
             <h3 className="font-display font-bold text-xs sm:text-base md:text-lg text-[#F5F1E8] leading-tight drop-shadow-md line-clamp-1 sm:line-clamp-2">
               {project.title}
             </h3>
-            <p className="text-[11px] sm:text-xs text-[#8A8A8A] line-clamp-1 sm:line-clamp-2 mt-1 hidden sm:block">
+            {project.client && (
+              <span className="text-[10px] sm:text-xs text-[#D4AF37] block mt-0.5">
+                Client: {project.client}
+              </span>
+            )}
+            <p className="text-[11px] sm:text-xs text-[#8A8A8A] line-clamp-2 mt-1 hidden sm:block">
               {project.description}
             </p>
 
             <div className="flex items-center justify-between pt-2 sm:pt-3 mt-2 sm:mt-3 border-t border-white/10 text-xs">
               <span className="text-[10px] sm:text-[11px] text-[#F5D77A] font-medium flex items-center gap-1">
                 <Eye className="w-3 sm:w-3.5 h-3 sm:h-3.5" />
-                <span className="hidden sm:inline">Details & Zoom</span>
-                <span className="sm:hidden">View</span>
+                <span>View Details & Pop-up</span>
               </span>
               <div className="w-6 sm:w-7 h-6 sm:h-7 rounded-full bg-[#D4AF37]/20 border border-[#D4AF37]/50 flex items-center justify-center text-[#F5D77A] group-hover:bg-[#D4AF37] group-hover:text-black transition-colors duration-300">
                 <ArrowUpRight className="w-3 sm:w-3.5 h-3 sm:h-3.5" />

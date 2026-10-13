@@ -62,6 +62,22 @@ export function ProjectProvider({ children }) {
     document.body.style.overflow = 'auto';
   };
 
+  const nextLightboxProject = () => {
+    if (!lightboxProject || projects.length === 0) return;
+    const currentIndex = projects.findIndex((p) => p.id === lightboxProject.id);
+    if (currentIndex === -1) return;
+    const nextIndex = (currentIndex + 1) % projects.length;
+    setLightboxProject(projects[nextIndex]);
+  };
+
+  const prevLightboxProject = () => {
+    if (!lightboxProject || projects.length === 0) return;
+    const currentIndex = projects.findIndex((p) => p.id === lightboxProject.id);
+    if (currentIndex === -1) return;
+    const prevIndex = (currentIndex - 1 + projects.length) % projects.length;
+    setLightboxProject(projects[prevIndex]);
+  };
+
   const handleToggleLike = async (projectId) => {
     try {
       const result = await projectService.toggleLike(projectId);
@@ -367,6 +383,8 @@ export function ProjectProvider({ children }) {
         lightboxProject,
         openLightbox,
         closeLightbox,
+        nextLightboxProject,
+        prevLightboxProject,
         toggleLike: handleToggleLike,
         addComment: handleAddComment,
         deleteComment: handleDeleteComment,
