@@ -473,8 +473,31 @@ class MediaService {
       if (Array.isArray(dbMedia) && dbMedia.length > 0) {
         this.customCache = dbMedia;
         this.isLoaded = true;
-        // Push local data up to cloud for future cross-browser access
-        saveCloudMedia(dbMedia).catch(() => {});
+        (async () => {
+          let changed = false;
+          const upgraded = await Promise.all(
+            dbMedia.map(async (item) => {
+              let m = { ...item };
+              if (m.path && m.path.startsWith('data:')) {
+                const safeName = (m.title || 'media-item').toLowerCase().replace(/[^a-z0-9]+/g, '-');
+                const url = await uploadFileToCloud(m.path, safeName);
+                if (url && url !== m.path) {
+                  m.path = url;
+                  changed = true;
+                }
+              }
+              return m;
+            })
+          );
+          if (changed) {
+            this.customCache = upgraded;
+            await storageDB.set(CUSTOM_MEDIA_KEY, upgraded);
+            try { localStorage.setItem(CUSTOM_MEDIA_KEY, JSON.stringify(upgraded)); } catch { /* ignore */ }
+            await saveCloudMedia(upgraded);
+          } else {
+            await saveCloudMedia(dbMedia);
+          }
+        })().catch(() => {});
         return;
       }
 

@@ -38,11 +38,38 @@ class ProjectService {
       if (!dbProjects && !local) {
         await storageDB.set(STORAGE_KEY, INITIAL_PROJECTS);
         try { localStorage.setItem(STORAGE_KEY, JSON.stringify(INITIAL_PROJECTS)); } catch { /* ignore */ }
-      } else if (local && !dbProjects) {
-        try {
-          const parsed = JSON.parse(local);
-          await storageDB.set(STORAGE_KEY, parsed);
-        } catch { /* ignore */ }
+        // Seed initial projects to cloud for other browsers
+        saveCloudProjects(INITIAL_PROJECTS).catch(() => {});
+      } else {
+        const existing = dbProjects || (local ? JSON.parse(local) : null);
+        if (Array.isArray(existing) && existing.length > 0) {
+          await storageDB.set(STORAGE_KEY, existing);
+          // If local has custom projects, migrate any base64 images to Supabase and sync to cloud
+          (async () => {
+            let changed = false;
+            const upgraded = await Promise.all(
+              existing.map(async (proj) => {
+                let p = { ...proj };
+                if (p.thumbnail && p.thumbnail.startsWith('data:')) {
+                  const url = await uploadFileToCloud(p.thumbnail, `${p.slug || 'proj'}-thumb`);
+                  if (url && url !== p.thumbnail) {
+                    p.thumbnail = url;
+                    p.images = [url];
+                    changed = true;
+                  }
+                }
+                return p;
+              })
+            );
+            if (changed) {
+              await storageDB.set(STORAGE_KEY, upgraded);
+              try { localStorage.setItem(STORAGE_KEY, JSON.stringify(upgraded)); } catch { /* ignore */ }
+              await saveCloudProjects(upgraded);
+            } else {
+              await saveCloudProjects(existing);
+            }
+          })().catch(() => {});
+        }
       }
 
       const likes = localStorage.getItem(LIKES_KEY);
@@ -163,25 +190,27 @@ class ProjectService {
     await this.saveProjects(updated);
 
     // Auto-register uploaded media into the Media Vault so it appears on all platforms
-    try {
-      if (finalThumbnail && !finalThumbnail.startsWith('/assets/')) {
-        mediaService.addMediaItem({
-          title: `${projectData.title} (Artwork)`,
-          category: projectData.category === 'motion' || projectData.category === 'videos' ? 'videos' : 'posters',
-          path: finalThumbnail,
-          type: 'image'
-        });
+    if (!projectData._fromMediaVault) {
+      try {
+        if (finalThumbnail && !finalThumbnail.startsWith('/assets/')) {
+          mediaService.addMediaItem({
+            title: `${projectData.title} (Artwork)`,
+            category: projectData.category === 'motion' || projectData.category === 'videos' ? 'videos' : 'posters',
+            path: finalThumbnail,
+            type: 'image'
+          });
+        }
+        if (finalVideoUrl && !finalVideoUrl.startsWith('/videos/')) {
+          mediaService.addMediaItem({
+            title: `${projectData.title} (Video)`,
+            category: 'videos',
+            path: finalVideoUrl,
+            type: 'video'
+          });
+        }
+      } catch {
+        // ignore
       }
-      if (finalVideoUrl && !finalVideoUrl.startsWith('/videos/')) {
-        mediaService.addMediaItem({
-          title: `${projectData.title} (Video)`,
-          category: 'videos',
-          path: finalVideoUrl,
-          type: 'video'
-        });
-      }
-    } catch {
-      // ignore
     }
 
     return newProject;

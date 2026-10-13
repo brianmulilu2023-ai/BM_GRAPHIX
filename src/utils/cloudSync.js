@@ -67,7 +67,7 @@ export async function uploadFileToCloud(dataUrl, filename = 'media-file') {
 
     const { error } = await supabase.storage
       .from('media')
-      .upload(path, blob, { contentType: mime, upsert: false });
+      .upload(path, blob, { contentType: mime, upsert: true });
 
     if (error) {
       console.warn('[CloudSync] Upload error:', error.message);
