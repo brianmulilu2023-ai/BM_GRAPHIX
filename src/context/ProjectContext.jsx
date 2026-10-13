@@ -236,8 +236,55 @@ export function ProjectProvider({ children }) {
   const handleAddMediaItem = async (item) => {
     try {
       const created = await mediaService.addMediaItem(item);
+
+      // ─── AUTO-PUBLISH TO PUBLIC GALLERY ────────────────────────────────────
+      // Media vault items must ALSO appear in the public Gallery/Work page.
+      // We do this by registering a matching project entry in projectService,
+      // so both systems stay in sync and visitors can see all uploaded media.
+      try {
+        const isVideo = created.type === 'video' ||
+          (created.path && /\.(mp4|webm|mov)$/i.test(created.path));
+
+        // Map media category → project category
+        const categoryMap = {
+          videos: 'motion',
+          logos: 'branding',
+          posters: 'posters',
+          portraits: 'posters',
+        };
+        const projectCategory = categoryMap[created.category] || 'posters';
+
+        const projectCategoryLabelMap = {
+          motion: 'Motion Graphics',
+          branding: 'Logos & Branding',
+          posters: 'Poster & Flyer Design',
+        };
+
+        const autoProject = {
+          title: created.title,
+          category: projectCategory,
+          categoryLabel: projectCategoryLabelMap[projectCategory] || 'Visual Design',
+          client: 'BM Graphix',
+          year: new Date().getFullYear().toString(),
+          featured: false,
+          thumbnail: created.path,
+          images: [created.path],
+          videoUrl: isVideo ? created.path : null,
+          description: created.description || `${created.title} — uploaded media asset`,
+          tools: ['Photoshop', 'Illustrator'],
+          aspectRatio: 'aspect-[4/5]',
+          _fromMediaVault: true,  // tag so we can identify vault-sourced projects
+        };
+
+        const newProject = await projectService.addProject(autoProject);
+        setProjects((prev) => [newProject, ...prev]);
+      } catch (projErr) {
+        // Don't fail the vault upload if project sync fails — just log it
+        console.warn('[ProjectContext] Could not auto-publish media to gallery:', projErr);
+      }
+
       setMediaItems(mediaService.getAllMedia());
-      showToast(`Media "${created.title}" added to vault!`, 'success');
+      showToast(`Media "${created.title}" added to vault and published to gallery!`, 'success');
       return created;
     } catch (err) {
       console.error(err);
