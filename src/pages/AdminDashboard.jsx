@@ -40,7 +40,11 @@ import {
   Calendar,
   Smartphone,
   QrCode,
-  ArrowRightLeft
+  ArrowRightLeft,
+  SlidersHorizontal,
+  Palette,
+  Sun,
+  RotateCcw
 } from 'lucide-react';
 import { useProjects } from '../context/ProjectContext';
 import ResponsiveVideoPlayer from '../components/ResponsiveVideoPlayer';
@@ -214,6 +218,167 @@ export default function AdminDashboard({ navigate }) {
   const [settingLocation, setSettingLocation] = useState(siteSettings?.location || 'Nairobi CBD, Kenya');
   const [settingAvailability, setSettingAvailability] = useState(siteSettings?.availabilityStatus || 'available');
   const [settingAvailabilityText, setSettingAvailabilityText] = useState(siteSettings?.availabilityText || 'Available for commissions & full-time roles');
+
+  // --- Landing Page Background Visibility & Atmosphere Range Sliders ---
+  const [heroBgVisibility, setHeroBgVisibility] = useState(
+    typeof siteSettings?.heroBgVisibility === 'number' ? siteSettings.heroBgVisibility : 55
+  );
+  const [heroDarkOverlay, setHeroDarkOverlay] = useState(
+    typeof siteSettings?.heroDarkOverlay === 'number' ? siteSettings.heroDarkOverlay : 85
+  );
+  const [nairobiSkylineOpacity, setNairobiSkylineOpacity] = useState(
+    typeof siteSettings?.nairobiSkylineOpacity === 'number' ? siteSettings.nairobiSkylineOpacity : 14
+  );
+  const [goldGlowIntensity, setGoldGlowIntensity] = useState(
+    typeof siteSettings?.goldGlowIntensity === 'number' ? siteSettings.goldGlowIntensity : 70
+  );
+  const [particlesVisibility, setParticlesVisibility] = useState(
+    typeof siteSettings?.particlesVisibility === 'number' ? siteSettings.particlesVisibility : 55
+  );
+
+  // --- Per-Branding Presets & Identity State ---
+  const [brandName, setBrandName] = useState(siteSettings?.brandName || 'BM Graphix');
+  const [brandTagline, setBrandTagline] = useState(siteSettings?.tagline || 'Designs That Move People');
+  const [activeBrandPreset, setActiveBrandPreset] = useState(siteSettings?.activeBrandPreset || 'royal-gold');
+  const [brandPrimaryColor, setBrandPrimaryColor] = useState(siteSettings?.brandPrimaryColor || '#D4AF37');
+  const [brandSecondaryColor, setBrandSecondaryColor] = useState(siteSettings?.brandSecondaryColor || '#F5D77A');
+  const [brandDarkColor, setBrandDarkColor] = useState(siteSettings?.brandDarkColor || '#B8860B');
+
+  const BRAND_PRESETS = [
+    {
+      id: 'royal-gold',
+      name: 'Royal Gold & Obsidian',
+      badge: 'Signature',
+      primary: '#D4AF37',
+      secondary: '#F5D77A',
+      dark: '#B8860B',
+      desc: 'Iconic cinematic gold with deep black contrast. Signature BM Graphix look.',
+      tagline: 'Designs That Move People',
+      bgVisibility: 55,
+      darkOverlay: 85,
+      skylineOpacity: 14,
+      glow: 75
+    },
+    {
+      id: 'champagne',
+      name: 'Champagne & Pearl',
+      badge: 'Haute Couture',
+      primary: '#E6CA65',
+      secondary: '#FFF0B3',
+      dark: '#A88523',
+      desc: 'Warm luxury and refined editorial glow. Ideal for lookbooks and art galleries.',
+      tagline: 'Bespoke Visual Haute Couture',
+      bgVisibility: 65,
+      darkOverlay: 75,
+      skylineOpacity: 18,
+      glow: 60
+    },
+    {
+      id: 'cyber-amber',
+      name: 'Cyberpunk Amber',
+      badge: 'High Octane',
+      primary: '#FF9F1C',
+      secondary: '#FFD166',
+      dark: '#D95D0F',
+      desc: 'High-energy sunset neon and kinetic velocity. Best for tours & motion trailers.',
+      tagline: 'Kinetic Cinema & Electric Motion',
+      bgVisibility: 75,
+      darkOverlay: 70,
+      skylineOpacity: 20,
+      glow: 90
+    },
+    {
+      id: 'imperial-bronze',
+      name: 'Imperial Bronze & Ochre',
+      badge: 'Prestigious',
+      primary: '#CD7F32',
+      secondary: '#E8A87C',
+      dark: '#8B4513',
+      desc: 'Deep warm burnished bronze and ancient copper. Rich, grounded authority.',
+      tagline: 'Timeless Prestige & Sculpted Identity',
+      bgVisibility: 50,
+      darkOverlay: 90,
+      skylineOpacity: 12,
+      glow: 65
+    },
+    {
+      id: 'monochrome-platinum',
+      name: 'Monochrome Platinum',
+      badge: 'Ultra Minimal',
+      primary: '#E2E8F0',
+      secondary: '#FFFFFF',
+      dark: '#94A3B8',
+      desc: 'Pure architectural silver and crisp Swiss typography. Sharp & stark.',
+      tagline: 'Architectural Precision & Pure Form',
+      bgVisibility: 40,
+      darkOverlay: 95,
+      skylineOpacity: 8,
+      glow: 40
+    }
+  ];
+
+  // Apply a brand preset button
+  const handleApplyBrandPreset = (preset) => {
+    setActiveBrandPreset(preset.id);
+    setBrandPrimaryColor(preset.primary);
+    setBrandSecondaryColor(preset.secondary);
+    setBrandDarkColor(preset.dark);
+    setBrandTagline(preset.tagline);
+    setHeroBgVisibility(preset.bgVisibility);
+    setHeroDarkOverlay(preset.darkOverlay);
+    setNairobiSkylineOpacity(preset.skylineOpacity);
+    setGoldGlowIntensity(preset.glow);
+
+    // Apply immediately to siteSettings and localStorage
+    updateSiteSettings({
+      activeBrandPreset: preset.id,
+      brandPrimaryColor: preset.primary,
+      brandSecondaryColor: preset.secondary,
+      brandDarkColor: preset.dark,
+      tagline: preset.tagline,
+      heroBgVisibility: preset.bgVisibility,
+      heroDarkOverlay: preset.darkOverlay,
+      nairobiSkylineOpacity: preset.skylineOpacity,
+      goldGlowIntensity: preset.glow
+    });
+
+    showToast(`Applied "${preset.name}" branding preset!`, 'gold');
+  };
+
+  // Save atmosphere settings from range inputs
+  const handleSaveAtmosphere = (e) => {
+    if (e && e.preventDefault) e.preventDefault();
+    updateSiteSettings({
+      heroBgVisibility: Number(heroBgVisibility),
+      heroDarkOverlay: Number(heroDarkOverlay),
+      nairobiSkylineOpacity: Number(nairobiSkylineOpacity),
+      goldGlowIntensity: Number(goldGlowIntensity),
+      particlesVisibility: Number(particlesVisibility),
+      brandName,
+      tagline: brandTagline,
+      brandPrimaryColor,
+      brandSecondaryColor,
+      brandDarkColor
+    });
+    showToast('Background atmosphere & branding saved!', 'gold');
+  };
+
+  // Reset atmosphere to defaults
+  const handleResetAtmosphere = () => {
+    setHeroBgVisibility(55);
+    setHeroDarkOverlay(85);
+    setNairobiSkylineOpacity(14);
+    setGoldGlowIntensity(70);
+    setParticlesVisibility(55);
+    updateSiteSettings({
+      heroBgVisibility: 55,
+      heroDarkOverlay: 85,
+      nairobiSkylineOpacity: 14,
+      goldGlowIntensity: 70,
+      particlesVisibility: 55
+    });
+    showToast('Restored default background visibility.', 'info');
+  };
 
   // Guard: Viewers must never see admin controls
   if (!isAdminLoggedIn) {
@@ -841,6 +1006,18 @@ export default function AdminDashboard({ navigate }) {
         </button>
 
         <button
+          onClick={() => setActiveTab('atmosphere')}
+          className={`flex items-center gap-2 px-4 py-2.5 rounded-full text-xs font-semibold tracking-wider whitespace-nowrap transition ${
+            activeTab === 'atmosphere'
+              ? 'bg-gradient-to-r from-[#D4AF37] to-[#F5D77A] text-black shadow-md shadow-[#D4AF37]/20 font-bold'
+              : 'text-[#8A8A8A] hover:text-[#F5F1E8] bg-[#141414] border border-white/5'
+          }`}
+        >
+          <SlidersHorizontal className="w-3.5 h-3.5" />
+          <span>Atmosphere & Branding</span>
+        </button>
+
+        <button
           onClick={() => setActiveTab('settings')}
           className={`flex items-center gap-2 px-4 py-2.5 rounded-full text-xs font-semibold tracking-wider whitespace-nowrap transition ${
             activeTab === 'settings'
@@ -887,6 +1064,14 @@ export default function AdminDashboard({ navigate }) {
                 >
                   <ImageIcon className="w-4 h-4 text-[#D4AF37]" />
                   <span>Open Media Vault</span>
+                </button>
+
+                <button
+                  onClick={() => setActiveTab('atmosphere')}
+                  className="px-4 py-2.5 rounded-xl text-xs font-semibold text-[#F5F1E8] bg-[#D4AF37]/10 hover:bg-[#D4AF37]/20 border border-[#D4AF37]/35 transition flex items-center gap-2"
+                >
+                  <SlidersHorizontal className="w-4 h-4 text-[#D4AF37]" />
+                  <span>Atmosphere & Branding</span>
                 </button>
 
                 <button
@@ -1960,6 +2145,603 @@ export default function AdminDashboard({ navigate }) {
                 <p className="text-xs text-[#8A8A8A]">Visitor feedback and artwork reviews will appear here.</p>
               </div>
             )}
+          </div>
+        </div>
+      )}
+
+      {/* ============================================================
+          TAB: ATMOSPHERE CONTROLS & PER-BRANDING STUDIO
+          ============================================================ */}
+      {activeTab === 'atmosphere' && (
+        <div className="space-y-10">
+          {/* Header Banner */}
+          <div className="p-6 sm:p-8 rounded-3xl glass-card border border-[#D4AF37]/30 bg-gradient-to-br from-[#1A1810] via-[#121212] to-[#0D0D0D] relative overflow-hidden">
+            <div className="max-w-3xl space-y-3 relative z-10">
+              <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-[#D4AF37]/20 border border-[#D4AF37]/40 text-xs font-mono text-[#F5D77A]">
+                <SlidersHorizontal className="w-3.5 h-3.5 text-[#D4AF37]" />
+                <span>Atmospheric Art Direction & Visual Identity</span>
+              </div>
+              <h2 className="font-display font-extrabold text-2xl sm:text-4xl text-[#F5F1E8]">
+                Background Visibility & <span className="gold-gradient-text">Per-Branding Studio</span>
+              </h2>
+              <p className="text-xs sm:text-sm text-[#8A8A8A] leading-relaxed">
+                Fine-tune the landing page background visibility, contrast vignette, and skyline silhouette with live range sliders. Or switch entire brand palettes in 1-click using the curated per-branding presets below.
+              </p>
+            </div>
+            <div className="absolute -right-10 -bottom-10 w-72 h-72 rounded-full bg-[#D4AF37]/10 blur-3xl pointer-events-none" />
+          </div>
+
+          {/* ════════ SECTION 1: LANDING PAGE BACKGROUND VISIBILITY CONTROLLER ════════ */}
+          <div className="p-6 sm:p-8 rounded-3xl glass-card border border-white/10 space-y-8">
+            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 pb-4 border-b border-white/10">
+              <div>
+                <div className="flex items-center gap-2">
+                  <SlidersHorizontal className="w-5 h-5 text-[#D4AF37]" />
+                  <h3 className="font-display font-bold text-xl text-[#F5F1E8]">
+                    Landing Page Background Visibility
+                  </h3>
+                </div>
+                <p className="text-xs text-[#8A8A8A] mt-1">
+                  Adjust opacity, darkness layers, and atmospheric glows to your exact taste. Changes sync live across the landing page.
+                </p>
+              </div>
+
+              <div className="flex items-center gap-2">
+                <button
+                  type="button"
+                  onClick={handleResetAtmosphere}
+                  className="px-4 py-2 rounded-xl text-xs font-medium text-[#8A8A8A] hover:text-[#F5F1E8] bg-white/5 hover:bg-white/10 border border-white/10 flex items-center gap-1.5 transition"
+                >
+                  <RotateCcw className="w-3.5 h-3.5" />
+                  <span>Reset Defaults</span>
+                </button>
+                <button
+                  type="button"
+                  onClick={handleSaveAtmosphere}
+                  className="px-5 py-2 rounded-xl text-xs font-bold uppercase tracking-wider text-black bg-gradient-to-r from-[#D4AF37] to-[#F5D77A] hover:brightness-110 transition shadow shadow-[#D4AF37]/25 flex items-center gap-1.5"
+                >
+                  <Check className="w-3.5 h-3.5" />
+                  <span>Save Atmosphere</span>
+                </button>
+              </div>
+            </div>
+
+            <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 items-start">
+              {/* Left Column: Sliders */}
+              <div className="lg:col-span-7 space-y-6">
+
+                {/* SLIDER 1: Hero Scrolling Art Columns Opacity */}
+                <div className="p-5 rounded-2xl bg-[#141414] border border-white/5 space-y-3">
+                  <div className="flex items-center justify-between">
+                    <div>
+                      <label className="text-xs font-bold uppercase tracking-wider text-[#F5F1E8] block">
+                        Background Art Columns Opacity
+                      </label>
+                      <span className="text-[11px] text-[#8A8A8A]">
+                        Controls visibility of the scrolling poster columns in the hero background
+                      </span>
+                    </div>
+                    <span className="px-3 py-1 rounded-full bg-[#D4AF37]/20 border border-[#D4AF37]/40 text-xs font-mono font-bold text-[#F5D77A]">
+                      {heroBgVisibility}%
+                    </span>
+                  </div>
+
+                  <input
+                    type="range"
+                    min="0"
+                    max="100"
+                    step="1"
+                    value={heroBgVisibility}
+                    onChange={(e) => {
+                      const val = Number(e.target.value);
+                      setHeroBgVisibility(val);
+                      document.documentElement.style.setProperty('--hero-bg-visibility', (val / 100).toString());
+                    }}
+                    className="w-full h-2 bg-[#222] rounded-lg appearance-none cursor-pointer accent-[#D4AF37]"
+                  />
+
+                  {/* Preset quick buttons */}
+                  <div className="flex items-center gap-2 pt-1">
+                    <span className="text-[10px] uppercase tracking-wider text-[#666]">Quick:</span>
+                    {[
+                      { label: 'Subtle', val: 20 },
+                      { label: 'Default', val: 55 },
+                      { label: 'Vivid', val: 75 },
+                      { label: 'Maximum', val: 100 }
+                    ].map((preset) => (
+                      <button
+                        key={preset.label}
+                        type="button"
+                        onClick={() => {
+                          setHeroBgVisibility(preset.val);
+                          document.documentElement.style.setProperty('--hero-bg-visibility', (preset.val / 100).toString());
+                        }}
+                        className={`text-[10px] px-2.5 py-1 rounded-lg transition ${
+                          heroBgVisibility === preset.val
+                            ? 'bg-[#D4AF37] text-black font-bold'
+                            : 'bg-white/5 text-[#8A8A8A] hover:text-white'
+                        }`}
+                      >
+                        {preset.label} ({preset.val}%)
+                      </button>
+                    ))}
+                  </div>
+                </div>
+
+                {/* SLIDER 2: Dark Vignette / Contrast Overlay */}
+                <div className="p-5 rounded-2xl bg-[#141414] border border-white/5 space-y-3">
+                  <div className="flex items-center justify-between">
+                    <div>
+                      <label className="text-xs font-bold uppercase tracking-wider text-[#F5F1E8] block">
+                        Contrast Vignette & Dark Overlay Depth
+                      </label>
+                      <span className="text-[11px] text-[#8A8A8A]">
+                        Controls the depth of the dark gradient covering background art (higher = bolder text contrast)
+                      </span>
+                    </div>
+                    <span className="px-3 py-1 rounded-full bg-[#D4AF37]/20 border border-[#D4AF37]/40 text-xs font-mono font-bold text-[#F5D77A]">
+                      {heroDarkOverlay}%
+                    </span>
+                  </div>
+
+                  <input
+                    type="range"
+                    min="20"
+                    max="100"
+                    step="1"
+                    value={heroDarkOverlay}
+                    onChange={(e) => {
+                      const val = Number(e.target.value);
+                      setHeroDarkOverlay(val);
+                      document.documentElement.style.setProperty('--hero-dark-overlay', (val / 100).toString());
+                    }}
+                    className="w-full h-2 bg-[#222] rounded-lg appearance-none cursor-pointer accent-[#D4AF37]"
+                  />
+
+                  <div className="flex items-center gap-2 pt-1">
+                    <span className="text-[10px] uppercase tracking-wider text-[#666]">Quick:</span>
+                    {[
+                      { label: 'Sheer', val: 45 },
+                      { label: 'Standard', val: 85 },
+                      { label: 'Heavy Shadow', val: 95 }
+                    ].map((preset) => (
+                      <button
+                        key={preset.label}
+                        type="button"
+                        onClick={() => {
+                          setHeroDarkOverlay(preset.val);
+                          document.documentElement.style.setProperty('--hero-dark-overlay', (preset.val / 100).toString());
+                        }}
+                        className={`text-[10px] px-2.5 py-1 rounded-lg transition ${
+                          heroDarkOverlay === preset.val
+                            ? 'bg-[#D4AF37] text-black font-bold'
+                            : 'bg-white/5 text-[#8A8A8A] hover:text-white'
+                        }`}
+                      >
+                        {preset.label} ({preset.val}%)
+                      </button>
+                    ))}
+                  </div>
+                </div>
+
+                {/* SLIDER 3: Nairobi Skyline Silhouette Opacity */}
+                <div className="p-5 rounded-2xl bg-[#141414] border border-white/5 space-y-3">
+                  <div className="flex items-center justify-between">
+                    <div>
+                      <label className="text-xs font-bold uppercase tracking-wider text-[#F5F1E8] block">
+                        Nairobi Skyline Silhouette Visibility
+                      </label>
+                      <span className="text-[11px] text-[#8A8A8A]">
+                        Parallax architectural CBD skyline visible in the background atmosphere
+                      </span>
+                    </div>
+                    <span className="px-3 py-1 rounded-full bg-[#D4AF37]/20 border border-[#D4AF37]/40 text-xs font-mono font-bold text-[#F5D77A]">
+                      {nairobiSkylineOpacity}%
+                    </span>
+                  </div>
+
+                  <input
+                    type="range"
+                    min="0"
+                    max="40"
+                    step="1"
+                    value={nairobiSkylineOpacity}
+                    onChange={(e) => {
+                      const val = Number(e.target.value);
+                      setNairobiSkylineOpacity(val);
+                      document.documentElement.style.setProperty('--nairobi-opacity', (val / 100).toString());
+                    }}
+                    className="w-full h-2 bg-[#222] rounded-lg appearance-none cursor-pointer accent-[#D4AF37]"
+                  />
+
+                  <div className="flex items-center gap-2 pt-1">
+                    <span className="text-[10px] uppercase tracking-wider text-[#666]">Quick:</span>
+                    {[
+                      { label: 'Off', val: 0 },
+                      { label: 'Delicate', val: 8 },
+                      { label: 'Default', val: 14 },
+                      { label: 'Prominent', val: 26 }
+                    ].map((preset) => (
+                      <button
+                        key={preset.label}
+                        type="button"
+                        onClick={() => {
+                          setNairobiSkylineOpacity(preset.val);
+                          document.documentElement.style.setProperty('--nairobi-opacity', (preset.val / 100).toString());
+                        }}
+                        className={`text-[10px] px-2.5 py-1 rounded-lg transition ${
+                          nairobiSkylineOpacity === preset.val
+                            ? 'bg-[#D4AF37] text-black font-bold'
+                            : 'bg-white/5 text-[#8A8A8A] hover:text-white'
+                        }`}
+                      >
+                        {preset.label} ({preset.val}%)
+                      </button>
+                    ))}
+                  </div>
+                </div>
+
+                {/* SLIDERS 4 & 5: Glow & Particles */}
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                  {/* Glow */}
+                  <div className="p-4 rounded-2xl bg-[#141414] border border-white/5 space-y-2.5">
+                    <div className="flex items-center justify-between">
+                      <label className="text-xs font-bold uppercase tracking-wider text-[#F5F1E8]">
+                        Ambient Gold Glow
+                      </label>
+                      <span className="text-xs font-mono font-bold text-[#F5D77A]">{goldGlowIntensity}%</span>
+                    </div>
+                    <input
+                      type="range"
+                      min="0"
+                      max="100"
+                      step="1"
+                      value={goldGlowIntensity}
+                      onChange={(e) => {
+                        const val = Number(e.target.value);
+                        setGoldGlowIntensity(val);
+                        document.documentElement.style.setProperty('--gold-glow-intensity', (val / 100).toString());
+                      }}
+                      className="w-full h-2 bg-[#222] rounded-lg appearance-none cursor-pointer accent-[#D4AF37]"
+                    />
+                    <span className="text-[10px] text-[#666] block">Aura radiance behind hero headline</span>
+                  </div>
+
+                  {/* Particles */}
+                  <div className="p-4 rounded-2xl bg-[#141414] border border-white/5 space-y-2.5">
+                    <div className="flex items-center justify-between">
+                      <label className="text-xs font-bold uppercase tracking-wider text-[#F5F1E8]">
+                        Gold Dust Particles
+                      </label>
+                      <span className="text-xs font-mono font-bold text-[#F5D77A]">{particlesVisibility}%</span>
+                    </div>
+                    <input
+                      type="range"
+                      min="0"
+                      max="100"
+                      step="1"
+                      value={particlesVisibility}
+                      onChange={(e) => {
+                        const val = Number(e.target.value);
+                        setParticlesVisibility(val);
+                        document.documentElement.style.setProperty('--particles-visibility', (val / 100).toString());
+                      }}
+                      className="w-full h-2 bg-[#222] rounded-lg appearance-none cursor-pointer accent-[#D4AF37]"
+                    />
+                    <span className="text-[10px] text-[#666] block">Floating motes count & opacity</span>
+                  </div>
+                </div>
+
+              </div>
+
+              {/* Right Column: Live Interactive Simulation Viewport */}
+              <div className="lg:col-span-5 space-y-4">
+                <div className="p-4 rounded-2xl bg-[#121212] border border-[#D4AF37]/30 space-y-3">
+                  <div className="flex items-center justify-between">
+                    <span className="text-xs font-bold uppercase tracking-wider text-[#F5F1E8] flex items-center gap-1.5">
+                      <Sparkles className="w-3.5 h-3.5 text-[#D4AF37]" />
+                      <span>Live Simulation Viewport</span>
+                    </span>
+                    <span className="text-[10px] text-[#22c55e] flex items-center gap-1 font-mono">
+                      <span className="w-1.5 h-1.5 rounded-full bg-[#22c55e] animate-pulse" />
+                      Live Sync
+                    </span>
+                  </div>
+
+                  {/* The Simulated Hero Card */}
+                  <div className="relative h-72 rounded-xl overflow-hidden border border-white/10 bg-[#0A0A0A] flex flex-col justify-end p-5 select-none">
+                    {/* Simulated skyline layer */}
+                    <div
+                      className="absolute inset-0 bg-cover bg-center pointer-events-none transition-opacity duration-300"
+                      style={{
+                        backgroundImage: "url('/assets/nairobi-cbd.jpg')",
+                        opacity: nairobiSkylineOpacity / 100,
+                        filter: 'blur(2px) contrast(1.1)',
+                      }}
+                    />
+
+                    {/* Simulated background columns */}
+                    <div
+                      className="absolute inset-0 flex gap-1 pointer-events-none transition-opacity duration-300"
+                      style={{ opacity: heroBgVisibility / 100 }}
+                    >
+                      {[1, 2, 3, 4].map((col) => (
+                        <div key={col} className="flex-1 opacity-70 bg-gradient-to-b from-[#1C1808] to-[#121008] border-r border-white/5 flex flex-col gap-1 p-1">
+                          <div className="h-14 rounded bg-[#2a2210] opacity-60" />
+                          <div className="h-20 rounded bg-[#352b14] opacity-50" />
+                          <div className="h-16 rounded bg-[#201a0d] opacity-70" />
+                        </div>
+                      ))}
+                    </div>
+
+                    {/* Simulated dark overlay gradient */}
+                    <div
+                      className="absolute inset-0 pointer-events-none transition-opacity duration-300"
+                      style={{
+                        opacity: heroDarkOverlay / 100,
+                        background: 'linear-gradient(to right, rgba(7,7,7,0.98) 0%, rgba(7,7,7,0.85) 60%, rgba(7,7,7,0.65) 100%)'
+                      }}
+                    />
+
+                    {/* Simulated ambient gold glow orb */}
+                    <div
+                      className="absolute w-44 h-44 rounded-full pointer-events-none -top-10 -left-10 blur-2xl transition-opacity duration-300"
+                      style={{
+                        opacity: goldGlowIntensity / 100,
+                        background: `radial-gradient(circle, ${brandPrimaryColor} 0%, transparent 70%)`
+                      }}
+                    />
+
+                    {/* Foreground simulated content */}
+                    <div className="relative z-10 space-y-2">
+                      <span className="inline-block text-[9px] font-mono uppercase tracking-widest text-[#D4AF37] px-2 py-0.5 rounded-full bg-black/60 border border-[#D4AF37]/30">
+                        Visual Art & Motion
+                      </span>
+                      <h4 className="font-display font-extrabold text-base text-[#F5F1E8] leading-tight">
+                        Visual Art That <br />
+                        <span style={{ color: brandPrimaryColor }}>Moves People.</span>
+                      </h4>
+                      <div className="flex items-center gap-2 pt-1">
+                        <div
+                          className="px-3 py-1 rounded-full text-[10px] font-bold text-black shadow"
+                          style={{ background: `linear-gradient(135deg, ${brandPrimaryColor}, ${brandSecondaryColor})` }}
+                        >
+                          View Work
+                        </div>
+                        <div className="px-3 py-1 rounded-full text-[10px] font-medium text-white/80 bg-white/10 border border-white/15">
+                          Hire Me
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+
+                  <p className="text-[11px] text-[#8A8A8A] leading-relaxed">
+                    This interactive viewport previews exactly how the artwork, dark overlay, and skyline silhouette balance on the landing page in real-time.
+                  </p>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          {/* ════════ SECTION 2: PER-BRANDING STUDIO & PRESET BUTTONS ════════ */}
+          <div className="p-6 sm:p-8 rounded-3xl glass-card border border-white/10 space-y-8">
+            <div className="pb-4 border-b border-white/10">
+              <div className="flex items-center gap-2">
+                <Palette className="w-5 h-5 text-[#D4AF37]" />
+                <h3 className="font-display font-bold text-xl text-[#F5F1E8]">
+                  Per-Branding Studio & Presets
+                </h3>
+              </div>
+              <p className="text-xs text-[#8A8A8A] mt-1">
+                Select any curated 1-click brand identity preset to instantly apply harmonized colors, gradients, and atmospheric lighting.
+              </p>
+            </div>
+
+            {/* Presets Grid (Per-Branding Buttons) */}
+            <div className="space-y-4">
+              <label className="text-xs uppercase tracking-wider text-[#A0A0A0] font-bold flex items-center gap-2">
+                <span>Select Brand Identity Preset (1-Click Apply)</span>
+              </label>
+
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                {BRAND_PRESETS.map((preset) => {
+                  const isActive = activeBrandPreset === preset.id;
+                  return (
+                    <div
+                      key={preset.id}
+                      onClick={() => handleApplyBrandPreset(preset)}
+                      className={`group relative p-5 rounded-2xl cursor-pointer transition-all duration-300 border ${
+                        isActive
+                          ? 'bg-[#181610] border-[#D4AF37] shadow-lg shadow-[#D4AF37]/20 scale-[1.01]'
+                          : 'bg-[#141414] border-white/10 hover:border-[#D4AF37]/50 hover:bg-[#161616]'
+                      }`}
+                    >
+                      <div className="flex items-center justify-between mb-3">
+                        <span className="text-[10px] font-mono uppercase tracking-widest px-2.5 py-0.5 rounded-full bg-white/5 border border-white/10 text-[#D4AF37]">
+                          {preset.badge}
+                        </span>
+
+                        {isActive ? (
+                          <span className="text-[11px] font-bold text-[#22c55e] flex items-center gap-1">
+                            <Check className="w-3.5 h-3.5" />
+                            Active
+                          </span>
+                        ) : (
+                          <span className="text-[10px] text-[#8A8A8A] group-hover:text-[#F5D77A] transition">
+                            Apply &rarr;
+                          </span>
+                        )}
+                      </div>
+
+                      <h4 className="font-display font-bold text-base text-[#F5F1E8] mb-1">
+                        {preset.name}
+                      </h4>
+                      <p className="text-[11px] text-[#8A8A8A] line-clamp-2 mb-3">
+                        {preset.desc}
+                      </p>
+
+                      {/* Swatch palette preview */}
+                      <div className="flex items-center justify-between pt-3 border-t border-white/10">
+                        <div className="flex items-center gap-1.5">
+                          <span
+                            className="w-4 h-4 rounded-full border border-white/20 shadow-sm"
+                            style={{ backgroundColor: preset.primary }}
+                            title={`Primary: ${preset.primary}`}
+                          />
+                          <span
+                            className="w-4 h-4 rounded-full border border-white/20 shadow-sm"
+                            style={{ backgroundColor: preset.secondary }}
+                            title={`Secondary: ${preset.secondary}`}
+                          />
+                          <span
+                            className="w-4 h-4 rounded-full border border-white/20 shadow-sm"
+                            style={{ backgroundColor: preset.dark }}
+                            title={`Dark: ${preset.dark}`}
+                          />
+                        </div>
+
+                        <span className="text-[10px] font-mono text-[#8A8A8A]">
+                          {preset.primary}
+                        </span>
+                      </div>
+                    </div>
+                  );
+                })}
+              </div>
+            </div>
+
+            {/* Custom Brand Palette & Identity Details */}
+            <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 pt-4 border-t border-white/10">
+              {/* Form Controls */}
+              <div className="lg:col-span-7 space-y-4">
+                <h4 className="text-xs font-bold uppercase tracking-wider text-[#A0A0A0]">
+                  Custom Brand Details & Palette Fine-Tuner
+                </h4>
+
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                  <div className="space-y-1.5">
+                    <label className="block text-xs uppercase tracking-wider text-[#A0A0A0]">Brand Name</label>
+                    <input
+                      type="text"
+                      value={brandName}
+                      onChange={(e) => setBrandName(e.target.value)}
+                      className="w-full px-4 py-2.5 rounded-xl bg-[#161616] border border-white/10 focus:border-[#D4AF37] focus:outline-none text-xs text-[#F5F1E8]"
+                    />
+                  </div>
+
+                  <div className="space-y-1.5">
+                    <label className="block text-xs uppercase tracking-wider text-[#A0A0A0]">Tagline</label>
+                    <input
+                      type="text"
+                      value={brandTagline}
+                      onChange={(e) => setBrandTagline(e.target.value)}
+                      className="w-full px-4 py-2.5 rounded-xl bg-[#161616] border border-white/10 focus:border-[#D4AF37] focus:outline-none text-xs text-[#F5F1E8]"
+                    />
+                  </div>
+                </div>
+
+                {/* Primary Color Picker & Quick Chips */}
+                <div className="space-y-2">
+                  <label className="block text-xs uppercase tracking-wider text-[#A0A0A0]">
+                    Primary Brand Accent Color
+                  </label>
+                  <div className="flex items-center gap-3">
+                    <input
+                      type="color"
+                      value={brandPrimaryColor}
+                      onChange={(e) => {
+                        const val = e.target.value;
+                        setBrandPrimaryColor(val);
+                        document.documentElement.style.setProperty('--gold-primary', val);
+                      }}
+                      className="w-10 h-10 rounded-xl cursor-pointer bg-transparent border-0 p-0"
+                    />
+                    <input
+                      type="text"
+                      value={brandPrimaryColor}
+                      onChange={(e) => {
+                        const val = e.target.value;
+                        setBrandPrimaryColor(val);
+                        document.documentElement.style.setProperty('--gold-primary', val);
+                      }}
+                      className="w-32 px-3 py-2 rounded-xl bg-[#161616] border border-white/10 text-xs font-mono text-[#F5D77A]"
+                    />
+                    {/* Quick color chips */}
+                    <div className="flex items-center gap-1.5">
+                      {['#D4AF37', '#FF9F1C', '#E6CA65', '#CD7F32', '#E2E8F0'].map((color) => (
+                        <button
+                          key={color}
+                          type="button"
+                          onClick={() => {
+                            setBrandPrimaryColor(color);
+                            document.documentElement.style.setProperty('--gold-primary', color);
+                          }}
+                          className="w-6 h-6 rounded-full border border-white/30 hover:scale-110 transition shadow"
+                          style={{ backgroundColor: color }}
+                          title={color}
+                        />
+                      ))}
+                    </div>
+                  </div>
+                </div>
+
+                <div className="pt-2">
+                  <button
+                    type="button"
+                    onClick={handleSaveAtmosphere}
+                    className="w-full sm:w-auto px-6 py-3 rounded-xl text-xs font-bold uppercase tracking-wider text-black bg-gradient-to-r from-[#D4AF37] via-[#F5D77A] to-[#B8860B] hover:brightness-110 transition shadow shadow-[#D4AF37]/25"
+                  >
+                    Save & Apply Brand Settings
+                  </button>
+                </div>
+              </div>
+
+              {/* Right: Live Identity Card */}
+              <div className="lg:col-span-5">
+                <div className="p-5 rounded-2xl bg-[#141414] border border-white/10 space-y-4">
+                  <span className="text-xs font-bold uppercase tracking-wider text-[#A0A0A0] block">
+                    Brand Lockup Preview
+                  </span>
+
+                  <div className="flex items-center gap-3">
+                    <div className="w-12 h-12 rounded-full p-1 bg-[#1A1A1A] border border-[#D4AF37]/40 flex items-center justify-center shadow">
+                      <img
+                        src="/assets/logo/BM_OFFICIAL_LOGO.png"
+                        alt="Logo"
+                        className="w-full h-full object-contain"
+                      />
+                    </div>
+                    <div>
+                      <h4 className="font-display font-extrabold text-lg" style={{ color: brandPrimaryColor }}>
+                        {brandName}
+                      </h4>
+                      <p className="text-[10px] uppercase tracking-widest text-[#8A8A8A]">
+                        {brandTagline}
+                      </p>
+                    </div>
+                  </div>
+
+                  <div
+                    className="p-3.5 rounded-xl border flex items-center justify-between"
+                    style={{
+                      background: 'rgba(212,175,55,0.06)',
+                      borderColor: 'rgba(212,175,55,0.2)'
+                    }}
+                  >
+                    <span className="text-xs font-medium text-[#F5F1E8]">CTA Button Style</span>
+                    <button
+                      type="button"
+                      className="px-4 py-1.5 rounded-full text-[11px] font-bold text-black uppercase tracking-wider shadow"
+                      style={{
+                        background: `linear-gradient(135deg, ${brandPrimaryColor}, ${brandSecondaryColor}, ${brandDarkColor})`
+                      }}
+                    >
+                      Hire Me
+                    </button>
+                  </div>
+                </div>
+              </div>
+            </div>
           </div>
         </div>
       )}

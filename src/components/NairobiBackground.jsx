@@ -1,8 +1,10 @@
 import React, { useEffect, useState } from 'react';
+import { useProjects } from '../context/ProjectContext';
 
 export default function NairobiBackground() {
   const [offsetY, setOffsetY] = useState(0);
   const [isDark, setIsDark] = useState(true);
+  const { siteSettings } = useProjects();
 
   useEffect(() => {
     // Track theme changes
@@ -28,32 +30,44 @@ export default function NairobiBackground() {
     return () => window.removeEventListener('scroll', handleScroll);
   }, []);
 
+  // Opacity configured dynamically from siteSettings
+  const baseSkylineOpacity = typeof siteSettings?.nairobiSkylineOpacity === 'number'
+    ? siteSettings.nairobiSkylineOpacity / 100
+    : 0.14;
+  const currentSkylineOpacity = isDark ? baseSkylineOpacity : baseSkylineOpacity * 0.55;
+
+  const glowFactor = typeof siteSettings?.goldGlowIntensity === 'number'
+    ? siteSettings.goldGlowIntensity / 100
+    : 0.70;
+
+  const brandGold = siteSettings?.brandPrimaryColor || '#D4AF37';
+
   return (
     <div className="fixed inset-0 pointer-events-none z-0 overflow-hidden" aria-hidden="true"
       style={{ transition: 'background 0.5s ease' }}>
 
-      {/* Parallax Nairobi Skyline Layer */}
+      {/* Parallax Nairobi Skyline Layer with dynamic opacity */}
       <div
         className="absolute inset-0 bg-cover bg-center scale-105"
         style={{
           backgroundImage: "url('/assets/nairobi-cbd.jpg')",
           transform: `translateY(-${offsetY}px)`,
-          opacity: isDark ? 0.14 : 0.07,
+          opacity: currentSkylineOpacity,
           filter: isDark
             ? 'blur(3px) brightness(0.9) contrast(1.1)'
             : 'blur(4px) brightness(1.05) saturate(0.7)',
-          transition: 'opacity 0.5s ease, filter 0.5s ease',
+          transition: 'opacity 0.4s ease, filter 0.5s ease',
         }}
       />
 
-      {/* Atmospheric Gold Radial Gradient Overlay */}
+      {/* Atmospheric Gold Radial Gradient Overlay with dynamic glow */}
       <div
         className="absolute inset-0"
         style={{
           background: isDark
-            ? 'radial-gradient(ellipse 80% 50% at 50% -10%, rgba(212, 175, 55, 0.15), transparent 70%), radial-gradient(ellipse 60% 40% at 100% 50%, rgba(184, 134, 11, 0.08), transparent 60%)'
-            : 'radial-gradient(ellipse 80% 50% at 50% -10%, rgba(212, 175, 55, 0.08), transparent 70%), radial-gradient(ellipse 60% 40% at 100% 50%, rgba(184, 134, 11, 0.04), transparent 60%)',
-          transition: 'background 0.5s ease',
+            ? `radial-gradient(ellipse 80% 50% at 50% -10%, rgba(212, 175, 55, ${0.15 * glowFactor}), transparent 70%), radial-gradient(ellipse 60% 40% at 100% 50%, rgba(184, 134, 11, ${0.08 * glowFactor}), transparent 60%)`
+            : `radial-gradient(ellipse 80% 50% at 50% -10%, rgba(212, 175, 55, ${0.08 * glowFactor}), transparent 70%), radial-gradient(ellipse 60% 40% at 100% 50%, rgba(184, 134, 11, ${0.04 * glowFactor}), transparent 60%)`,
+          transition: 'background 0.4s ease',
         }}
       />
 

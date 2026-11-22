@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { ProjectProvider } from './context/ProjectContext';
+import { ProjectProvider, useProjects } from './context/ProjectContext';
 import { useTheme } from './context/ThemeContext';
 import NairobiBackground from './components/NairobiBackground';
 import ScrollProgressBar from './components/ScrollProgressBar';
@@ -21,6 +21,49 @@ import About from './pages/About';
 import Contact from './pages/Contact';
 import AdminLogin from './pages/AdminLogin';
 import AdminDashboard from './pages/AdminDashboard';
+
+// Real-time synchronization of background visibility & branding variables
+function AtmosphereSync() {
+  const { siteSettings } = useProjects();
+
+  useEffect(() => {
+    if (!siteSettings) return;
+    const root = document.documentElement;
+
+    // Hero background visibility (0 to 1)
+    const heroVis = typeof siteSettings.heroBgVisibility === 'number' ? siteSettings.heroBgVisibility / 100 : 0.55;
+    root.style.setProperty('--hero-bg-visibility', heroVis.toString());
+
+    // Dark overlay opacity (0 to 1)
+    const overlayDark = typeof siteSettings.heroDarkOverlay === 'number' ? siteSettings.heroDarkOverlay / 100 : 0.85;
+    root.style.setProperty('--hero-dark-overlay', overlayDark.toString());
+
+    // Nairobi skyline opacity (0 to 1)
+    const nairobiOp = typeof siteSettings.nairobiSkylineOpacity === 'number' ? siteSettings.nairobiSkylineOpacity / 100 : 0.14;
+    root.style.setProperty('--nairobi-opacity', nairobiOp.toString());
+
+    // Gold glow intensity (0 to 1)
+    const glowOp = typeof siteSettings.goldGlowIntensity === 'number' ? siteSettings.goldGlowIntensity / 100 : 0.70;
+    root.style.setProperty('--gold-glow-intensity', glowOp.toString());
+
+    // Particles visibility
+    const partOp = typeof siteSettings.particlesVisibility === 'number' ? siteSettings.particlesVisibility / 100 : 0.55;
+    root.style.setProperty('--particles-visibility', partOp.toString());
+
+    // Dynamic brand colors
+    if (siteSettings.brandPrimaryColor) {
+      root.style.setProperty('--gold-primary', siteSettings.brandPrimaryColor);
+    }
+    if (siteSettings.brandSecondaryColor) {
+      root.style.setProperty('--gold-light', siteSettings.brandSecondaryColor);
+    }
+    if (siteSettings.brandDarkColor) {
+      root.style.setProperty('--gold-dark', siteSettings.brandDarkColor);
+    }
+  }, [siteSettings]);
+
+  return null;
+}
 
 export default function App() {
   const { isDark } = useTheme();
@@ -91,6 +134,7 @@ export default function App() {
 
   return (
     <ProjectProvider>
+      <AtmosphereSync />
       <div
         className="theme-root relative min-h-screen font-sans overflow-x-hidden selection:bg-[#D4AF37] selection:text-black"
         style={{

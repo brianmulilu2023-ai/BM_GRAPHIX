@@ -1,7 +1,6 @@
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
-@import './styles/lightmode.css';
 
 body {
   background-color: var(--bg, #0A0A0A);
@@ -919,14 +918,17 @@ body {
   height: 100%;
   object-fit: cover;
   display: block;
-  filter: brightness(0.3) saturate(0.6) opacity(0.55);
-  transition: filter 0.3s;
+  filter: brightness(0.3) saturate(0.6);
+  opacity: var(--hero-bg-visibility, 0.55);
+  transition: opacity 0.4s ease, filter 0.3s;
 }
 
 /* Dark overlay: heavy on the left where text lives, lighter on right */
 .hero-bg-overlay {
   position: absolute;
   inset: 0;
+  opacity: var(--hero-dark-overlay, 1);
+  transition: opacity 0.4s ease;
   /* Strong dark gradient from left (text area) to semi-transparent right */
   background:
     linear-gradient(

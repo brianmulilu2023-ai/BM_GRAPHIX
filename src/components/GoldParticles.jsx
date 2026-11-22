@@ -1,9 +1,11 @@
 import React, { useEffect, useRef, useState } from 'react';
+import { useProjects } from '../context/ProjectContext';
 
 /* Lightweight canvas-based floating gold dust particles */
 export default function GoldParticles() {
   const canvasRef = useRef(null);
   const [isDark, setIsDark] = useState(true);
+  const { siteSettings } = useProjects();
 
   useEffect(() => {
     const checkTheme = () => setIsDark(!document.documentElement.classList.contains('light'));
@@ -12,6 +14,14 @@ export default function GoldParticles() {
     observer.observe(document.documentElement, { attributes: true, attributeFilter: ['class'] });
     return () => observer.disconnect();
   }, []);
+
+  const particlesVisibility = typeof siteSettings?.particlesVisibility === 'number'
+    ? siteSettings.particlesVisibility / 100
+    : 0.55;
+
+  const brandPrimary = siteSettings?.brandPrimaryColor || '#D4AF37';
+  const brandLight = siteSettings?.brandSecondaryColor || '#F5D77A';
+  const brandDark = siteSettings?.brandDarkColor || '#B8860B';
 
   useEffect(() => {
     const canvas = canvasRef.current;
@@ -22,7 +32,9 @@ export default function GoldParticles() {
     let H = (canvas.height = window.innerHeight);
     let raf;
 
-    const COUNT = isDark ? 55 : 35;
+    const baseCount = isDark ? 55 : 35;
+    const COUNT = Math.max(5, Math.round(baseCount * (particlesVisibility / 0.55)));
+
     const particles = Array.from({ length: COUNT }, () => ({
       x: Math.random() * W,
       y: Math.random() * H,
@@ -33,8 +45,8 @@ export default function GoldParticles() {
       fade: (Math.random() * 0.006 + 0.002) * (Math.random() < 0.5 ? 1 : -1),
     }));
 
-    const DARK_COLORS  = ['#D4AF37', '#F5D77A', '#B8860B', '#FFD700', '#FFF8DC'];
-    const LIGHT_COLORS = ['#D4AF37', '#C89F2A', '#B8860B', '#E5C158', '#D4AF37'];
+    const DARK_COLORS  = [brandPrimary, brandLight, brandDark, '#FFD700', '#FFF8DC'];
+    const LIGHT_COLORS = [brandPrimary, brandDark, brandLight, '#C89F2A', '#D4AF37'];
     const COLORS = isDark ? DARK_COLORS : LIGHT_COLORS;
 
     function draw() {
@@ -49,12 +61,12 @@ export default function GoldParticles() {
         if (p.x > W + 5) p.x = -5;
 
         ctx.save();
-        ctx.globalAlpha = Math.max(0, p.alpha);
+        ctx.globalAlpha = Math.max(0, p.alpha * (particlesVisibility / 0.55));
         ctx.beginPath();
         ctx.arc(p.x, p.y, p.r, 0, Math.PI * 2);
         ctx.fillStyle = COLORS[i % COLORS.length];
         ctx.shadowBlur = isDark ? 8 : 4;
-        ctx.shadowColor = '#D4AF37';
+        ctx.shadowColor = brandPrimary;
         ctx.fill();
         ctx.restore();
       });
@@ -73,7 +85,7 @@ export default function GoldParticles() {
       cancelAnimationFrame(raf);
       window.removeEventListener('resize', onResize);
     };
-  }, [isDark]);
+  }, [isDark, particlesVisibility, brandPrimary, brandLight, brandDark]);
 
   return (
     <canvas
@@ -83,8 +95,8 @@ export default function GoldParticles() {
         inset: 0,
         zIndex: 1,
         pointerEvents: 'none',
-        opacity: isDark ? 0.55 : 0.3,
-        transition: 'opacity 0.5s ease',
+        opacity: (isDark ? 0.55 : 0.3) * (particlesVisibility / 0.55),
+        transition: 'opacity 0.4s ease',
       }}
       aria-hidden="true"
     />

@@ -28,7 +28,18 @@ export const DEFAULT_SITE_SETTINGS = {
   heroHeadline: 'Visual Artist & Motion Designer',
   instagram: 'https://instagram.com',
   behance: 'https://behance.net',
-  youtube: 'https://youtube.com'
+  youtube: 'https://youtube.com',
+  // Landing Page Background & Atmosphere Controls
+  heroBgVisibility: 55, // 0 to 100%
+  heroDarkOverlay: 85, // 0 to 100%
+  nairobiSkylineOpacity: 14, // 0 to 100%
+  goldGlowIntensity: 70, // 0 to 100%
+  particlesVisibility: 55, // 0 to 100%
+  // Per-Branding Presets & Custom Palette
+  activeBrandPreset: 'royal-gold',
+  brandPrimaryColor: '#D4AF37',
+  brandSecondaryColor: '#F5D77A',
+  brandDarkColor: '#B8860B'
 };
 
 class AdminService {

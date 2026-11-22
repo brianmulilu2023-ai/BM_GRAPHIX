@@ -194,6 +194,8 @@ html.light .mobile-menu-bg .border-white\/10 { border-color: rgba(0,0,0,0.08) !i
 html.light .hero-section { background: var(--bg); }
 
 html.light .hero-bg-overlay {
+  opacity: var(--hero-dark-overlay, 1);
+  transition: opacity 0.4s ease;
   background:
     linear-gradient(to right,
       var(--hero-overlay-start) 0%,
@@ -210,6 +212,8 @@ html.light .hero-bg-overlay {
 }
 html.light .hero-img-cell-img {
   filter: var(--image-filter);
+  opacity: var(--hero-bg-visibility, 0.7);
+  transition: opacity 0.4s ease, filter 0.3s;
 }
 html.light .hero-bg-orb--gold {
   background: radial-gradient(circle, rgba(212,175,55,0.1) 0%, transparent 70%);
