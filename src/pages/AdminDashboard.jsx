@@ -840,6 +840,19 @@ export default function AdminDashboard({ navigate }) {
   const totalLikes = projects.reduce((acc, p) => acc + (p.likes || 0), 0);
   const totalComments = projects.reduce((acc, p) => acc + (p.comments ? p.comments.length : 0), 0);
   const newInquiriesCount = inquiries.filter(i => i.status === 'new').length;
+
+  // Discipline breakdown for analytics
+  const postersCount = projects.filter(p => p.category === 'posters').length;
+  const brandingCount = projects.filter(p => p.category === 'branding').length;
+  const motionCount = projects.filter(p => p.category === 'motion').length;
+  const videosCount = projects.filter(p => p.category === 'videos').length;
+  const totalProjectsCount = Math.max(1, projects.length);
+  const postersPct = Math.round((postersCount / totalProjectsCount) * 100);
+  const brandingPct = Math.round((brandingCount / totalProjectsCount) * 100);
+  const motionPct = Math.round((motionCount / totalProjectsCount) * 100);
+  const videosPct = Math.round((videosCount / totalProjectsCount) * 100);
+  const photosCount = mediaItems.filter(m => m.type !== 'video').length;
+  const videosMediaCount = mediaItems.filter(m => m.type === 'video').length;
   
   // All comments aggregated
   const allComments = projects.flatMap((p) =>
