@@ -29,12 +29,30 @@ export const DEFAULT_SITE_SETTINGS = {
   instagram: 'https://instagram.com',
   behance: 'https://behance.net',
   youtube: 'https://youtube.com',
-  // Landing Page Background & Atmosphere Controls
+
+  // Active Atmosphere Editing Page: 'home' | 'work' | 'global'
+  atmosphereActivePage: 'home',
+
+  // Home / Landing Page Atmosphere Controls
   heroBgVisibility: 55, // 0 to 100%
   heroDarkOverlay: 85, // 0 to 100%
   nairobiSkylineOpacity: 14, // 0 to 100%
   goldGlowIntensity: 70, // 0 to 100%
   particlesVisibility: 55, // 0 to 100%
+
+  // Work / Portfolio Page Atmosphere Controls (with 100% crystal clear capability)
+  workNairobiSkylineOpacity: 55, // 0 to 100% (allows up to 100% crystal clear Nairobi peak)
+  workNairobiClarity: 85, // 0 to 100% (100% = 0px blur, high micro-contrast & razor sharpness)
+  workDarkOverlay: 70, // 0 to 100%
+  workGoldGlow: 65, // 0 to 100%
+  workParticles: 50, // 0 to 100%
+
+  // Global Atmosphere / Other Pages
+  globalNairobiSkylineOpacity: 20, // 0 to 100%
+  globalDarkOverlay: 80, // 0 to 100%
+  globalGoldGlow: 60, // 0 to 100%
+  globalParticles: 45, // 0 to 100%
+
   // Per-Branding Presets & Custom Palette
   activeBrandPreset: 'royal-gold',
   brandPrimaryColor: '#D4AF37',
@@ -91,7 +109,9 @@ class AdminService {
   getSiteSettings() {
     try {
       const data = localStorage.getItem(SITE_SETTINGS_KEY);
-      return data ? JSON.parse(data) : DEFAULT_SITE_SETTINGS;
+      if (!data) return DEFAULT_SITE_SETTINGS;
+      const parsed = JSON.parse(data);
+      return { ...DEFAULT_SITE_SETTINGS, ...parsed };
     } catch {
       return DEFAULT_SITE_SETTINGS;
     }

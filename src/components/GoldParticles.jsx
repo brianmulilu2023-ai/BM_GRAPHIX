@@ -2,12 +2,13 @@ import React, { useEffect, useRef, useState } from 'react';
 import { useProjects } from '../context/ProjectContext';
 
 /* Lightweight canvas-based floating gold dust particles */
-export default function GoldParticles() {
+export default function GoldParticles({ currentPath = '/' }) {
   const canvasRef = useRef(null);
   const [isDark, setIsDark] = useState(true);
   const { siteSettings } = useProjects();
 
   useEffect(() => {
+    // Track theme changes
     const checkTheme = () => setIsDark(!document.documentElement.classList.contains('light'));
     checkTheme();
     const observer = new MutationObserver(checkTheme);
@@ -15,9 +16,14 @@ export default function GoldParticles() {
     return () => observer.disconnect();
   }, []);
 
-  const particlesVisibility = typeof siteSettings?.particlesVisibility === 'number'
-    ? siteSettings.particlesVisibility / 100
-    : 0.55;
+  const activePath = (currentPath || (typeof window !== 'undefined' ? window.location.pathname : '/'))
+    .toLowerCase()
+    .replace(/\/$/, '') || '/';
+  const isWorkPage = activePath === '/work' || activePath === '/portfolio' || activePath === '/gallery';
+
+  const particlesVisibility = isWorkPage
+    ? (typeof siteSettings?.workParticles === 'number' ? siteSettings.workParticles / 100 : 0.50)
+    : (typeof siteSettings?.particlesVisibility === 'number' ? siteSettings.particlesVisibility / 100 : 0.55);
 
   const brandPrimary = siteSettings?.brandPrimaryColor || '#D4AF37';
   const brandLight = siteSettings?.brandSecondaryColor || '#F5D77A';

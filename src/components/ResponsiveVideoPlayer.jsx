@@ -1,12 +1,14 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { Play, Pause, Volume2, VolumeX, AlertCircle, RefreshCw } from 'lucide-react';
+import { Play, Pause, Volume2, VolumeX, AlertCircle, RefreshCw, Sparkles } from 'lucide-react';
 import { resolveSafeVideoUrl } from '../utils/videoHelper';
 
 /**
  * ResponsiveVideoPlayer
- * Universal mobile-responsive video player that works across Windows desktop,
- * iPhone Safari, iPad, and Android Chrome.
- * Resolves base64 data URLs to Blob URLs so WebKit/iOS does not refuse playback.
+ * Universal mobile-responsive video player with TikTok-style lazy streaming:
+ * - Employs IntersectionObserver to only load video buffers when within viewport.
+ * - Auto-pauses when scrolled out of view to preserve CPU, battery and bandwidth.
+ * - Displays instant high-resolution poster frame with zero layout shift.
+ * - Resolves base64 data URLs to Blob URLs so WebKit/iOS does not refuse playback.
  */
 export default function ResponsiveVideoPlayer({
   src,
@@ -20,13 +22,46 @@ export default function ResponsiveVideoPlayer({
   aspectRatio = 'auto',
   onEnded
 }) {
+  const containerRef = useRef(null);
   const videoRef = useRef(null);
   const [resolvedSrc, setResolvedSrc] = useState('');
+  const [isInView, setIsInView] = useState(false);
   const [hasError, setHasError] = useState(false);
   const [errorMessage, setErrorMessage] = useState('');
   const [isPlaying, setIsPlaying] = useState(false);
   const [isMuted, setIsMuted] = useState(muted);
   const [isLoading, setIsLoading] = useState(true);
+
+  // Lazy loading observer: only buffer media when within 250px of viewport
+  useEffect(() => {
+    if (!containerRef.current) return;
+    
+    // Fallback if IntersectionObserver is not supported
+    if (typeof IntersectionObserver === 'undefined') {
+      setIsInView(true);
+      return;
+    }
+
+    const observer = new IntersectionObserver(
+      (entries) => {
+        entries.forEach((entry) => {
+          if (entry.isIntersecting) {
+            setIsInView(true);
+          } else {
+            // When scrolled out of view, pause playback to save resources (TikTok standard)
+            if (videoRef.current && !videoRef.current.paused) {
+              videoRef.current.pause();
+              setIsPlaying(false);
+            }
+          }
+        });
+      },
+      { rootMargin: '250px 0px' } // Preload when 250px away
+    );
+
+    observer.observe(containerRef.current);
+    return () => observer.disconnect();
+  }, []);
 
   // Safely resolve the video URL whenever src changes
   useEffect(() => {
@@ -92,24 +127,25 @@ export default function ResponsiveVideoPlayer({
 
   return (
     <div
+      ref={containerRef}
       className={`relative w-full overflow-hidden rounded-xl bg-black flex items-center justify-center ${className}`}
       style={{ aspectRatio }}
     >
-      {/* Video Element */}
+      {/* Video Element — only connects stream when in viewport for lightning performance */}
       {resolvedSrc && !hasError && (
         <video
           ref={videoRef}
           key={resolvedSrc}
-          src={resolvedSrc}
+          src={isInView ? resolvedSrc : undefined}
           poster={poster || undefined}
           controls={controls}
-          autoPlay={autoPlay}
+          autoPlay={autoPlay && isInView}
           muted={autoPlay ? true : isMuted} // Autoplay on mobile strictly requires muted
           loop={loop}
           playsInline={playsInline}
           webkit-playsinline="true"
           x5-playsinline="true"
-          preload="metadata"
+          preload={isInView ? 'metadata' : 'none'}
           onLoadedData={handleLoadedData}
           onError={handleError}
           onPlay={() => setIsPlaying(true)}
@@ -119,8 +155,19 @@ export default function ResponsiveVideoPlayer({
         />
       )}
 
+      {/* Instant poster placeholder while waiting for viewport entry */}
+      {!isInView && poster && (
+        <img
+          src={poster}
+          alt="Video Preview"
+          loading="lazy"
+          decoding="async"
+          className="absolute inset-0 w-full h-full object-cover filter brightness-90"
+        />
+      )}
+
       {/* Loading state indicator */}
-      {isLoading && !hasError && (
+      {isLoading && isInView && !hasError && (
         <div className="absolute inset-0 flex items-center justify-center bg-black/40 pointer-events-none">
           <div className="w-8 h-8 border-2 border-[#D4AF37] border-t-transparent rounded-full animate-spin" />
         </div>

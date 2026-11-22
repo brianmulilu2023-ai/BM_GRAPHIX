@@ -23,7 +23,7 @@ import AdminLogin from './pages/AdminLogin';
 import AdminDashboard from './pages/AdminDashboard';
 
 // Real-time synchronization of background visibility & branding variables
-function AtmosphereSync() {
+function AtmosphereSync({ currentPath }) {
   const { siteSettings } = useProjects();
 
   useEffect(() => {
@@ -41,6 +41,18 @@ function AtmosphereSync() {
     // Nairobi skyline opacity (0 to 1)
     const nairobiOp = typeof siteSettings.nairobiSkylineOpacity === 'number' ? siteSettings.nairobiSkylineOpacity / 100 : 0.14;
     root.style.setProperty('--nairobi-opacity', nairobiOp.toString());
+
+    // Work Page: Nairobi skyline opacity (up to 100% full clarity)
+    const workNairobiOp = typeof siteSettings.workNairobiSkylineOpacity === 'number' ? siteSettings.workNairobiSkylineOpacity / 100 : 0.55;
+    root.style.setProperty('--work-nairobi-opacity', workNairobiOp.toString());
+
+    // Work Page: Clarity factor (0 to 1)
+    const workClarity = typeof siteSettings.workNairobiClarity === 'number' ? siteSettings.workNairobiClarity / 100 : 0.85;
+    root.style.setProperty('--work-nairobi-clarity', workClarity.toString());
+
+    // Work Page: Dark overlay
+    const workDark = typeof siteSettings.workDarkOverlay === 'number' ? siteSettings.workDarkOverlay / 100 : 0.70;
+    root.style.setProperty('--work-dark-overlay', workDark.toString());
 
     // Gold glow intensity (0 to 1)
     const glowOp = typeof siteSettings.goldGlowIntensity === 'number' ? siteSettings.goldGlowIntensity / 100 : 0.70;
@@ -60,7 +72,7 @@ function AtmosphereSync() {
     if (siteSettings.brandDarkColor) {
       root.style.setProperty('--gold-dark', siteSettings.brandDarkColor);
     }
-  }, [siteSettings]);
+  }, [siteSettings, currentPath]);
 
   return null;
 }
@@ -134,7 +146,7 @@ export default function App() {
 
   return (
     <ProjectProvider>
-      <AtmosphereSync />
+      <AtmosphereSync currentPath={currentPath} />
       <div
         className="theme-root relative min-h-screen font-sans overflow-x-hidden selection:bg-[#D4AF37] selection:text-black"
         style={{
@@ -153,10 +165,10 @@ export default function App() {
         <Preloader />
 
         {/* Gold dust ambient particles */}
-        <GoldParticles />
+        <GoldParticles currentPath={currentPath} />
 
         {/* Nairobi Skyline + Atmospheric Parallax Background */}
-        <NairobiBackground />
+        <NairobiBackground currentPath={currentPath} />
 
         {/* Glassmorphism Header & Navigation */}
         <Navbar currentPath={currentPath} navigate={navigate} />
