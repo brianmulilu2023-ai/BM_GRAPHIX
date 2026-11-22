@@ -1,19 +1,14 @@
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
-
-:root {
-  --gold-primary: #D4AF37;
-  --gold-light: #F5D77A;
-  --gold-dark: #B8860B;
-  --bg-dark: #0A0A0A;
-}
+@import './styles/lightmode.css';
 
 body {
-  background-color: #0A0A0A;
-  color: #F5F1E8;
+  background-color: var(--bg, #0A0A0A);
+  color: var(--text-primary, #F5F1E8);
   font-family: 'Inter', sans-serif;
   overflow-x: hidden;
+  transition: background-color 0.4s ease, color 0.4s ease;
 }
 
 /* Custom Scrollbar */

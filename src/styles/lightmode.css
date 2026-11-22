@@ -1,0 +1,635 @@
+/* ============================================================
+   LIGHT MODE — Master-Class Editorial Design System
+   Senior Graphic Designer Level — Color Harmony Grade
+   ============================================================ */
+
+/* ── Root CSS custom properties ── */
+:root {
+  --gold-primary: #D4AF37;
+  --gold-light: #F5D77A;
+  --gold-dark: #B8860B;
+
+  /* Dark mode tokens (defaults) */
+  --bg: #0A0A0A;
+  --bg-card: #121212;
+  --bg-surface: #171717;
+  --bg-elevated: #1F1F1F;
+  --bg-hover: rgba(255,255,255,0.04);
+  --border: rgba(255,255,255,0.06);
+  --border-gold: rgba(212,175,55,0.22);
+  --text-primary: #F5F1E8;
+  --text-secondary: #8A8A8A;
+  --text-muted: #5A5A5A;
+  --text-inverse: #0A0A0A;
+  --navbar-bg: rgba(10,10,10,0.95);
+  --navbar-blur-bg: rgba(10,10,10,0.75);
+  --mobile-menu-bg: rgba(10,10,10,0.98);
+  --hero-overlay-start: rgba(7,7,7,0.99);
+  --hero-overlay-mid: rgba(7,7,7,0.90);
+  --hero-overlay-end: rgba(7,7,7,0.68);
+  --scrollbar-track: #0A0A0A;
+  --scrollbar-thumb: #262626;
+  --marquee-bg: #0f0f0f;
+  --stat-bg: rgba(18,18,18,0.7);
+  --process-bg: rgba(14,14,14,0.95);
+  --process-content-bg: rgba(18,18,18,0.7);
+  --process-content-border: rgba(255,255,255,0.06);
+  --philosophy-bg-start: #0D0D0D;
+  --philosophy-bg-mid: #111108;
+  --cta-bg: #141414;
+  --back-to-top-bg: rgba(14,14,14,0.9);
+  --hero-chip-bg: rgba(18,18,18,0.88);
+  --hero-showcase-bg: rgba(16,16,16,0.9);
+  --hero-card-dots-bg: rgba(12,12,12,0.95);
+  --hero-avail-bg: rgba(10,10,10,0.8);
+  --hero-btn-secondary-bg: rgba(18,18,18,0.8);
+  --hero-btn-secondary-text: #F5F1E8;
+  --glass-card-bg: rgba(18,18,18,0.7);
+  --glass-navbar-bg: rgba(10,10,10,0.75);
+  --image-filter: brightness(0.3) saturate(0.6) opacity(0.55);
+  --nairobi-opacity: 0.14;
+  --particle-opacity: 0.55;
+  --footer-bg: #080808;
+  --footer-border: rgba(255,255,255,0.05);
+  --icon-bg: #1C1C1C;
+  --input-bg: #141414;
+  --tag-bg: rgba(255,255,255,0.05);
+  --tag-border: rgba(255,255,255,0.05);
+  --category-btn-bg: #141414;
+  --category-btn-border: rgba(255,255,255,0.05);
+  --wa-popup-bg: rgba(18,18,18,0.95);
+  --lightbox-bg: rgba(0,0,0,0.97);
+  --social-icon-bg: #121212;
+  --social-icon-border: rgba(255,255,255,0.1);
+}
+
+/* ── Light mode token overrides ── */
+html.light {
+  --bg: #F5F0E8;
+  --bg-card: #FDFAF5;
+  --bg-surface: #F0EAE0;
+  --bg-elevated: #EDE6DA;
+  --bg-hover: rgba(0,0,0,0.03);
+  --border: rgba(0,0,0,0.07);
+  --border-gold: rgba(180,140,20,0.3);
+  --text-primary: #1C1510;
+  --text-secondary: #6B5D4F;
+  --text-muted: #9A8878;
+  --text-inverse: #FDFAF5;
+  --navbar-bg: rgba(248,243,235,0.97);
+  --navbar-blur-bg: rgba(248,243,235,0.82);
+  --mobile-menu-bg: rgba(248,243,235,0.99);
+  --hero-overlay-start: rgba(245,240,232,0.98);
+  --hero-overlay-mid: rgba(245,240,232,0.88);
+  --hero-overlay-end: rgba(245,240,232,0.60);
+  --scrollbar-track: #F5F0E8;
+  --scrollbar-thumb: #D6CBBF;
+  --marquee-bg: #EDE6DA;
+  --stat-bg: rgba(253,250,245,0.9);
+  --process-bg: rgba(253,250,245,1);
+  --process-content-bg: rgba(253,250,245,0.95);
+  --process-content-border: rgba(0,0,0,0.06);
+  --philosophy-bg-start: #EDE6DA;
+  --philosophy-bg-mid: #E8E0D2;
+  --cta-bg: #EDE6DA;
+  --back-to-top-bg: rgba(253,250,245,0.95);
+  --hero-chip-bg: rgba(253,250,245,0.92);
+  --hero-showcase-bg: rgba(253,250,245,0.95);
+  --hero-card-dots-bg: rgba(240,234,224,1);
+  --hero-avail-bg: rgba(253,250,245,0.9);
+  --hero-btn-secondary-bg: rgba(255,255,255,0.8);
+  --hero-btn-secondary-text: #1C1510;
+  --glass-card-bg: rgba(253,250,245,0.8);
+  --glass-navbar-bg: rgba(248,243,235,0.82);
+  --image-filter: brightness(0.75) saturate(0.9) opacity(0.8);
+  --nairobi-opacity: 0.09;
+  --particle-opacity: 0.25;
+  --footer-bg: #EDE6DA;
+  --footer-border: rgba(0,0,0,0.07);
+  --icon-bg: #EDE6DA;
+  --input-bg: #FDFAF5;
+  --tag-bg: rgba(0,0,0,0.04);
+  --tag-border: rgba(0,0,0,0.07);
+  --category-btn-bg: #EDE6DA;
+  --category-btn-border: rgba(0,0,0,0.07);
+  --wa-popup-bg: rgba(253,250,245,0.98);
+  --lightbox-bg: rgba(245,240,232,0.97);
+  --social-icon-bg: #EDE6DA;
+  --social-icon-border: rgba(0,0,0,0.1);
+}
+
+/* ── Light mode body & theme-root ── */
+html.light body,
+html.light .theme-root {
+  background-color: #F5F0E8;
+  color: #1C1510;
+}
+
+/* ── Global base overrides ── */
+html.light body {
+  background-color: var(--bg);
+  color: var(--text-primary);
+}
+
+html.light .theme-root {
+  background-color: var(--bg);
+  color: var(--text-primary);
+}
+
+/* ── Scrollbar ── */
+html.light ::-webkit-scrollbar-track { background: var(--scrollbar-track); }
+html.light ::-webkit-scrollbar-thumb { background: var(--scrollbar-thumb); }
+
+/* ── Custom glass utilities ── */
+html.light .glass-card {
+  background: var(--glass-card-bg);
+  border-color: var(--border);
+}
+html.light .glass-navbar {
+  background: var(--glass-navbar-bg);
+}
+
+/* ── NAVBAR ── */
+.navbar-scrolled {
+  background: var(--navbar-bg);
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
+  border-bottom: 1px solid var(--border-gold);
+  box-shadow: 0 10px 30px rgba(0,0,0,0.08);
+}
+html.light .navbar-scrolled {
+  box-shadow: 0 4px 20px rgba(0,0,0,0.07), 0 1px 0 rgba(212,175,55,0.15);
+}
+.navbar-top {
+  background: transparent;
+}
+html.light .navbar-top {
+  border-bottom-color: rgba(0,0,0,0.06) !important;
+}
+
+/* Nav link text */
+html.light header button.text-\[\#8A8A8A\] { color: #6B5D4F !important; }
+html.light header button:hover.text-\[\#8A8A8A\] { color: #1C1510 !important; }
+html.light header .text-\[\#F5F1E8\] { color: #1C1510 !important; }
+html.light header .text-\[\#F5D77A\] { color: #8B6914 !important; }
+
+/* Logo inner disc — dark glass to warm white */
+html.light header .bg-\[\#0E0E0E\]\/90 {
+  background: rgba(253,250,245,0.95) !important;
+}
+
+/* Nav indicator line stays gold */
+
+/* Mobile menu */
+.mobile-menu-bg {
+  background: var(--mobile-menu-bg) !important;
+}
+html.light .mobile-menu-bg { border-bottom-color: rgba(212,175,55,0.2); }
+html.light .mobile-menu-bg button { color: #6B5D4F !important; }
+html.light .mobile-menu-bg button:hover { color: #1C1510 !important; }
+html.light .mobile-menu-bg .text-\[\#F5D77A\] { color: #8B6914 !important; }
+html.light .mobile-menu-bg .border-white\/10 { border-color: rgba(0,0,0,0.08) !important; }
+
+/* ── HERO SECTION ── */
+html.light .hero-section { background: var(--bg); }
+
+html.light .hero-bg-overlay {
+  background:
+    linear-gradient(to right,
+      var(--hero-overlay-start) 0%,
+      var(--hero-overlay-mid) 45%,
+      var(--hero-overlay-mid) 65%,
+      var(--hero-overlay-end) 100%
+    ),
+    linear-gradient(to bottom,
+      rgba(245,240,232,0.5) 0%,
+      transparent 15%,
+      transparent 85%,
+      rgba(245,240,232,0.6) 100%
+    );
+}
+html.light .hero-img-cell-img {
+  filter: var(--image-filter);
+}
+html.light .hero-bg-orb--gold {
+  background: radial-gradient(circle, rgba(212,175,55,0.1) 0%, transparent 70%);
+}
+
+/* Hero headline, subtitle */
+html.light .hero-headline { color: var(--text-primary); }
+html.light .hero-subtitle { color: var(--text-secondary); }
+html.light .hero-typewriter-prefix { color: var(--text-muted); }
+html.light .hero-trust-count { color: var(--text-primary); }
+html.light .hero-trust-sub { color: var(--text-secondary); }
+
+/* Hero availability badge */
+html.light .hero-avail-badge {
+  background: var(--hero-avail-bg);
+  border-color: rgba(34,197,94,0.4);
+}
+
+/* Hero CTA secondary */
+html.light .hero-btn-secondary {
+  background: var(--hero-btn-secondary-bg);
+  color: var(--hero-btn-secondary-text);
+  border-color: rgba(212,175,55,0.35);
+}
+html.light .hero-btn-secondary:hover {
+  border-color: rgba(212,175,55,0.65);
+  background: rgba(212,175,55,0.08);
+}
+
+/* Hero trust bar border */
+html.light .hero-trust-bar {
+  border-top-color: rgba(0,0,0,0.08);
+}
+html.light .hero-trust-avatar {
+  border-color: var(--bg);
+}
+
+/* Hero chip */
+html.light .hero-chip {
+  background: var(--hero-chip-bg);
+  border-color: rgba(212,175,55,0.4);
+  color: var(--text-primary);
+  box-shadow: 0 4px 20px rgba(0,0,0,0.08), 0 0 12px rgba(212,175,55,0.1);
+}
+
+/* Hero showcase card */
+html.light .hero-showcase-card {
+  background: var(--hero-showcase-bg);
+  border-color: rgba(212,175,55,0.3);
+  box-shadow:
+    0 0 0 1px rgba(212,175,55,0.12),
+    0 24px 60px rgba(0,0,0,0.12),
+    0 0 80px rgba(212,175,55,0.07);
+}
+html.light .hero-card-dots {
+  background: var(--hero-card-dots-bg);
+}
+html.light .hero-card-dot {
+  background: rgba(0,0,0,0.12);
+}
+html.light .hero-card-dot--active { background: #D4AF37; }
+
+/* Hero scroll cue */
+html.light .hero-scroll-cue { color: rgba(180,140,20,0.6); }
+
+/* ── MARQUEE STRIP ── */
+html.light .marquee-strip {
+  background: var(--marquee-bg);
+  border-top-color: rgba(212,175,55,0.12);
+  border-bottom-color: rgba(212,175,55,0.12);
+}
+html.light .marquee-item { color: #9A8878; }
+html.light .marquee-item:hover { color: #D4AF37; }
+
+/* ── SECTION TAGS ── */
+html.light .section-tag {
+  background: rgba(212,175,55,0.08);
+  border-color: rgba(180,140,20,0.25);
+  color: #B8860B;
+}
+html.light .section-tag::before { background: #B8860B; }
+
+/* ── PAGE HEADINGS ── */
+html.light h1, html.light h2, html.light h3, html.light h4 {
+  color: var(--text-primary);
+}
+/* Specific Tailwind overrides */
+html.light .text-\[\#F5F1E8\] { color: var(--text-primary) !important; }
+html.light .text-\[\#8A8A8A\] { color: var(--text-secondary) !important; }
+html.light .text-\[\#5A5A5A\] { color: var(--text-muted) !important; }
+html.light .text-\[\#E5E1D8\] { color: #3A2E24 !important; }
+html.light .text-\[\#F5D77A\] { color: #8B6914 !important; }
+
+/* ── STAT ITEMS ── */
+html.light .stat-item {
+  background: var(--stat-bg);
+  border-color: rgba(212,175,55,0.14);
+  box-shadow: 0 1px 4px rgba(0,0,0,0.05);
+}
+html.light .stat-item:hover {
+  border-color: rgba(212,175,55,0.4);
+  box-shadow: 0 12px 30px rgba(212,175,55,0.08);
+}
+html.light .stat-icon-wrap {
+  background: rgba(212,175,55,0.07);
+  border-color: rgba(212,175,55,0.2);
+}
+html.light .stat-label { color: #9A8878; }
+
+/* ── PROCESS TIMELINE ── */
+html.light .process-dot {
+  background: var(--process-bg);
+  border-color: rgba(212,175,55,0.35);
+  color: #D4AF37;
+  box-shadow: 0 0 0 6px rgba(212,175,55,0.04);
+}
+html.light .process-step:hover .process-dot {
+  background: rgba(212,175,55,0.08);
+  border-color: #D4AF37;
+  box-shadow: 0 0 0 8px rgba(212,175,55,0.08), 0 0 20px rgba(212,175,55,0.2);
+}
+html.light .process-content {
+  background: var(--process-content-bg);
+  border-color: var(--process-content-border);
+  box-shadow: 0 1px 4px rgba(0,0,0,0.05);
+}
+html.light .process-step:hover .process-content {
+  border-color: rgba(212,175,55,0.22);
+  box-shadow: 0 8px 30px rgba(212,175,55,0.07);
+}
+html.light .process-step-title { color: var(--text-primary); }
+html.light .process-step-desc { color: var(--text-secondary); }
+html.light .process-timeline::before {
+  background: linear-gradient(180deg, transparent, rgba(212,175,55,0.4) 10%, rgba(212,175,55,0.15) 90%, transparent);
+}
+
+/* ── PHILOSOPHY SECTION ── */
+html.light .philosophy-section {
+  background: linear-gradient(135deg, var(--philosophy-bg-start) 0%, var(--philosophy-bg-mid) 50%, var(--philosophy-bg-start) 100%) !important;
+  border-top-color: rgba(212,175,55,0.1);
+  border-bottom-color: rgba(212,175,55,0.1);
+}
+html.light .philosophy-lead { color: var(--text-primary); }
+html.light .philosophy-point { color: #9A8878; }
+html.light .philosophy-point:hover { color: #D4AF37; }
+
+/* ── SERVICES CARDS ── */
+html.light .glass-card.border { border-color: var(--border); }
+html.light .border-white\/5 { border-color: rgba(0,0,0,0.06) !important; }
+html.light .border-white\/10 { border-color: rgba(0,0,0,0.08) !important; }
+html.light .border-white\/15 { border-color: rgba(0,0,0,0.1) !important; }
+html.light .bg-white\/5 { background: rgba(0,0,0,0.04) !important; }
+html.light .bg-white\/10 { background: rgba(0,0,0,0.06) !important; }
+html.light .bg-\[\#141414\] { background: var(--category-btn-bg) !important; }
+html.light .bg-\[\#161616\] { background: #EDE6DA !important; }
+html.light .bg-\[\#121212\] { background: var(--bg-card) !important; }
+html.light .bg-\[\#1C1C1C\] { background: var(--icon-bg) !important; }
+html.light .bg-\[\#0A0A0A\]\/95 { background: var(--navbar-bg) !important; }
+
+/* Service icon */
+html.light .icon-glow-badge {
+  background: var(--icon-bg) !important;
+  border-color: rgba(212,175,55,0.3) !important;
+  color: #8B6914 !important;
+}
+html.light .group:hover .icon-glow-badge {
+  background: rgba(212,175,55,0.15) !important;
+  color: #000 !important;
+  box-shadow: 0 0 20px rgba(212,175,55,0.3), inset 0 0 12px rgba(212,175,55,0.08);
+}
+
+/* Tag/badge pill */
+html.light .text-xs.font-mono.uppercase.tracking-widest.text-\[\#8A8A8A\].px-3 {
+  background: var(--tag-bg);
+  border-color: var(--tag-border);
+  color: var(--text-secondary) !important;
+}
+
+/* Category filter tabs */
+html.light .text-\[\#8A8A8A\].hover\:text-\[\#F5F1E8\].bg-\[\#141414\] {
+  background: var(--category-btn-bg) !important;
+  border-color: var(--category-btn-border) !important;
+  color: var(--text-secondary) !important;
+}
+html.light button.text-\[\#8A8A8A\]:hover { color: var(--text-primary) !important; }
+
+/* ── PROJECT CARDS ── */
+html.light .group.relative.rounded-xl.bg-\[\#121212\] {
+  background: var(--bg-card) !important;
+  border-color: rgba(0,0,0,0.08) !important;
+}
+html.light .group.relative.rounded-xl.bg-\[\#121212\]:hover {
+  border-color: rgba(212,175,55,0.45) !important;
+  box-shadow: 0 20px 45px rgba(212,175,55,0.14) !important;
+}
+html.light .bg-neutral-950 { background: var(--bg-surface) !important; }
+
+/* ── ANIMATED STATS ── */
+html.light .animated-stats-grid .stat-item { background: var(--stat-bg); }
+
+/* ── ABOUT SECTION ── */
+html.light .rounded-3xl.glass-card.border-\[\#D4AF37\]\/30 {
+  background: var(--glass-card-bg);
+}
+
+/* ── CTA BANNER ── */
+html.light .cta-banner-bg {
+  background: linear-gradient(135deg,
+    #EDE6DA 0%, #E8DFD0 25%, #E5DBC8 50%, #E8DFD0 75%, #EDE6DA 100%
+  ) !important;
+  border-color: rgba(212,175,55,0.35);
+}
+html.light .cta-banner-bg .text-\[\#F5F1E8\] { color: var(--text-primary) !important; }
+html.light .cta-banner-bg p { color: var(--text-secondary); }
+html.light .bg-black\/60.border.border-\[\#25D366\]\/40 {
+  background: rgba(255,255,255,0.7) !important;
+  color: var(--text-primary) !important;
+}
+
+/* ── BACK TO TOP ── */
+html.light .back-to-top-btn {
+  background: var(--back-to-top-bg);
+  box-shadow: 0 4px 20px rgba(0,0,0,0.12);
+}
+
+/* ── FOOTER ── */
+html.light footer {
+  background: var(--footer-bg);
+  color: var(--text-secondary);
+  border-top-color: var(--footer-border);
+}
+html.light footer .text-\[\#8A8A8A\] { color: var(--text-secondary) !important; }
+html.light footer .text-\[\#F5F1E8\] { color: var(--text-primary) !important; }
+html.light footer h4 { color: var(--text-primary); }
+html.light footer .bg-\[\#121212\] {
+  background: var(--social-icon-bg) !important;
+  border-color: var(--social-icon-border) !important;
+}
+html.light footer .border-white\/5 { border-color: rgba(0,0,0,0.06) !important; }
+html.light footer .border-white\/10 { border-color: rgba(0,0,0,0.08) !important; }
+
+/* Footer divider gradient */
+html.light footer .absolute.top-0.h-\[1px\] {
+  background: linear-gradient(to right, transparent, rgba(212,175,55,0.3), transparent);
+}
+
+/* Powered by Computer Wizard badge */
+html.light footer .bg-\[\#121212\].border.border-\[\#D4AF37\]\/30 {
+  background: var(--social-icon-bg) !important;
+}
+
+/* ── GALLERY PAGE ── */
+html.light .py-20.text-center.rounded-3xl.glass-card {
+  background: var(--glass-card-bg);
+}
+html.light input[type="text"].bg-\[\#141414\] {
+  background: var(--input-bg) !important;
+  border-color: rgba(0,0,0,0.1) !important;
+  color: var(--text-primary) !important;
+}
+html.light input[type="text"].bg-\[\#141414\]::placeholder {
+  color: var(--text-muted) !important;
+}
+html.light input[type="text"]:hover.bg-\[\#141414\],
+html.light input:hover {
+  border-color: rgba(212,175,55,0.3) !important;
+}
+html.light input:focus {
+  border-color: rgba(212,175,55,0.6) !important;
+}
+
+/* ── ABOUT PAGE ── */
+html.light .rounded-3xl.overflow-hidden.border-2.border-\[\#D4AF37\]\/50.shadow-\[0_15px_50px_rgba\(212\,175\,55\,0\.25\)\].bg-\[\#121212\] {
+  background: var(--bg-card) !important;
+}
+html.light .skill-bar-fill {
+  box-shadow: 0 0 10px rgba(212,175,55,0.4);
+}
+
+/* Skill bar track background */
+html.light .h-1\.5.rounded-full.bg-white\/5 {
+  background: rgba(0,0,0,0.06) !important;
+}
+html.light .h-2.rounded-full.bg-white\/5 {
+  background: rgba(0,0,0,0.06) !important;
+}
+
+/* Tool cards */
+html.light .tool-card-reveal {
+  opacity: 0;
+}
+html.light .tool-card-reveal.revealed {
+  opacity: 1;
+}
+
+/* Timeline items */
+html.light .border.border-\[\#D4AF37\]\/30 { border-color: rgba(212,175,55,0.25) !important; }
+
+/* ── CONTACT PAGE ── */
+html.light .glass-card.border-\[\#25D366\]\/30 {
+  background: var(--glass-card-bg);
+}
+html.light select, html.light textarea,
+html.light input {
+  background: var(--input-bg);
+  border-color: rgba(0,0,0,0.1);
+  color: var(--text-primary);
+}
+html.light select:hover, html.light textarea:hover, html.light input:hover {
+  border-color: rgba(212,175,55,0.3);
+}
+html.light label { color: var(--text-secondary); }
+
+/* ── SERVICES PAGE ── */
+html.light .rounded-2xl.glass-card.border.border-\[\#D4AF37\]\/30 {
+  background: var(--glass-card-bg);
+}
+
+/* ── WHATSAPP POPUP ── */
+html.light .glass-card.p-4.shadow-2xl.border.border-\[\#D4AF37\]\/30 {
+  background: var(--wa-popup-bg) !important;
+}
+html.light .glass-card .text-\[\#F5F1E8\] { color: var(--text-primary) !important; }
+html.light .glass-card .text-\[\#8A8A8A\] { color: var(--text-secondary) !important; }
+html.light .glass-card .border-white\/10 { border-color: rgba(0,0,0,0.08) !important; }
+html.light .glass-card .hover\:bg-white\/5:hover { background: rgba(0,0,0,0.04) !important; }
+
+/* ── LIGHTBOX ── */
+html.light .fixed.inset-0.z-\[100\] {
+  background: rgba(245,240,232,0.97);
+}
+html.light .lightbox-panel {
+  background: var(--bg-card);
+  border-color: var(--border-gold);
+}
+
+/* ── NAIROBI BACKGROUND ── */
+html.light .hero-bg-overlay + .absolute,
+html.light .bg-gradient-to-b.from-\[\#0A0A0A\]\/70 {
+  background: linear-gradient(to bottom, rgba(245,240,232,0.6), rgba(245,240,232,0.85), var(--bg));
+}
+
+/* ── PRELOADER ── */
+html.light .fixed.inset-0.z-\[9999\].bg-\[\#0A0A0A\] {
+  background: var(--bg);
+}
+
+/* ── SCROLL PROGRESS BAR ── stays gold always ── */
+
+/* ── ANIM BORDER CARD INNER ── */
+html.light .anim-border-card {
+  background: rgba(253,250,245,0.9);
+}
+html.light .anim-border-card-inner {
+  background: rgba(253,250,245,0.98);
+}
+html.light .anim-border-card:hover {
+  box-shadow: 0 20px 50px rgba(212,175,55,0.1), 0 0 0 1px rgba(212,175,55,0.2);
+}
+
+/* ── FEATURED WORKS section header ── */
+html.light .flex.items-center.gap-2.px-3.py-1.rounded-full.bg-\[\#161616\] {
+  background: rgba(0,0,0,0.05) !important;
+}
+
+/* ── PAGE SET COUNTER ── */
+html.light .text-\[\#8A8A8A\].font-mono { color: var(--text-secondary) !important; }
+
+/* ── HOVER EFFECTS ── */
+html.light .gold-glow-hover:hover {
+  box-shadow: 0 0 25px rgba(212,175,55,0.25);
+  border-color: rgba(212,175,55,0.45);
+}
+
+/* ── SECTION TAG BACKGROUND COLOR ── */
+html.light .bg-\[\#161616\].border.border-\[\#D4AF37\]\/30 {
+  background: rgba(212,175,55,0.07) !important;
+}
+
+/* ── SHIMMER HOVER — lighter in light mode ── */
+html.light .shimmer-hover::after {
+  background: linear-gradient(105deg, transparent 35%, rgba(255,255,255,0.15) 50%, transparent 65%);
+}
+
+/* ── MAG CARD ── */
+html.light .mag-card:hover {
+  box-shadow: 0 24px 50px rgba(0,0,0,0.1), 0 0 30px rgba(212,175,55,0.1);
+}
+
+/* ── CheckCircle icon ── */
+html.light .text-\[\#D4AF37\] { color: #B8860B !important; }
+
+/* ── PAGE CONTENT areas ── */
+html.light .relative.z-10 {
+  color: var(--text-primary);
+}
+
+/* ── About section skill bars track ── */
+html.light .rounded-full.bg-white\/5 { background: rgba(0,0,0,0.06) !important; }
+
+/* ── Admin pages - keep dark ── */
+html.light .admin-dark {
+  background: #0A0A0A;
+  color: #F5F1E8;
+}
+
+/* ── Explore All button ── */
+html.light .flex.items-center.gap-2.text-xs.font-semibold.uppercase.text-\[\#F5D77A\] {
+  color: #8B6914 !important;
+}
+html.light .flex.items-center.gap-2.text-xs.font-semibold.uppercase.tracking-widest.text-\[\#F5D77A\] {
+  color: #8B6914 !important;
+}
+
+/* hero section background base */
+html.light .hero-section {
+  background: var(--bg);
+}
+
+/* prevent dark scrollbars in light mode body */
+html.light {
+  color-scheme: light;
+}

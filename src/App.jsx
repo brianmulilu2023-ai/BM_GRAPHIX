@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { ProjectProvider } from './context/ProjectContext';
+import { useTheme } from './context/ThemeContext';
 import NairobiBackground from './components/NairobiBackground';
 import ScrollProgressBar from './components/ScrollProgressBar';
 import BackToTop from './components/BackToTop';
@@ -22,6 +23,7 @@ import AdminLogin from './pages/AdminLogin';
 import AdminDashboard from './pages/AdminDashboard';
 
 export default function App() {
+  const { isDark } = useTheme();
   const [currentPath, setCurrentPath] = useState(() => {
     if (typeof window !== 'undefined') {
       return window.location.pathname || '/';
@@ -89,7 +91,14 @@ export default function App() {
 
   return (
     <ProjectProvider>
-      <div className="relative min-h-screen bg-[#0A0A0A] text-[#F5F1E8] font-sans overflow-x-hidden selection:bg-[#D4AF37] selection:text-black">
+      <div
+        className="theme-root relative min-h-screen font-sans overflow-x-hidden selection:bg-[#D4AF37] selection:text-black"
+        style={{
+          backgroundColor: isDark ? '#0A0A0A' : '#F5F0E8',
+          color: isDark ? '#F5F1E8' : '#1C1510',
+          transition: 'background-color 0.4s ease, color 0.4s ease',
+        }}
+      >
         {/* Scroll Progress Bar */}
         <ScrollProgressBar />
 

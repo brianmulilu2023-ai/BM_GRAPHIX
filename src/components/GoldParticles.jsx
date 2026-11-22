@@ -1,8 +1,17 @@
-import React, { useEffect, useRef } from 'react';
+import React, { useEffect, useRef, useState } from 'react';
 
 /* Lightweight canvas-based floating gold dust particles */
 export default function GoldParticles() {
   const canvasRef = useRef(null);
+  const [isDark, setIsDark] = useState(true);
+
+  useEffect(() => {
+    const checkTheme = () => setIsDark(!document.documentElement.classList.contains('light'));
+    checkTheme();
+    const observer = new MutationObserver(checkTheme);
+    observer.observe(document.documentElement, { attributes: true, attributeFilter: ['class'] });
+    return () => observer.disconnect();
+  }, []);
 
   useEffect(() => {
     const canvas = canvasRef.current;
@@ -13,7 +22,7 @@ export default function GoldParticles() {
     let H = (canvas.height = window.innerHeight);
     let raf;
 
-    const COUNT = 55;
+    const COUNT = isDark ? 55 : 35;
     const particles = Array.from({ length: COUNT }, () => ({
       x: Math.random() * W,
       y: Math.random() * H,
@@ -24,7 +33,9 @@ export default function GoldParticles() {
       fade: (Math.random() * 0.006 + 0.002) * (Math.random() < 0.5 ? 1 : -1),
     }));
 
-    const COLORS = ['#D4AF37', '#F5D77A', '#B8860B', '#FFD700', '#FFF8DC'];
+    const DARK_COLORS  = ['#D4AF37', '#F5D77A', '#B8860B', '#FFD700', '#FFF8DC'];
+    const LIGHT_COLORS = ['#D4AF37', '#C89F2A', '#B8860B', '#E5C158', '#D4AF37'];
+    const COLORS = isDark ? DARK_COLORS : LIGHT_COLORS;
 
     function draw() {
       ctx.clearRect(0, 0, W, H);
@@ -42,7 +53,7 @@ export default function GoldParticles() {
         ctx.beginPath();
         ctx.arc(p.x, p.y, p.r, 0, Math.PI * 2);
         ctx.fillStyle = COLORS[i % COLORS.length];
-        ctx.shadowBlur = 8;
+        ctx.shadowBlur = isDark ? 8 : 4;
         ctx.shadowColor = '#D4AF37';
         ctx.fill();
         ctx.restore();
@@ -62,7 +73,7 @@ export default function GoldParticles() {
       cancelAnimationFrame(raf);
       window.removeEventListener('resize', onResize);
     };
-  }, []);
+  }, [isDark]);
 
   return (
     <canvas
@@ -72,7 +83,8 @@ export default function GoldParticles() {
         inset: 0,
         zIndex: 1,
         pointerEvents: 'none',
-        opacity: 0.55,
+        opacity: isDark ? 0.55 : 0.3,
+        transition: 'opacity 0.5s ease',
       }}
       aria-hidden="true"
     />

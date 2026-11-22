@@ -1,11 +1,16 @@
 import React, { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Menu, X, ArrowUpRight, Sparkles } from 'lucide-react';
+import { Menu, X, ArrowUpRight } from 'lucide-react';
+import ThemeToggle from './ThemeToggle';
+import { useTheme } from '../context/ThemeContext';
 
 export default function Navbar({ currentPath, navigate }) {
   const [isScrolled, setIsScrolled] = useState(false);
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
+  const { isDark } = useTheme();
 
+  const textPrimary    = isDark ? '#F5F1E8' : '#1C1510';
+  const textSecondary  = isDark ? '#8A8A8A' : '#6B5D4F';
   useEffect(() => {
     const handleScroll = () => {
       setIsScrolled(window.scrollY > 25);
@@ -33,8 +38,8 @@ export default function Navbar({ currentPath, navigate }) {
       <header
         className={`fixed top-0 left-0 right-0 z-40 transition-all duration-500 ${
           isScrolled
-            ? 'bg-[#0A0A0A]/95 backdrop-blur-xl border-b border-[#D4AF37]/20 py-2.5 shadow-[0_10px_30px_rgba(0,0,0,0.8)]'
-            : 'bg-transparent py-3.5 border-b border-white/5'
+            ? 'navbar-scrolled py-2.5'
+            : 'navbar-top py-3.5 border-b border-black/5'
         }`}
       >
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
@@ -67,7 +72,13 @@ export default function Navbar({ currentPath, navigate }) {
                 />
 
                 {/* Inner Dark Glass Disc */}
-                <div className="relative w-full h-full rounded-full bg-[#0E0E0E]/90 backdrop-blur-md p-1.5 flex items-center justify-center border border-[#D4AF37]/40 shadow-inner group-hover:border-[#F5D77A] transition-colors">
+                <div
+                  className="relative w-full h-full rounded-full backdrop-blur-md p-1.5 flex items-center justify-center transition-colors"
+                  style={{
+                    background: isDark ? 'rgba(14,14,14,0.90)' : 'rgba(253,250,245,0.95)',
+                    border: isDark ? '1px solid rgba(212,175,55,0.40)' : '1px solid rgba(212,175,55,0.50)',
+                  }}
+                >
                   <img
                     src="/assets/logo/BM_OFFICIAL_LOGO.png"
                     alt="BM Graphix Logo"
@@ -104,11 +115,10 @@ export default function Navbar({ currentPath, navigate }) {
                   <button
                     key={link.path}
                     onClick={() => handleNavClick(link.path)}
-                    className={`relative text-xs uppercase tracking-[0.2em] font-medium transition-colors duration-300 ${
-                      isActive
-                        ? 'text-[#F5D77A]'
-                        : 'text-[#8A8A8A] hover:text-[#F5F1E8]'
-                    }`}
+                    className="relative text-xs uppercase tracking-[0.2em] font-medium transition-colors duration-300"
+                    style={{ color: isActive ? '#D4AF37' : textSecondary }}
+                    onMouseEnter={e => { if (!isActive) e.currentTarget.style.color = textPrimary; }}
+                    onMouseLeave={e => { if (!isActive) e.currentTarget.style.color = textSecondary; }}
                   >
                     {link.label}
                     {isActive && (
@@ -123,8 +133,11 @@ export default function Navbar({ currentPath, navigate }) {
               })}
             </nav>
 
-            {/* Right Action: Hire Me button */}
-            <div className="hidden md:flex items-center gap-4">
+            {/* Right Action: Theme Toggle + Hire Me button */}
+            <div className="hidden md:flex items-center gap-3">
+              {/* Light/Dark Toggle */}
+              <ThemeToggle />
+
               <button
                 onClick={() => handleNavClick('/contact')}
                 className="relative group overflow-hidden px-5 py-2.5 rounded-full text-xs font-semibold uppercase tracking-wider text-black bg-gradient-to-r from-[#D4AF37] via-[#F5D77A] to-[#B8860B] shadow-[0_0_20px_rgba(212,175,55,0.3)] hover:shadow-[0_0_30px_rgba(212,175,55,0.5)] transition-all duration-300 active:scale-95"
@@ -139,9 +152,12 @@ export default function Navbar({ currentPath, navigate }) {
 
             {/* Mobile Menu Button */}
             <div className="flex md:hidden items-center gap-3">
+              {/* Theme toggle on mobile too */}
+              <ThemeToggle />
               <button
                 onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
-                className="p-2 text-[#F5F1E8] hover:text-[#F5D77A] focus:outline-none"
+                className="p-2 hover:text-[#F5D77A] focus:outline-none transition-colors"
+                style={{ color: textPrimary }}
                 aria-label={mobileMenuOpen ? 'Close Menu' : 'Open Menu'}
               >
                 {mobileMenuOpen ? <X className="w-6 h-6" /> : <Menu className="w-6 h-6" />}
@@ -159,8 +175,7 @@ export default function Navbar({ currentPath, navigate }) {
             animate={{ opacity: 1, height: 'auto' }}
             exit={{ opacity: 0, height: 0 }}
             transition={{ duration: 0.3, ease: 'easeInOut' }}
-            className="fixed top-[64px] sm:top-[70px] left-0 right-0 z-30 bg-[#0A0A0A]/98 backdrop-blur-2xl border-b border-[#D4AF37]/20 px-6 py-8 md:hidden"
-          >
+            className="fixed top-[64px] sm:top-[70px] left-0 right-0 z-30 mobile-menu-bg backdrop-blur-2xl border-b border-[#D4AF37]/20 px-6 py-8 md:hidden"          >
             <div className="flex flex-col gap-6">
               {navLinks.map((link) => {
                 const isActive = currentPath === link.path;
@@ -168,16 +183,17 @@ export default function Navbar({ currentPath, navigate }) {
                   <button
                     key={link.path}
                     onClick={() => handleNavClick(link.path)}
-                    className={`text-left text-lg font-display uppercase tracking-wider font-semibold py-1 transition-colors ${
-                      isActive ? 'text-[#F5D77A]' : 'text-[#8A8A8A] hover:text-[#F5F1E8]'
-                    }`}
+                    className="text-left text-lg font-display uppercase tracking-wider font-semibold py-1 transition-colors"
+                    style={{ color: isActive ? '#D4AF37' : textSecondary }}
+                    onMouseEnter={e => { if (!isActive) e.currentTarget.style.color = textPrimary; }}
+                    onMouseLeave={e => { if (!isActive) e.currentTarget.style.color = textSecondary; }}
                   >
                     {link.label}
                   </button>
                 );
               })}
 
-              <div className="pt-4 border-t border-white/10 flex flex-col gap-3">
+              <div className="pt-4 flex flex-col gap-3" style={{ borderTop: `1px solid ${isDark ? 'rgba(255,255,255,0.1)' : 'rgba(0,0,0,0.08)'}` }}>
                 <button
                   onClick={() => handleNavClick('/contact')}
                   className="w-full py-3 rounded-xl text-center text-xs font-bold uppercase tracking-wider text-black bg-gradient-to-r from-[#D4AF37] via-[#F5D77A] to-[#B8860B] shadow-lg shadow-[#D4AF37]/25"
