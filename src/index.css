@@ -196,6 +196,32 @@ body {
 }
 
 /* ============================================================
+   CONTINUOUS INFINITE IMAGE TICKER (ENDLESS 60FPS LOOP)
+   ============================================================ */
+.image-ticker-container {
+  overflow: hidden;
+  position: relative;
+  width: 100%;
+}
+.image-ticker-track {
+  display: flex;
+  width: max-content;
+  animation: image-ticker-scroll var(--ticker-speed, 55s) linear infinite;
+  will-change: transform;
+}
+.image-ticker-track:hover {
+  animation-play-state: paused;
+}
+@keyframes image-ticker-scroll {
+  0% {
+    transform: translate3d(0, 0, 0);
+  }
+  100% {
+    transform: translate3d(-50%, 0, 0);
+  }
+}
+
+/* ============================================================
    BACK TO TOP BUTTON WITH CIRCULAR PROGRESS
    ============================================================ */
 .back-to-top-btn {
@@ -1420,6 +1446,41 @@ body {
   background-size: 200% 100%;
   animation: card-shimmer 4s ease-in-out infinite;
   pointer-events: none;
+}
+
+/* ── Endless Image Ticker ── */
+.image-ticker-container {
+  overflow: hidden;
+  position: relative;
+  width: 100%;
+}
+
+.image-ticker-track {
+  display: flex;
+  width: max-content;
+  animation: image-ticker-scroll var(--ticker-speed, 55s) linear infinite;
+  will-change: transform;
+}
+
+.image-ticker-track:hover {
+  animation-play-state: paused;
+}
+
+@keyframes image-ticker-scroll {
+  0% {
+    transform: translate3d(0, 0, 0);
+  }
+  100% {
+    transform: translate3d(-50%, 0, 0);
+  }
+}
+
+.ticker-fade-left {
+  background: linear-gradient(to right, var(--bg, #0A0A0A) 0%, transparent 100%);
+}
+
+.ticker-fade-right {
+  background: linear-gradient(to left, var(--bg, #0A0A0A) 0%, transparent 100%);
 }
 
 /* ── Responsive tweaks ── */

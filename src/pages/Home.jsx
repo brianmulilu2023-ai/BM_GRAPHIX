@@ -18,6 +18,7 @@ import { useProjects } from '../context/ProjectContext';
 import ProjectCard from '../components/ProjectCard';
 import MarqueeStrip from '../components/MarqueeStrip';
 import HeroSection from '../components/HeroSection';
+import ImageTicker from '../components/ImageTicker';
 
 /* ------------------------------------------------------------------
    Scroll-reveal hook (inline so we keep one file)
@@ -482,6 +483,9 @@ export default function Home({ navigate }) {
           </div>
         </div>
       </section>
+
+      {/* 6.5 ENDLESS ARTWORK TICKER (Continuous Infinite Loop) */}
+      <ImageTicker navigate={navigate} />
 
       {/* 7. CALL TO ACTION BANNER */}
       <section className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
