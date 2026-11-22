@@ -89,18 +89,29 @@ export default function Navbar({ currentPath, navigate }) {
 
               {/* Brand Typography */}
               <div className="flex flex-col justify-center">
-                <span className="font-display font-extrabold text-base sm:text-lg md:text-xl tracking-wider bg-gradient-to-r from-[#F5D77A] via-[#E5C158] to-[#D4AF37] bg-clip-text text-transparent group-hover:brightness-125 transition-all duration-300 leading-none">
+                <span
+                  className="font-display font-extrabold text-base sm:text-lg md:text-xl tracking-wider bg-clip-text text-transparent group-hover:brightness-110 transition-all duration-300 leading-none"
+                  style={{
+                    backgroundImage: isDark
+                      ? 'linear-gradient(135deg, #F5D77A, #E5C158, #D4AF37)'
+                      : 'linear-gradient(135deg, #A86D00, #C98A12, #6E3F00)',
+                  }}
+                >
                   BM GRAPHIX
                 </span>
                 <div className="flex items-center gap-1.5 mt-1">
                   <motion.span
                     animate={{ scale: [1, 1.35, 1], opacity: [0.6, 1, 0.6] }}
                     transition={{ duration: 2.2, repeat: Infinity, ease: 'easeInOut' }}
-                    className="text-[8px] text-[#F5D77A]"
+                    className="text-[8px]"
+                    style={{ color: isDark ? '#F5D77A' : '#A86D00' }}
                   >
                     ✦
                   </motion.span>
-                  <span className="text-[9px] sm:text-[10px] tracking-[0.26em] uppercase text-[#D4AF37] font-semibold leading-none">
+                  <span
+                    className="text-[9px] sm:text-[10px] tracking-[0.26em] uppercase font-bold leading-none"
+                    style={{ color: isDark ? '#D4AF37' : '#7A4900' }}
+                  >
                     Motion & Visual Art
                   </span>
                 </div>
