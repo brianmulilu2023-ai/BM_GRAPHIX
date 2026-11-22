@@ -144,6 +144,8 @@ export default function App() {
     }
   };
 
+  const isAdminRoute = (currentPath || '').toLowerCase().startsWith('/admin');
+
   return (
     <ProjectProvider>
       <AtmosphereSync currentPath={currentPath} />
@@ -155,26 +157,20 @@ export default function App() {
           transition: 'background-color 0.4s ease, color 0.4s ease',
         }}
       >
-        {/* Scroll Progress Bar */}
-        <ScrollProgressBar />
-
-        {/* Back To Top */}
-        <BackToTop />
-
-        {/* Animated Initial Preloader */}
+        {/* Public Browsing Widgets — omitted in Admin Portal */}
+        {!isAdminRoute && <ScrollProgressBar />}
+        {!isAdminRoute && <BackToTop />}
         <Preloader />
 
-        {/* Gold dust ambient particles */}
+        {/* Ambient Atmosphere Layers */}
         <GoldParticles currentPath={currentPath} />
-
-        {/* Nairobi Skyline + Atmospheric Parallax Background */}
         <NairobiBackground currentPath={currentPath} />
 
-        {/* Glassmorphism Header & Navigation */}
-        <Navbar currentPath={currentPath} navigate={navigate} />
+        {/* Public Navigation Header — hidden in Admin Dashboard so Sidebar reaches top */}
+        {!isAdminRoute && <Navbar currentPath={currentPath} navigate={navigate} />}
 
         {/* Main Content Area — wrapped in page transition */}
-        <main className="relative z-10 min-h-[calc(100vh-200px)]">
+        <main className={`relative z-10 ${isAdminRoute ? 'min-h-screen' : 'min-h-[calc(100vh-200px)]'}`}>
           <PageTransition routeKey={currentPath}>
             {renderPage()}
           </PageTransition>
@@ -183,14 +179,14 @@ export default function App() {
         {/* Full-Screen Interactive Lightbox */}
         <Lightbox />
 
-        {/* Floating WhatsApp Action Button */}
-        <FloatingWhatsApp />
+        {/* Floating WhatsApp Action Button — public only */}
+        {!isAdminRoute && <FloatingWhatsApp />}
 
         {/* Toast Notifications */}
         <Toast />
 
-        {/* Footer */}
-        <Footer navigate={navigate} />
+        {/* Footer — completely removed in Admin Panel */}
+        {!isAdminRoute && <Footer navigate={navigate} />}
       </div>
     </ProjectProvider>
   );

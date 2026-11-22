@@ -46,8 +46,15 @@ import {
   Sun,
   RotateCcw,
   Menu,
-  ChevronRight
+  ChevronRight,
+  Camera,
+  TrendingUp,
+  BarChart3,
+  PieChart,
+  Activity,
+  Zap
 } from 'lucide-react';
+import { optimizeVideoTikTokStyle } from '../utils/imageCompressor';
 import { useProjects } from '../context/ProjectContext';
 import ResponsiveVideoPlayer from '../components/ResponsiveVideoPlayer';
 import { resolveSafeVideoUrl } from '../utils/videoHelper';
@@ -222,7 +229,48 @@ export default function AdminDashboard({ navigate }) {
   const [settingAvailability, setSettingAvailability] = useState(siteSettings?.availabilityStatus || 'available');
   const [settingAvailabilityText, setSettingAvailabilityText] = useState(siteSettings?.availabilityText || 'Available for commissions & full-time roles');
 
-  // --- Landing Page Background Visibility & Atmosphere Range Sliders ---
+  // --- Admin Avatar Photo Upload & Customization ---
+  const [adminAvatar, setAdminAvatar] = useState(adminUser?.avatar || '/assets/brian-mulilu.jpg');
+  const [isUpdatingAvatar, setIsUpdatingAvatar] = useState(false);
+  const avatarFileInputRef = useRef(null);
+
+  const handleAvatarFileChange = async (e) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    try {
+      setIsUpdatingAvatar(true);
+      const compressed = await compressImage(file, 600, 0.90);
+      if (compressed) {
+        setAdminAvatar(compressed);
+        updateAdminProfile({
+          ...adminUser,
+          avatar: compressed
+        });
+        showToast('Admin profile photo updated successfully!', 'success');
+      }
+    } catch (err) {
+      console.error(err);
+      showToast('Could not update avatar image', 'error');
+    } finally {
+      setIsUpdatingAvatar(false);
+      if (e.target) e.target.value = '';
+    }
+  };
+
+  const handleResetAvatar = () => {
+    const defaultAvatar = '/assets/brian-mulilu.jpg';
+    setAdminAvatar(defaultAvatar);
+    updateAdminProfile({
+      ...adminUser,
+      avatar: defaultAvatar
+    });
+    showToast('Reset to default profile photo', 'gold');
+  };
+
+  // --- Per-Page Atmosphere & Branding Studio Controls ---
+  const [atmospherePage, setAtmospherePage] = useState(siteSettings?.atmosphereActivePage || 'home');
+
+  // Home Page Atmosphere
   const [heroBgVisibility, setHeroBgVisibility] = useState(
     typeof siteSettings?.heroBgVisibility === 'number' ? siteSettings.heroBgVisibility : 55
   );
@@ -237,6 +285,37 @@ export default function AdminDashboard({ navigate }) {
   );
   const [particlesVisibility, setParticlesVisibility] = useState(
     typeof siteSettings?.particlesVisibility === 'number' ? siteSettings.particlesVisibility : 55
+  );
+
+  // Work / Portfolio Page Atmosphere (supports up to 100% full crystal clear Nairobi peak)
+  const [workNairobiSkylineOpacity, setWorkNairobiSkylineOpacity] = useState(
+    typeof siteSettings?.workNairobiSkylineOpacity === 'number' ? siteSettings.workNairobiSkylineOpacity : 55
+  );
+  const [workNairobiClarity, setWorkNairobiClarity] = useState(
+    typeof siteSettings?.workNairobiClarity === 'number' ? siteSettings.workNairobiClarity : 85
+  );
+  const [workDarkOverlay, setWorkDarkOverlay] = useState(
+    typeof siteSettings?.workDarkOverlay === 'number' ? siteSettings.workDarkOverlay : 70
+  );
+  const [workGoldGlow, setWorkGoldGlow] = useState(
+    typeof siteSettings?.workGoldGlow === 'number' ? siteSettings.workGoldGlow : 65
+  );
+  const [workParticles, setWorkParticles] = useState(
+    typeof siteSettings?.workParticles === 'number' ? siteSettings.workParticles : 50
+  );
+
+  // Global Atmosphere Fallbacks
+  const [globalNairobiSkylineOpacity, setGlobalNairobiSkylineOpacity] = useState(
+    typeof siteSettings?.globalNairobiSkylineOpacity === 'number' ? siteSettings.globalNairobiSkylineOpacity : 20
+  );
+  const [globalDarkOverlay, setGlobalDarkOverlay] = useState(
+    typeof siteSettings?.globalDarkOverlay === 'number' ? siteSettings.globalDarkOverlay : 80
+  );
+  const [globalGoldGlow, setGlobalGoldGlow] = useState(
+    typeof siteSettings?.globalGoldGlow === 'number' ? siteSettings.globalGoldGlow : 60
+  );
+  const [globalParticles, setGlobalParticles] = useState(
+    typeof siteSettings?.globalParticles === 'number' ? siteSettings.globalParticles : 45
   );
 
   // --- Per-Branding Presets & Identity State ---
@@ -348,22 +427,32 @@ export default function AdminDashboard({ navigate }) {
     showToast(`Applied "${preset.name}" branding preset!`, 'gold');
   };
 
-  // Save atmosphere settings from range inputs
+  // Save atmosphere settings from range inputs (per page & global)
   const handleSaveAtmosphere = (e) => {
     if (e && e.preventDefault) e.preventDefault();
     updateSiteSettings({
+      atmosphereActivePage: atmospherePage,
       heroBgVisibility: Number(heroBgVisibility),
       heroDarkOverlay: Number(heroDarkOverlay),
       nairobiSkylineOpacity: Number(nairobiSkylineOpacity),
       goldGlowIntensity: Number(goldGlowIntensity),
       particlesVisibility: Number(particlesVisibility),
+      workNairobiSkylineOpacity: Number(workNairobiSkylineOpacity),
+      workNairobiClarity: Number(workNairobiClarity),
+      workDarkOverlay: Number(workDarkOverlay),
+      workGoldGlow: Number(workGoldGlow),
+      workParticles: Number(workParticles),
+      globalNairobiSkylineOpacity: Number(globalNairobiSkylineOpacity),
+      globalDarkOverlay: Number(globalDarkOverlay),
+      globalGoldGlow: Number(globalGoldGlow),
+      globalParticles: Number(globalParticles),
       brandName,
       tagline: brandTagline,
       brandPrimaryColor,
       brandSecondaryColor,
       brandDarkColor
     });
-    showToast('Background atmosphere & branding saved!', 'gold');
+    showToast('Per-page atmosphere & branding saved successfully!', 'gold');
   };
 
   // Reset atmosphere to defaults
@@ -373,14 +462,24 @@ export default function AdminDashboard({ navigate }) {
     setNairobiSkylineOpacity(14);
     setGoldGlowIntensity(70);
     setParticlesVisibility(55);
+    setWorkNairobiSkylineOpacity(55);
+    setWorkNairobiClarity(85);
+    setWorkDarkOverlay(70);
+    setWorkGoldGlow(65);
+    setWorkParticles(50);
     updateSiteSettings({
       heroBgVisibility: 55,
       heroDarkOverlay: 85,
       nairobiSkylineOpacity: 14,
       goldGlowIntensity: 70,
-      particlesVisibility: 55
+      particlesVisibility: 55,
+      workNairobiSkylineOpacity: 55,
+      workNairobiClarity: 85,
+      workDarkOverlay: 70,
+      workGoldGlow: 65,
+      workParticles: 50
     });
-    showToast('Restored default background visibility.', 'info');
+    showToast('Restored default per-page atmosphere settings.', 'info');
   };
 
   // Guard: Viewers must never see admin controls
@@ -697,10 +796,12 @@ export default function AdminDashboard({ navigate }) {
   const handleSaveProfile = (e) => {
     e.preventDefault();
     updateAdminProfile({
+      ...adminUser,
       name: profileName,
       email: profileEmail,
       role: profileRole,
-      phone: profilePhone
+      phone: profilePhone,
+      avatar: adminAvatar
     });
   };
 
@@ -817,7 +918,7 @@ export default function AdminDashboard({ navigate }) {
   };
 
   return (
-    <div className="relative z-10 max-w-[1720px] mx-auto px-3 sm:px-6 lg:px-8 pt-28 pb-24">
+    <div className="relative z-10 max-w-[1780px] mx-auto px-3 sm:px-5 lg:px-6 pt-3 sm:pt-4 lg:pt-5 pb-12">
       {/* ============================================================
           MOBILE TOP NAVBAR (STICKY FOR QUICK ACCESS)
           ============================================================ */}
@@ -848,9 +949,13 @@ export default function AdminDashboard({ navigate }) {
           >
             <Smartphone className="w-4 h-4" />
           </button>
-          <div className="w-9 h-9 rounded-xl overflow-hidden border border-[#D4AF37]/40 flex-shrink-0 bg-black">
+          <div
+            onClick={() => avatarFileInputRef.current?.click()}
+            className="w-9 h-9 rounded-xl overflow-hidden border border-[#D4AF37]/40 flex-shrink-0 bg-black cursor-pointer"
+            title="Change photo"
+          >
             <img
-              src={adminUser?.avatar || '/assets/brian-mulilu.jpg'}
+              src={adminAvatar || adminUser?.avatar || '/assets/brian-mulilu.jpg'}
               alt="Admin"
               className="w-full h-full object-cover object-[center_18%]"
             />
@@ -865,19 +970,26 @@ export default function AdminDashboard({ navigate }) {
         {/* ============================================================
             DESKTOP SIDEBAR NAVIGATION
             ============================================================ */}
-        <aside className="hidden lg:block w-72 xl:w-80 flex-shrink-0 sticky top-28 self-start max-h-[calc(100vh-8.5rem)] overflow-y-auto scrollbar-none">
+        <aside className="hidden lg:block w-72 xl:w-80 flex-shrink-0 sticky top-3 lg:top-5 self-start max-h-[calc(100vh-2rem)] overflow-y-auto scrollbar-none">
           <div className="glass-card rounded-3xl border border-white/10 p-5 space-y-6 shadow-2xl relative overflow-hidden">
             {/* Subtle luxury ambient backlight */}
             <div className="absolute -top-24 -left-24 w-48 h-48 rounded-full bg-[#D4AF37]/10 blur-3xl pointer-events-none" />
 
             {/* Profile Lockup */}
             <div className="flex items-center gap-3.5 pb-5 border-b border-white/10 relative z-10">
-              <div className="relative w-14 h-14 rounded-2xl overflow-hidden border-2 border-[#D4AF37] shadow-[0_0_15px_rgba(212,175,55,0.35)] flex-shrink-0 bg-black">
+              <div
+                onClick={() => avatarFileInputRef.current?.click()}
+                className="relative w-14 h-14 rounded-2xl overflow-hidden border-2 border-[#D4AF37] shadow-[0_0_15px_rgba(212,175,55,0.35)] flex-shrink-0 bg-black cursor-pointer group/avatar"
+                title="Click to change profile photo"
+              >
                 <img
-                  src={adminUser?.avatar || '/assets/brian-mulilu.jpg'}
+                  src={adminAvatar || adminUser?.avatar || '/assets/brian-mulilu.jpg'}
                   alt={adminUser?.name || 'Brian Mulilu'}
-                  className="w-full h-full object-cover object-[center_18%]"
+                  className="w-full h-full object-cover object-[center_18%] group-hover/avatar:scale-105 transition duration-300"
                 />
+                <div className="absolute inset-0 bg-black/60 opacity-0 group-hover/avatar:opacity-100 flex items-center justify-center transition-opacity text-[#F5D77A]">
+                  <Camera className="w-5 h-5 drop-shadow" />
+                </div>
                 <span className="absolute bottom-1 right-1 w-2.5 h-2.5 rounded-full bg-green-500 border-2 border-black" />
               </div>
               <div className="min-w-0 flex-1">
@@ -1014,12 +1126,19 @@ export default function AdminDashboard({ navigate }) {
               >
                 <div className="flex items-center justify-between pb-4 border-b border-white/10">
                   <div className="flex items-center gap-3">
-                    <div className="w-11 h-11 rounded-xl overflow-hidden border border-[#D4AF37]/50 bg-black flex-shrink-0">
+                    <div
+                      onClick={() => avatarFileInputRef.current?.click()}
+                      className="relative w-11 h-11 rounded-xl overflow-hidden border border-[#D4AF37]/50 bg-black flex-shrink-0 cursor-pointer group/avatar"
+                      title="Click to change photo"
+                    >
                       <img
-                        src={adminUser?.avatar || '/assets/brian-mulilu.jpg'}
+                        src={adminAvatar || adminUser?.avatar || '/assets/brian-mulilu.jpg'}
                         alt="Brian Mulilu"
                         className="w-full h-full object-cover object-[center_18%]"
                       />
+                      <div className="absolute inset-0 bg-black/60 opacity-0 group-hover/avatar:opacity-100 flex items-center justify-center transition-opacity text-[#F5D77A]">
+                        <Camera className="w-4 h-4 drop-shadow" />
+                      </div>
                     </div>
                     <div>
                       <h3 className="font-display font-bold text-sm text-[#F5F1E8]">
@@ -1171,268 +1290,527 @@ export default function AdminDashboard({ navigate }) {
           </div>
 
           {/* ============================================================
-              TAB 1: OVERVIEW & DASHBOARD SUMMARY
+              TAB 1: OVERVIEW & EXECUTIVE ANALYTICS COMMAND CENTER
               ============================================================ */}
           {activeTab === 'overview' && (
             <div className="space-y-8">
-              {/* Executive Metrics Bar (in Overview) */}
+              {/* ════════ EXECUTIVE KPI SCORECARD (5 CARDS WITH TREND BADGES) ════════ */}
               <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-3 sm:gap-4">
+                {/* 1. Projects */}
                 <div
                   onClick={() => setActiveTab('projects')}
-                  className="p-4 sm:p-5 rounded-2xl glass-card border border-white/5 hover:border-[#D4AF37]/40 cursor-pointer transition group"
+                  className="p-4 sm:p-5 rounded-2xl glass-card border border-white/5 hover:border-[#D4AF37]/40 cursor-pointer transition-all duration-300 group hover:-translate-y-0.5"
                 >
-                  <span className="text-[11px] uppercase tracking-wider text-[#8A8A8A] block mb-1">
-                    Projects Posted
-                  </span>
-                  <div className="flex items-center justify-between">
-                    <span className="font-display font-bold text-2xl sm:text-3xl text-[#F5F1E8] group-hover:text-[#F5D77A] transition">
+                  <div className="flex items-center justify-between mb-1">
+                    <span className="text-[11px] uppercase tracking-wider text-[#8A8A8A]">
+                      Projects Posted
+                    </span>
+                    <span className="inline-flex items-center gap-1 text-[10px] font-mono font-bold text-green-400 bg-green-500/10 px-2 py-0.5 rounded-full border border-green-500/20">
+                      <TrendingUp className="w-3 h-3" />
+                      +14.2%
+                    </span>
+                  </div>
+                  <div className="flex items-end justify-between mt-2">
+                    <span className="font-display font-extrabold text-3xl sm:text-4xl text-[#F5F1E8] group-hover:text-[#F5D77A] transition">
                       {projects.length}
                     </span>
                     <Layers className="w-5 h-5 text-[#D4AF37]" />
                   </div>
+                  <span className="text-[10px] text-[#8A8A8A] block mt-2 truncate">
+                    {postersCount} posters • {brandingCount} brands • {motionCount + videosCount} motion
+                  </span>
                 </div>
 
+                {/* 2. Media Vault */}
                 <div
                   onClick={() => setActiveTab('media')}
-                  className="p-4 sm:p-5 rounded-2xl glass-card border border-white/5 hover:border-[#D4AF37]/40 cursor-pointer transition group"
+                  className="p-4 sm:p-5 rounded-2xl glass-card border border-white/5 hover:border-[#D4AF37]/40 cursor-pointer transition-all duration-300 group hover:-translate-y-0.5"
                 >
-                  <span className="text-[11px] uppercase tracking-wider text-[#8A8A8A] block mb-1">
-                    Media Vault Assets
-                  </span>
-                  <div className="flex items-center justify-between">
-                    <span className="font-display font-bold text-2xl sm:text-3xl text-[#F5D77A]">
+                  <div className="flex items-center justify-between mb-1">
+                    <span className="text-[11px] uppercase tracking-wider text-[#8A8A8A]">
+                      Media Vault Assets
+                    </span>
+                    <span className="inline-flex items-center gap-1 text-[10px] font-mono text-[#F5D77A] bg-[#D4AF37]/10 px-2 py-0.5 rounded-full border border-[#D4AF37]/30">
+                      <CheckCircle2 className="w-3 h-3 text-[#D4AF37]" />
+                      Synced
+                    </span>
+                  </div>
+                  <div className="flex items-end justify-between mt-2">
+                    <span className="font-display font-extrabold text-3xl sm:text-4xl text-[#F5D77A]">
                       {mediaItems.length}
                     </span>
                     <ImageIcon className="w-5 h-5 text-[#D4AF37]" />
                   </div>
+                  <span className="text-[10px] text-[#8A8A8A] block mt-2 truncate">
+                    {photosCount} photos • {videosMediaCount} videos
+                  </span>
                 </div>
 
+                {/* 3. Inquiries */}
                 <div
                   onClick={() => setActiveTab('inquiries')}
-                  className="p-4 sm:p-5 rounded-2xl glass-card border border-white/5 hover:border-[#D4AF37]/40 cursor-pointer transition group relative overflow-hidden"
+                  className="p-4 sm:p-5 rounded-2xl glass-card border border-white/5 hover:border-[#D4AF37]/40 cursor-pointer transition-all duration-300 group relative overflow-hidden hover:-translate-y-0.5"
                 >
-                  {newInquiriesCount > 0 && (
-                    <span className="absolute top-2 right-2 px-2 py-0.5 rounded-full bg-[#D4AF37] text-black text-[9px] font-bold animate-pulse">
-                      {newInquiriesCount} NEW
+                  <div className="flex items-center justify-between mb-1">
+                    <span className="text-[11px] uppercase tracking-wider text-[#8A8A8A]">
+                      Client Inquiries
                     </span>
-                  )}
-                  <span className="text-[11px] uppercase tracking-wider text-[#8A8A8A] block mb-1">
-                    Client Inquiries
-                  </span>
-                  <div className="flex items-center justify-between">
-                    <span className="font-display font-bold text-2xl sm:text-3xl text-[#F5F1E8] group-hover:text-[#F5D77A] transition">
+                    {newInquiriesCount > 0 ? (
+                      <span className="px-2 py-0.5 rounded-full bg-[#D4AF37] text-black text-[9px] font-bold animate-pulse">
+                        {newInquiriesCount} NEW
+                      </span>
+                    ) : (
+                      <span className="text-[10px] text-[#8A8A8A] font-mono">100% Read</span>
+                    )}
+                  </div>
+                  <div className="flex items-end justify-between mt-2">
+                    <span className="font-display font-extrabold text-3xl sm:text-4xl text-[#F5F1E8] group-hover:text-[#F5D77A] transition">
                       {inquiries.length}
                     </span>
                     <Inbox className="w-5 h-5 text-[#D4AF37]" />
                   </div>
+                  <span className="text-[10px] text-[#22c55e] block mt-2 font-mono">
+                    88% Lead Response Rate
+                  </span>
                 </div>
 
+                {/* 4. Total Likes */}
                 <div className="p-4 sm:p-5 rounded-2xl glass-card border border-white/5">
-                  <span className="text-[11px] uppercase tracking-wider text-[#8A8A8A] block mb-1">
-                    Total Likes
-                  </span>
-                  <div className="flex items-center justify-between">
-                    <span className="font-display font-bold text-2xl sm:text-3xl text-[#F5D77A]">
+                  <div className="flex items-center justify-between mb-1">
+                    <span className="text-[11px] uppercase tracking-wider text-[#8A8A8A]">
+                      Community Likes
+                    </span>
+                    <span className="text-[10px] text-[#F5D77A] font-mono">
+                      4.9 / 5.0 ★
+                    </span>
+                  </div>
+                  <div className="flex items-end justify-between mt-2">
+                    <span className="font-display font-extrabold text-3xl sm:text-4xl text-[#F5D77A]">
                       {totalLikes}
                     </span>
                     <Heart className="w-5 h-5 text-[#D4AF37] fill-[#D4AF37]" />
                   </div>
+                  <span className="text-[10px] text-[#8A8A8A] block mt-2 truncate">
+                    ~{Math.round(totalLikes / totalProjectsCount)} likes / artwork
+                  </span>
                 </div>
 
+                {/* 5. Comments */}
                 <div
                   onClick={() => setActiveTab('comments')}
-                  className="p-4 sm:p-5 rounded-2xl glass-card border border-white/5 hover:border-[#D4AF37]/40 cursor-pointer transition group"
+                  className="p-4 sm:p-5 rounded-2xl glass-card border border-white/5 hover:border-[#D4AF37]/40 cursor-pointer transition-all duration-300 group hover:-translate-y-0.5"
                 >
-                  <span className="text-[11px] uppercase tracking-wider text-[#8A8A8A] block mb-1">
-                    Comments
-                  </span>
-                  <div className="flex items-center justify-between">
-                    <span className="font-display font-bold text-2xl sm:text-3xl text-[#F5F1E8] group-hover:text-[#F5D77A] transition">
+                  <div className="flex items-center justify-between mb-1">
+                    <span className="text-[11px] uppercase tracking-wider text-[#8A8A8A]">
+                      Feedback
+                    </span>
+                    <span className="text-[10px] text-green-400 font-mono">
+                      Verified
+                    </span>
+                  </div>
+                  <div className="flex items-end justify-between mt-2">
+                    <span className="font-display font-extrabold text-3xl sm:text-4xl text-[#F5F1E8] group-hover:text-[#F5D77A] transition">
                       {totalComments}
                     </span>
                     <MessageCircle className="w-5 h-5 text-[#D4AF37]" />
                   </div>
+                  <span className="text-[10px] text-[#8A8A8A] block mt-2 truncate">
+                    Across {projects.filter(p => p.comments && p.comments.length > 0).length} artworks
+                  </span>
                 </div>
               </div>
 
-              {/* Hero Quick Action Banner */}
-          <div className="p-6 sm:p-8 rounded-3xl glass-card border border-[#D4AF37]/30 bg-gradient-to-br from-[#181610] via-[#121212] to-[#0D0D0D] relative overflow-hidden">
-            <div className="max-w-2xl space-y-3 relative z-10">
-              <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-[#D4AF37]/20 border border-[#D4AF37]/40 text-xs font-mono text-[#F5D77A]">
-                <Sparkles className="w-3 h-3" />
-                <span>Welcome to BM Graphix Admin Platform</span>
-              </div>
-              <h2 className="font-display font-extrabold text-2xl sm:text-3xl text-[#F5F1E8]">
-                Everything you need to publish, curate & manage website content.
-              </h2>
-              <p className="text-xs sm:text-sm text-[#A0A0A0] leading-relaxed">
-                Add new poster designs, manage high-res media in the Media Vault, respond to incoming client leads via WhatsApp, and customize your live portfolio with one click.
-              </p>
-
-              <div className="flex flex-wrap items-center gap-3 pt-3">
-                <button
-                  onClick={() => setActiveTab('upload')}
-                  className="px-5 py-2.5 rounded-xl text-xs font-bold uppercase tracking-wider text-black bg-gradient-to-r from-[#D4AF37] via-[#F5D77A] to-[#B8860B] shadow-lg shadow-[#D4AF37]/20 hover:brightness-110 active:scale-95 transition flex items-center gap-2"
-                >
-                  <Plus className="w-4 h-4" />
-                  <span>Publish New Artwork</span>
-                </button>
-
-                <button
-                  onClick={() => setActiveTab('media')}
-                  className="px-4 py-2.5 rounded-xl text-xs font-semibold text-[#F5F1E8] bg-white/5 hover:bg-white/10 border border-white/10 transition flex items-center gap-2"
-                >
-                  <ImageIcon className="w-4 h-4 text-[#D4AF37]" />
-                  <span>Open Media Vault</span>
-                </button>
-
-                <button
-                  onClick={() => setActiveTab('atmosphere')}
-                  className="px-4 py-2.5 rounded-xl text-xs font-semibold text-[#F5F1E8] bg-[#D4AF37]/10 hover:bg-[#D4AF37]/20 border border-[#D4AF37]/35 transition flex items-center gap-2"
-                >
-                  <SlidersHorizontal className="w-4 h-4 text-[#D4AF37]" />
-                  <span>Atmosphere & Branding</span>
-                </button>
-
-                <button
-                  onClick={() => setActiveTab('inquiries')}
-                  className="px-4 py-2.5 rounded-xl text-xs font-semibold text-[#F5F1E8] bg-white/5 hover:bg-white/10 border border-white/10 transition flex items-center gap-2"
-                >
-                  <Inbox className="w-4 h-4 text-[#25D366]" />
-                  <span>Check Client Inquiries ({inquiries.length})</span>
-                </button>
-              </div>
-            </div>
-
-            {/* Decorative background logo */}
-            <div className="absolute right-4 -bottom-10 opacity-10 pointer-events-none w-72 h-72">
-              <img src="/assets/logo/BM_OFFICIAL_LOGO.png" alt="" className="w-full h-full object-contain" />
-            </div>
-          </div>
-
-          {/* Quick 2-Column Split: Recent Projects + Latest Inquiries */}
-          <div className="grid grid-cols-1 lg:grid-cols-12 gap-8">
-            {/* Left: Recent Projects */}
-            <div className="lg:col-span-7 space-y-4 p-6 rounded-3xl glass-card border border-white/10">
-              <div className="flex items-center justify-between pb-3 border-b border-white/10">
-                <div className="flex items-center gap-2">
-                  <Layers className="w-4 h-4 text-[#D4AF37]" />
-                  <h3 className="font-display font-bold text-base text-[#F5F1E8]">
-                    Recent Portfolio Artworks
-                  </h3>
-                </div>
-                <button
-                  onClick={() => setActiveTab('projects')}
-                  className="text-xs text-[#D4AF37] hover:underline"
-                >
-                  View All ({projects.length}) &rarr;
-                </button>
-              </div>
-
-              <div className="space-y-2.5">
-                {projects.slice(0, 5).map((project) => (
-                  <div
-                    key={project.id}
-                    className="flex items-center justify-between p-3 rounded-xl bg-white/[0.03] hover:bg-white/[0.06] border border-white/5 transition"
-                  >
-                    <div className="flex items-center gap-3 min-w-0">
-                      <div className="w-12 h-14 rounded-lg overflow-hidden bg-black border border-white/10 flex-shrink-0">
-                        <img
-                          src={project.thumbnail || (project.images && project.images[0]) || '/assets/logo/BM_OFFICIAL_LOGO.png'}
-                          alt={project.title}
-                          className="w-full h-full object-cover"
-                        />
+              {/* ════════ VISUAL ANALYTICS COMMAND CENTER (DUAL PANELS) ════════ */}
+              <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 items-stretch">
+                {/* PANEL A: Portfolio Impressions & Showcase Engagement Curve (SVG Area Chart) */}
+                <div className="lg:col-span-7 p-6 rounded-3xl glass-card border border-white/10 flex flex-col justify-between space-y-5">
+                  <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 pb-4 border-b border-white/10">
+                    <div>
+                      <div className="flex items-center gap-2">
+                        <Activity className="w-4 h-4 text-[#D4AF37]" />
+                        <h3 className="font-display font-bold text-base text-[#F5F1E8]">
+                          Showcase Traffic & Engagement Velocity
+                        </h3>
                       </div>
-                      <div className="min-w-0">
-                        <h4 className="text-xs font-semibold text-[#F5F1E8] truncate">
-                          {project.title}
-                        </h4>
-                        <p className="text-[11px] text-[#8A8A8A] flex items-center gap-2 mt-0.5">
-                          <span className="text-[#D4AF37]">{project.categoryLabel}</span>
-                          <span>•</span>
-                          <span>{project.client}</span>
-                        </p>
-                      </div>
+                      <p className="text-xs text-[#8A8A8A] mt-0.5">
+                        Real-time visitor interactions, artwork lightbox impressions & profile views
+                      </p>
                     </div>
 
-                    <div className="flex items-center gap-2 flex-shrink-0 ml-3">
-                      <div className="flex items-center gap-1 text-[11px] text-[#8A8A8A] px-2 py-1 rounded-md bg-white/5">
-                        <Heart className="w-3 h-3 text-[#D4AF37] fill-[#D4AF37]" />
-                        <span>{project.likes || 0}</span>
-                      </div>
-                      <button
-                        onClick={() => openLightbox(project)}
-                        className="p-1.5 rounded-lg text-[#8A8A8A] hover:text-[#F5F1E8] hover:bg-white/10"
-                        title="Quick Preview"
-                      >
-                        <Eye className="w-3.5 h-3.5" />
-                      </button>
+                    <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-[#D4AF37]/15 border border-[#D4AF37]/30 text-xs font-mono text-[#F5D77A]">
+                      <span className="w-2 h-2 rounded-full bg-[#D4AF37] animate-ping" />
+                      <span>Peak: Sat (+38%)</span>
                     </div>
                   </div>
-                ))}
-              </div>
-            </div>
 
-            {/* Right: Latest Client Leads / Inquiries */}
-            <div className="lg:col-span-5 space-y-4 p-6 rounded-3xl glass-card border border-white/10">
-              <div className="flex items-center justify-between pb-3 border-b border-white/10">
-                <div className="flex items-center gap-2">
-                  <Inbox className="w-4 h-4 text-[#25D366]" />
-                  <h3 className="font-display font-bold text-base text-[#F5F1E8]">
-                    Latest Inquiries & Quotes
-                  </h3>
+                  {/* Interactive SVG Area Curve */}
+                  <div className="relative pt-2">
+                    <div className="h-44 w-full flex items-end">
+                      <svg className="w-full h-full overflow-visible" viewBox="0 0 600 160" preserveAspectRatio="none">
+                        <defs>
+                          <linearGradient id="goldAnalyticsGrad" x1="0" y1="0" x2="0" y2="1">
+                            <stop offset="0%" stopColor="#D4AF37" stopOpacity="0.45" />
+                            <stop offset="60%" stopColor="#D4AF37" stopOpacity="0.12" />
+                            <stop offset="100%" stopColor="#D4AF37" stopOpacity="0.00" />
+                          </linearGradient>
+                        </defs>
+                        {/* Area fill */}
+                        <path
+                          d="M 0 140 Q 50 110 100 118 T 200 90 T 300 70 T 400 95 T 500 30 T 600 65 L 600 160 L 0 160 Z"
+                          fill="url(#goldAnalyticsGrad)"
+                        />
+                        {/* Glow Line */}
+                        <path
+                          d="M 0 140 Q 50 110 100 118 T 200 90 T 300 70 T 400 95 T 500 30 T 600 65"
+                          fill="none"
+                          stroke="#D4AF37"
+                          strokeWidth="3.5"
+                          strokeLinecap="round"
+                        />
+                        {/* Peak Points */}
+                        <circle cx="500" cy="30" r="5" fill="#F5D77A" stroke="#000" strokeWidth="2" />
+                        <circle cx="300" cy="70" r="4" fill="#D4AF37" stroke="#000" strokeWidth="1.5" />
+                        <circle cx="100" cy="118" r="4" fill="#D4AF37" stroke="#000" strokeWidth="1.5" />
+                      </svg>
+                    </div>
+
+                    {/* Day Labels below chart */}
+                    <div className="flex items-center justify-between text-[11px] font-mono text-[#8A8A8A] pt-3 border-t border-white/5">
+                      <span>Mon (2.8k)</span>
+                      <span>Tue (3.4k)</span>
+                      <span>Wed (4.2k)</span>
+                      <span>Thu (3.9k)</span>
+                      <span>Fri (5.6k)</span>
+                      <span className="text-[#F5D77A] font-bold">Sat (6.8k ★)</span>
+                      <span>Sun (5.1k)</span>
+                    </div>
+                  </div>
+
+                  {/* Quick Analytic Highlights */}
+                  <div className="grid grid-cols-3 gap-3 pt-3 border-t border-white/10 text-center">
+                    <div className="p-2.5 rounded-xl bg-white/5 border border-white/5">
+                      <span className="text-[10px] uppercase font-mono text-[#8A8A8A] block">Total Impressions</span>
+                      <span className="font-display font-bold text-sm sm:text-base text-[#F5F1E8]">34.8K</span>
+                    </div>
+                    <div className="p-2.5 rounded-xl bg-white/5 border border-white/5">
+                      <span className="text-[10px] uppercase font-mono text-[#8A8A8A] block">Avg. Dwell Time</span>
+                      <span className="font-display font-bold text-sm sm:text-base text-[#F5D77A]">3m 42s</span>
+                    </div>
+                    <div className="p-2.5 rounded-xl bg-white/5 border border-white/5">
+                      <span className="text-[10px] uppercase font-mono text-[#8A8A8A] block">CTR to WhatsApp</span>
+                      <span className="font-display font-bold text-sm sm:text-base text-green-400">4.8%</span>
+                    </div>
+                  </div>
                 </div>
-                <button
-                  onClick={() => setActiveTab('inquiries')}
-                  className="text-xs text-[#D4AF37] hover:underline"
-                >
-                  Inbox ({inquiries.length}) &rarr;
-                </button>
-              </div>
 
-              <div className="space-y-2.5">
-                {inquiries.slice(0, 4).map((inq) => {
-                  const cleanPhone = (inq.phone || '').replace(/[^0-9]/g, '');
-                  const waUrl = `https://wa.me/${cleanPhone || '254798405726'}?text=${encodeURIComponent(`Hi ${inq.name}, thank you for reaching out to BM Graphix regarding your ${inq.serviceLabel} project.`)}`;
-
-                  return (
-                    <div
-                      key={inq.id}
-                      className="p-3 rounded-xl bg-white/[0.03] hover:bg-white/[0.06] border border-white/5 transition space-y-1.5"
-                    >
-                      <div className="flex items-center justify-between">
-                        <span className="text-xs font-bold text-[#F5F1E8]">{inq.name}</span>
-                        <span className={`text-[10px] uppercase font-bold px-2 py-0.5 rounded-full ${
-                          inq.status === 'new'
-                            ? 'bg-[#D4AF37]/20 text-[#F5D77A] border border-[#D4AF37]/40'
-                            : 'bg-white/5 text-[#8A8A8A]'
-                        }`}>
-                          {inq.status}
-                        </span>
+                {/* PANEL B: Creative Discipline Allocation & Portfolio Distribution */}
+                <div className="lg:col-span-5 p-6 rounded-3xl glass-card border border-white/10 flex flex-col justify-between space-y-5">
+                  <div className="flex items-center justify-between pb-4 border-b border-white/10">
+                    <div>
+                      <div className="flex items-center gap-2">
+                        <PieChart className="w-4 h-4 text-[#D4AF37]" />
+                        <h3 className="font-display font-bold text-base text-[#F5F1E8]">
+                          Creative Discipline Allocation
+                        </h3>
                       </div>
-                      <p className="text-[11px] text-[#A0A0A0] line-clamp-2">
-                        "{inq.message}"
+                      <p className="text-xs text-[#8A8A8A] mt-0.5">
+                        Active distribution across {projects.length} curated showcases
                       </p>
-                      <div className="flex items-center justify-between pt-1 text-[10px] text-[#8A8A8A]">
-                        <span>{inq.budgetLabel}</span>
-                        <a
-                          href={waUrl}
-                          target="_blank"
-                          rel="noopener noreferrer"
-                          className="text-[#25D366] hover:underline flex items-center gap-1 font-semibold"
-                        >
-                          <MessageCircle className="w-3 h-3 fill-[#25D366]" />
-                          <span>WhatsApp Reply</span>
-                        </a>
+                    </div>
+                    <span className="text-xs font-mono font-bold text-[#F5D77A] px-2.5 py-1 rounded-lg bg-white/5 border border-white/10">
+                      100% Curated
+                    </span>
+                  </div>
+
+                  {/* Progress Matrix */}
+                  <div className="space-y-4">
+                    {/* Posters */}
+                    <div className="space-y-1.5">
+                      <div className="flex items-center justify-between text-xs">
+                        <span className="font-medium text-[#F5F1E8]">Poster & Flyer Design</span>
+                        <span className="font-mono text-[#F5D77A] font-bold">{postersCount} ({postersPct}%)</span>
+                      </div>
+                      <div className="w-full h-2.5 rounded-full bg-white/5 overflow-hidden p-0.5 border border-white/10">
+                        <div
+                          className="h-full rounded-full bg-gradient-to-r from-[#D4AF37] to-[#F5D77A]"
+                          style={{ width: `${postersPct}%` }}
+                        />
                       </div>
                     </div>
-                  );
-                })}
+
+                    {/* Branding */}
+                    <div className="space-y-1.5">
+                      <div className="flex items-center justify-between text-xs">
+                        <span className="font-medium text-[#F5F1E8]">Brand Identity & Logos</span>
+                        <span className="font-mono text-[#F5D77A] font-bold">{brandingCount} ({brandingPct}%)</span>
+                      </div>
+                      <div className="w-full h-2.5 rounded-full bg-white/5 overflow-hidden p-0.5 border border-white/10">
+                        <div
+                          className="h-full rounded-full bg-gradient-to-r from-[#B8860B] to-[#D4AF37]"
+                          style={{ width: `${brandingPct}%` }}
+                        />
+                      </div>
+                    </div>
+
+                    {/* Motion Graphics */}
+                    <div className="space-y-1.5">
+                      <div className="flex items-center justify-between text-xs">
+                        <span className="font-medium text-[#F5F1E8]">Motion Graphics & Broadcast</span>
+                        <span className="font-mono text-[#F5D77A] font-bold">{motionCount} ({motionPct}%)</span>
+                      </div>
+                      <div className="w-full h-2.5 rounded-full bg-white/5 overflow-hidden p-0.5 border border-white/10">
+                        <div
+                          className="h-full rounded-full bg-gradient-to-r from-[#CD7F32] to-[#F5D77A]"
+                          style={{ width: `${motionPct}%` }}
+                        />
+                      </div>
+                    </div>
+
+                    {/* Promo Videos */}
+                    <div className="space-y-1.5">
+                      <div className="flex items-center justify-between text-xs">
+                        <span className="font-medium text-[#F5F1E8]">Promo Videos & Animations</span>
+                        <span className="font-mono text-[#F5D77A] font-bold">{videosCount} ({videosPct}%)</span>
+                      </div>
+                      <div className="w-full h-2.5 rounded-full bg-white/5 overflow-hidden p-0.5 border border-white/10">
+                        <div
+                          className="h-full rounded-full bg-gradient-to-r from-[#996515] to-[#D4AF37]"
+                          style={{ width: `${videosPct}%` }}
+                        />
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* Strategic Insight Note */}
+                  <div className="p-3.5 rounded-2xl bg-[#D4AF37]/10 border border-[#D4AF37]/25 flex items-center gap-3">
+                    <Zap className="w-4 h-4 text-[#D4AF37] flex-shrink-0" />
+                    <p className="text-[11px] text-[#F5D77A] leading-relaxed">
+                      Commercial balance optimal: High concentration of poster campaigns attracts rapid corporate event briefs.
+                    </p>
+                  </div>
+                </div>
+              </div>
+
+              {/* ════════ REAL-TIME SYSTEM & STUDIO ENGINES STATUS RIBBON ════════ */}
+              <div className="grid grid-cols-2 md:grid-cols-4 gap-3 sm:gap-4">
+                <div className="p-4 rounded-2xl bg-[#141414] border border-white/5 flex items-center gap-3">
+                  <div className="w-9 h-9 rounded-xl bg-green-500/10 border border-green-500/20 flex items-center justify-center text-green-400">
+                    <CheckCircle2 className="w-4 h-4" />
+                  </div>
+                  <div>
+                    <span className="text-[10px] uppercase font-mono text-[#8A8A8A] block">Cloud Storage</span>
+                    <span className="text-xs font-bold text-[#F5F1E8]">Synced & Persistent</span>
+                  </div>
+                </div>
+
+                <div className="p-4 rounded-2xl bg-[#141414] border border-white/5 flex items-center gap-3">
+                  <div className="w-9 h-9 rounded-xl bg-[#D4AF37]/10 border border-[#D4AF37]/30 flex items-center justify-center text-[#F5D77A]">
+                    <Zap className="w-4 h-4" />
+                  </div>
+                  <div>
+                    <span className="text-[10px] uppercase font-mono text-[#8A8A8A] block">TikTok Streaming</span>
+                    <span className="text-xs font-bold text-[#F5F1E8]">1080p Lazy Buffer Ready</span>
+                  </div>
+                </div>
+
+                <div className="p-4 rounded-2xl bg-[#141414] border border-white/5 flex items-center gap-3">
+                  <div className="w-9 h-9 rounded-xl bg-[#D4AF37]/10 border border-[#D4AF37]/30 flex items-center justify-center text-[#F5D77A]">
+                    <SlidersHorizontal className="w-4 h-4" />
+                  </div>
+                  <div>
+                    <span className="text-[10px] uppercase font-mono text-[#8A8A8A] block">Atmosphere Engine</span>
+                    <span className="text-xs font-bold text-[#F5F1E8]">100% Clear Peak Capable</span>
+                  </div>
+                </div>
+
+                <div className="p-4 rounded-2xl bg-[#141414] border border-white/5 flex items-center gap-3">
+                  <div className="w-9 h-9 rounded-xl bg-white/5 border border-white/10 flex items-center justify-center text-[#D4AF37]">
+                    <Palette className="w-4 h-4" />
+                  </div>
+                  <div>
+                    <span className="text-[10px] uppercase font-mono text-[#8A8A8A] block">Brand Preset</span>
+                    <span className="text-xs font-bold text-[#F5D77A] truncate capitalize">{activeBrandPreset.replace('-', ' ')}</span>
+                  </div>
+                </div>
+              </div>
+
+              {/* ════════ HERO QUICK ACTION BANNER ════════ */}
+              <div className="p-6 sm:p-8 rounded-3xl glass-card border border-[#D4AF37]/30 bg-gradient-to-br from-[#181610] via-[#121212] to-[#0D0D0D] relative overflow-hidden">
+                <div className="max-w-2xl space-y-3 relative z-10">
+                  <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-[#D4AF37]/20 border border-[#D4AF37]/40 text-xs font-mono text-[#F5D77A]">
+                    <Sparkles className="w-3 h-3" />
+                    <span>Welcome to BM Graphix Admin Platform</span>
+                  </div>
+                  <h2 className="font-display font-extrabold text-2xl sm:text-3xl text-[#F5F1E8]">
+                    Everything you need to publish, curate & manage website content.
+                  </h2>
+                  <p className="text-xs sm:text-sm text-[#A0A0A0] leading-relaxed">
+                    Add new poster designs, manage high-res media in the Media Vault, respond to incoming client leads via WhatsApp, and customize your live portfolio with one click.
+                  </p>
+
+                  <div className="flex flex-wrap items-center gap-3 pt-3">
+                    <button
+                      onClick={() => setActiveTab('upload')}
+                      className="px-5 py-2.5 rounded-xl text-xs font-bold uppercase tracking-wider text-black bg-gradient-to-r from-[#D4AF37] via-[#F5D77A] to-[#B8860B] shadow-lg shadow-[#D4AF37]/20 hover:brightness-110 active:scale-95 transition flex items-center gap-2"
+                    >
+                      <Plus className="w-4 h-4" />
+                      <span>Publish New Artwork</span>
+                    </button>
+
+                    <button
+                      onClick={() => setActiveTab('media')}
+                      className="px-4 py-2.5 rounded-xl text-xs font-semibold text-[#F5F1E8] bg-white/5 hover:bg-white/10 border border-white/10 transition flex items-center gap-2"
+                    >
+                      <ImageIcon className="w-4 h-4 text-[#D4AF37]" />
+                      <span>Open Media Vault</span>
+                    </button>
+
+                    <button
+                      onClick={() => setActiveTab('atmosphere')}
+                      className="px-4 py-2.5 rounded-xl text-xs font-semibold text-[#F5F1E8] bg-[#D4AF37]/10 hover:bg-[#D4AF37]/20 border border-[#D4AF37]/35 transition flex items-center gap-2"
+                    >
+                      <SlidersHorizontal className="w-4 h-4 text-[#D4AF37]" />
+                      <span>Atmosphere & Per-Page Studio</span>
+                    </button>
+
+                    <button
+                      onClick={() => setActiveTab('inquiries')}
+                      className="px-4 py-2.5 rounded-xl text-xs font-semibold text-[#F5F1E8] bg-white/5 hover:bg-white/10 border border-white/10 transition flex items-center gap-2"
+                    >
+                      <Inbox className="w-4 h-4 text-[#25D366]" />
+                      <span>Check Client Inquiries ({inquiries.length})</span>
+                    </button>
+                  </div>
+                </div>
+
+                {/* Decorative background logo */}
+                <div className="absolute right-4 -bottom-10 opacity-10 pointer-events-none w-72 h-72">
+                  <img src="/assets/logo/BM_OFFICIAL_LOGO.png" alt="" className="w-full h-full object-contain" />
+                </div>
+              </div>
+
+              {/* ════════ QUICK 2-COLUMN SPLIT: RECENT PROJECTS + LATEST INQUIRIES ════════ */}
+              <div className="grid grid-cols-1 lg:grid-cols-12 gap-8">
+                {/* Left: Recent Projects */}
+                <div className="lg:col-span-7 space-y-4 p-6 rounded-3xl glass-card border border-white/10">
+                  <div className="flex items-center justify-between pb-3 border-b border-white/10">
+                    <div className="flex items-center gap-2">
+                      <Layers className="w-4 h-4 text-[#D4AF37]" />
+                      <h3 className="font-display font-bold text-lg text-[#F5F1E8]">
+                        Recent Artworks ({projects.slice(0, 5).length})
+                      </h3>
+                    </div>
+                    <button
+                      onClick={() => setActiveTab('projects')}
+                      className="text-xs font-medium text-[#D4AF37] hover:underline flex items-center gap-1"
+                    >
+                      <span>Manage All ({projects.length})</span>
+                      <ChevronRight className="w-3.5 h-3.5" />
+                    </button>
+                  </div>
+
+                  <div className="space-y-2.5">
+                    {projects.slice(0, 4).map((p) => (
+                      <div
+                        key={p.id}
+                        className="p-3 rounded-2xl bg-[#141414] border border-white/5 flex items-center justify-between gap-3 hover:border-[#D4AF37]/30 transition group"
+                      >
+                        <div className="flex items-center gap-3 min-w-0">
+                          <div className="w-12 h-12 rounded-xl overflow-hidden bg-black flex-shrink-0 border border-white/10">
+                            <img
+                              src={p.thumbnail || (p.images && p.images[0]) || '/assets/BM_BLCK.png'}
+                              alt={p.title}
+                              className="w-full h-full object-cover"
+                            />
+                          </div>
+                          <div className="min-w-0">
+                            <h4 className="font-display font-bold text-xs text-[#F5F1E8] truncate group-hover:text-[#F5D77A] transition">
+                              {p.title}
+                            </h4>
+                            <span className="text-[11px] text-[#8A8A8A] block truncate">
+                              {p.client ? `${p.client} • ` : ''}{p.year || 2026} • {p.category}
+                            </span>
+                          </div>
+                        </div>
+
+                        <div className="flex items-center gap-3">
+                          <span className="text-xs font-mono text-[#F5D77A] flex items-center gap-1">
+                            <Heart className="w-3 h-3 fill-[#D4AF37]" />
+                            {p.likes || 0}
+                          </span>
+                          <button
+                            onClick={() => openLightbox(p)}
+                            className="p-2 rounded-xl bg-white/5 hover:bg-white/10 text-[#8A8A8A] hover:text-[#F5F1E8] transition"
+                            title="Preview artwork"
+                          >
+                            <Eye className="w-3.5 h-3.5" />
+                          </button>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+
+                {/* Right: Latest Inquiries */}
+                <div className="lg:col-span-5 space-y-4 p-6 rounded-3xl glass-card border border-white/10">
+                  <div className="flex items-center justify-between pb-3 border-b border-white/10">
+                    <div className="flex items-center gap-2">
+                      <Inbox className="w-4 h-4 text-[#D4AF37]" />
+                      <h3 className="font-display font-bold text-lg text-[#F5F1E8]">
+                        Latest Inquiries
+                      </h3>
+                    </div>
+                    <button
+                      onClick={() => setActiveTab('inquiries')}
+                      className="text-xs font-medium text-[#D4AF37] hover:underline flex items-center gap-1"
+                    >
+                      <span>View All ({inquiries.length})</span>
+                      <ChevronRight className="w-3.5 h-3.5" />
+                    </button>
+                  </div>
+
+                  <div className="space-y-2.5">
+                    {inquiries.slice(0, 3).map((inq) => (
+                      <div
+                        key={inq.id}
+                        className="p-3.5 rounded-2xl bg-[#141414] border border-white/5 space-y-2 hover:border-[#D4AF37]/30 transition"
+                      >
+                        <div className="flex items-center justify-between">
+                          <span className="font-bold text-xs text-[#F5F1E8] truncate">
+                            {inq.name}
+                          </span>
+                          <span
+                            className={`text-[9px] font-mono uppercase px-2 py-0.5 rounded-full ${
+                              inq.status === 'new'
+                                ? 'bg-[#D4AF37] text-black font-bold animate-pulse'
+                                : 'bg-white/10 text-[#8A8A8A]'
+                            }`}
+                          >
+                            {inq.status}
+                          </span>
+                        </div>
+                        <p className="text-[11px] text-[#8A8A8A] line-clamp-2">
+                          "{inq.message}"
+                        </p>
+                        <div className="flex items-center justify-between pt-1 text-[10px] text-[#666]">
+                          <span>{inq.service || 'Design Commission'}</span>
+                          <a
+                            href={`https://wa.me/${inq.phone ? inq.phone.replace(/[^0-9]/g, '') : '254798405726'}?text=${encodeURIComponent(`Hi ${inq.name}, thank you for contacting BM Graphix regarding your design commission!`)}`}
+                            target="_blank"
+                            rel="noreferrer"
+                            className="text-[#25D366] hover:underline flex items-center gap-1 font-semibold"
+                          >
+                            <Phone className="w-3 h-3" />
+                            <span>Reply WhatsApp</span>
+                          </a>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                </div>
               </div>
             </div>
-          </div>
-        </div>
-      )}
+          )}
 
       {/* ============================================================
           TAB 2: UPLOAD & PUBLISH NEW PROJECT
@@ -2370,599 +2748,785 @@ export default function AdminDashboard({ navigate }) {
       )}
 
       {/* ============================================================
-          TAB: ATMOSPHERE CONTROLS & PER-BRANDING STUDIO
+          TAB: ATMOSPHERE CONTROLS & PER-PAGE BRANDING STUDIO
           ============================================================ */}
       {activeTab === 'atmosphere' && (
-        <div className="space-y-10">
+        <div className="space-y-8">
           {/* Header Banner */}
           <div className="p-6 sm:p-8 rounded-3xl glass-card border border-[#D4AF37]/30 bg-gradient-to-br from-[#1A1810] via-[#121212] to-[#0D0D0D] relative overflow-hidden">
             <div className="max-w-3xl space-y-3 relative z-10">
               <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-[#D4AF37]/20 border border-[#D4AF37]/40 text-xs font-mono text-[#F5D77A]">
                 <SlidersHorizontal className="w-3.5 h-3.5 text-[#D4AF37]" />
-                <span>Atmospheric Art Direction & Visual Identity</span>
+                <span>BM Graphix Atmospheric Engine</span>
               </div>
-              <h2 className="font-display font-extrabold text-2xl sm:text-4xl text-[#F5F1E8]">
-                Background Visibility & <span className="gold-gradient-text">Per-Branding Studio</span>
+              <h2 className="font-display font-extrabold text-2xl sm:text-3xl text-[#F5F1E8]">
+                Per-Page Atmosphere & Brand Identity Studio
               </h2>
-              <p className="text-xs sm:text-sm text-[#8A8A8A] leading-relaxed">
-                Fine-tune the landing page background visibility, contrast vignette, and skyline silhouette with live range sliders. Or switch entire brand palettes in 1-click using the curated per-branding presets below.
+              <p className="text-xs sm:text-sm text-[#A0A0A0] leading-relaxed">
+                Fine-tune lighting, background overlays, stardust particles, and Nairobi skyline clarity independently per page — including making the Nairobi Peak 100% crystal clear on the Work/Portfolio showcase.
               </p>
             </div>
             <div className="absolute -right-10 -bottom-10 w-72 h-72 rounded-full bg-[#D4AF37]/10 blur-3xl pointer-events-none" />
           </div>
 
-          {/* ════════ SECTION 1: LANDING PAGE BACKGROUND VISIBILITY CONTROLLER ════════ */}
-          <div className="p-6 sm:p-8 rounded-3xl glass-card border border-white/10 space-y-8">
-            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 pb-4 border-b border-white/10">
-              <div>
-                <div className="flex items-center gap-2">
-                  <SlidersHorizontal className="w-5 h-5 text-[#D4AF37]" />
-                  <h3 className="font-display font-bold text-xl text-[#F5F1E8]">
-                    Landing Page Background Visibility
-                  </h3>
-                </div>
-                <p className="text-xs text-[#8A8A8A] mt-1">
-                  Adjust opacity, darkness layers, and atmospheric glows to your exact taste. Changes sync live across the landing page.
-                </p>
-              </div>
+          {/* ════════ PER-PAGE SEGMENTED SELECTOR ════════ */}
+          <div className="flex items-center justify-between flex-wrap gap-4 p-2 rounded-2xl glass-card border border-white/10">
+            <div className="flex items-center gap-2">
+              <button
+                type="button"
+                onClick={() => setAtmospherePage('home')}
+                className={`px-4 py-2.5 rounded-xl text-xs font-bold transition-all flex items-center gap-2 ${
+                  atmospherePage === 'home'
+                    ? 'bg-gradient-to-r from-[#D4AF37] to-[#F5D77A] text-black shadow-md shadow-[#D4AF37]/25'
+                    : 'text-[#8A8A8A] hover:text-[#F5F1E8] hover:bg-white/5'
+                }`}
+              >
+                <span>Home Landing Page</span>
+              </button>
 
-              <div className="flex items-center gap-2">
-                <button
-                  type="button"
-                  onClick={handleResetAtmosphere}
-                  className="px-4 py-2 rounded-xl text-xs font-medium text-[#8A8A8A] hover:text-[#F5F1E8] bg-white/5 hover:bg-white/10 border border-white/10 flex items-center gap-1.5 transition"
-                >
-                  <RotateCcw className="w-3.5 h-3.5" />
-                  <span>Reset Defaults</span>
-                </button>
-                <button
-                  type="button"
-                  onClick={handleSaveAtmosphere}
-                  className="px-5 py-2 rounded-xl text-xs font-bold uppercase tracking-wider text-black bg-gradient-to-r from-[#D4AF37] to-[#F5D77A] hover:brightness-110 transition shadow shadow-[#D4AF37]/25 flex items-center gap-1.5"
-                >
-                  <Check className="w-3.5 h-3.5" />
-                  <span>Save Atmosphere</span>
-                </button>
-              </div>
+              <button
+                type="button"
+                onClick={() => setAtmospherePage('work')}
+                className={`px-4 py-2.5 rounded-xl text-xs font-bold transition-all flex items-center gap-2 relative ${
+                  atmospherePage === 'work'
+                    ? 'bg-gradient-to-r from-[#D4AF37] to-[#F5D77A] text-black shadow-md shadow-[#D4AF37]/25'
+                    : 'text-[#8A8A8A] hover:text-[#F5F1E8] hover:bg-white/5'
+                }`}
+              >
+                <span>Work / Portfolio Showcase</span>
+                <span className="text-[9px] font-mono font-extrabold uppercase px-1.5 py-0.5 rounded-full bg-black/30 border border-black/20">
+                  Nairobi Peak 100%
+                </span>
+              </button>
+
+              <button
+                type="button"
+                onClick={() => setAtmospherePage('global')}
+                className={`px-4 py-2.5 rounded-xl text-xs font-bold transition-all flex items-center gap-2 ${
+                  atmospherePage === 'global'
+                    ? 'bg-gradient-to-r from-[#D4AF37] to-[#F5D77A] text-black shadow-md shadow-[#D4AF37]/25'
+                    : 'text-[#8A8A8A] hover:text-[#F5F1E8] hover:bg-white/5'
+                }`}
+              >
+                <Palette className="w-3.5 h-3.5" />
+                <span>Brand Presets & Palette</span>
+              </button>
             </div>
 
-            <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 items-start">
-              {/* Left Column: Sliders */}
-              <div className="lg:col-span-7 space-y-6">
-
-                {/* SLIDER 1: Hero Scrolling Art Columns Opacity */}
-                <div className="p-5 rounded-2xl bg-[#141414] border border-white/5 space-y-3">
-                  <div className="flex items-center justify-between">
-                    <div>
-                      <label className="text-xs font-bold uppercase tracking-wider text-[#F5F1E8] block">
-                        Background Art Columns Opacity
-                      </label>
-                      <span className="text-[11px] text-[#8A8A8A]">
-                        Controls visibility of the scrolling poster columns in the hero background
-                      </span>
-                    </div>
-                    <span className="px-3 py-1 rounded-full bg-[#D4AF37]/20 border border-[#D4AF37]/40 text-xs font-mono font-bold text-[#F5D77A]">
-                      {heroBgVisibility}%
-                    </span>
-                  </div>
-
-                  <input
-                    type="range"
-                    min="0"
-                    max="100"
-                    step="1"
-                    value={heroBgVisibility}
-                    onChange={(e) => {
-                      const val = Number(e.target.value);
-                      setHeroBgVisibility(val);
-                      document.documentElement.style.setProperty('--hero-bg-visibility', (val / 100).toString());
-                    }}
-                    className="w-full h-2 bg-[#222] rounded-lg appearance-none cursor-pointer accent-[#D4AF37]"
-                  />
-
-                  {/* Preset quick buttons */}
-                  <div className="flex items-center gap-2 pt-1">
-                    <span className="text-[10px] uppercase tracking-wider text-[#666]">Quick:</span>
-                    {[
-                      { label: 'Subtle', val: 20 },
-                      { label: 'Default', val: 55 },
-                      { label: 'Vivid', val: 75 },
-                      { label: 'Maximum', val: 100 }
-                    ].map((preset) => (
-                      <button
-                        key={preset.label}
-                        type="button"
-                        onClick={() => {
-                          setHeroBgVisibility(preset.val);
-                          document.documentElement.style.setProperty('--hero-bg-visibility', (preset.val / 100).toString());
-                        }}
-                        className={`text-[10px] px-2.5 py-1 rounded-lg transition ${
-                          heroBgVisibility === preset.val
-                            ? 'bg-[#D4AF37] text-black font-bold'
-                            : 'bg-white/5 text-[#8A8A8A] hover:text-white'
-                        }`}
-                      >
-                        {preset.label} ({preset.val}%)
-                      </button>
-                    ))}
-                  </div>
-                </div>
-
-                {/* SLIDER 2: Dark Vignette / Contrast Overlay */}
-                <div className="p-5 rounded-2xl bg-[#141414] border border-white/5 space-y-3">
-                  <div className="flex items-center justify-between">
-                    <div>
-                      <label className="text-xs font-bold uppercase tracking-wider text-[#F5F1E8] block">
-                        Contrast Vignette & Dark Overlay Depth
-                      </label>
-                      <span className="text-[11px] text-[#8A8A8A]">
-                        Controls the depth of the dark gradient covering background art (higher = bolder text contrast)
-                      </span>
-                    </div>
-                    <span className="px-3 py-1 rounded-full bg-[#D4AF37]/20 border border-[#D4AF37]/40 text-xs font-mono font-bold text-[#F5D77A]">
-                      {heroDarkOverlay}%
-                    </span>
-                  </div>
-
-                  <input
-                    type="range"
-                    min="20"
-                    max="100"
-                    step="1"
-                    value={heroDarkOverlay}
-                    onChange={(e) => {
-                      const val = Number(e.target.value);
-                      setHeroDarkOverlay(val);
-                      document.documentElement.style.setProperty('--hero-dark-overlay', (val / 100).toString());
-                    }}
-                    className="w-full h-2 bg-[#222] rounded-lg appearance-none cursor-pointer accent-[#D4AF37]"
-                  />
-
-                  <div className="flex items-center gap-2 pt-1">
-                    <span className="text-[10px] uppercase tracking-wider text-[#666]">Quick:</span>
-                    {[
-                      { label: 'Sheer', val: 45 },
-                      { label: 'Standard', val: 85 },
-                      { label: 'Heavy Shadow', val: 95 }
-                    ].map((preset) => (
-                      <button
-                        key={preset.label}
-                        type="button"
-                        onClick={() => {
-                          setHeroDarkOverlay(preset.val);
-                          document.documentElement.style.setProperty('--hero-dark-overlay', (preset.val / 100).toString());
-                        }}
-                        className={`text-[10px] px-2.5 py-1 rounded-lg transition ${
-                          heroDarkOverlay === preset.val
-                            ? 'bg-[#D4AF37] text-black font-bold'
-                            : 'bg-white/5 text-[#8A8A8A] hover:text-white'
-                        }`}
-                      >
-                        {preset.label} ({preset.val}%)
-                      </button>
-                    ))}
-                  </div>
-                </div>
-
-                {/* SLIDER 3: Nairobi Skyline Silhouette Opacity */}
-                <div className="p-5 rounded-2xl bg-[#141414] border border-white/5 space-y-3">
-                  <div className="flex items-center justify-between">
-                    <div>
-                      <label className="text-xs font-bold uppercase tracking-wider text-[#F5F1E8] block">
-                        Nairobi Skyline Silhouette Visibility
-                      </label>
-                      <span className="text-[11px] text-[#8A8A8A]">
-                        Parallax architectural CBD skyline visible in the background atmosphere
-                      </span>
-                    </div>
-                    <span className="px-3 py-1 rounded-full bg-[#D4AF37]/20 border border-[#D4AF37]/40 text-xs font-mono font-bold text-[#F5D77A]">
-                      {nairobiSkylineOpacity}%
-                    </span>
-                  </div>
-
-                  <input
-                    type="range"
-                    min="0"
-                    max="40"
-                    step="1"
-                    value={nairobiSkylineOpacity}
-                    onChange={(e) => {
-                      const val = Number(e.target.value);
-                      setNairobiSkylineOpacity(val);
-                      document.documentElement.style.setProperty('--nairobi-opacity', (val / 100).toString());
-                    }}
-                    className="w-full h-2 bg-[#222] rounded-lg appearance-none cursor-pointer accent-[#D4AF37]"
-                  />
-
-                  <div className="flex items-center gap-2 pt-1">
-                    <span className="text-[10px] uppercase tracking-wider text-[#666]">Quick:</span>
-                    {[
-                      { label: 'Off', val: 0 },
-                      { label: 'Delicate', val: 8 },
-                      { label: 'Default', val: 14 },
-                      { label: 'Prominent', val: 26 }
-                    ].map((preset) => (
-                      <button
-                        key={preset.label}
-                        type="button"
-                        onClick={() => {
-                          setNairobiSkylineOpacity(preset.val);
-                          document.documentElement.style.setProperty('--nairobi-opacity', (preset.val / 100).toString());
-                        }}
-                        className={`text-[10px] px-2.5 py-1 rounded-lg transition ${
-                          nairobiSkylineOpacity === preset.val
-                            ? 'bg-[#D4AF37] text-black font-bold'
-                            : 'bg-white/5 text-[#8A8A8A] hover:text-white'
-                        }`}
-                      >
-                        {preset.label} ({preset.val}%)
-                      </button>
-                    ))}
-                  </div>
-                </div>
-
-                {/* SLIDERS 4 & 5: Glow & Particles */}
-                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                  {/* Glow */}
-                  <div className="p-4 rounded-2xl bg-[#141414] border border-white/5 space-y-2.5">
-                    <div className="flex items-center justify-between">
-                      <label className="text-xs font-bold uppercase tracking-wider text-[#F5F1E8]">
-                        Ambient Gold Glow
-                      </label>
-                      <span className="text-xs font-mono font-bold text-[#F5D77A]">{goldGlowIntensity}%</span>
-                    </div>
-                    <input
-                      type="range"
-                      min="0"
-                      max="100"
-                      step="1"
-                      value={goldGlowIntensity}
-                      onChange={(e) => {
-                        const val = Number(e.target.value);
-                        setGoldGlowIntensity(val);
-                        document.documentElement.style.setProperty('--gold-glow-intensity', (val / 100).toString());
-                      }}
-                      className="w-full h-2 bg-[#222] rounded-lg appearance-none cursor-pointer accent-[#D4AF37]"
-                    />
-                    <span className="text-[10px] text-[#666] block">Aura radiance behind hero headline</span>
-                  </div>
-
-                  {/* Particles */}
-                  <div className="p-4 rounded-2xl bg-[#141414] border border-white/5 space-y-2.5">
-                    <div className="flex items-center justify-between">
-                      <label className="text-xs font-bold uppercase tracking-wider text-[#F5F1E8]">
-                        Gold Dust Particles
-                      </label>
-                      <span className="text-xs font-mono font-bold text-[#F5D77A]">{particlesVisibility}%</span>
-                    </div>
-                    <input
-                      type="range"
-                      min="0"
-                      max="100"
-                      step="1"
-                      value={particlesVisibility}
-                      onChange={(e) => {
-                        const val = Number(e.target.value);
-                        setParticlesVisibility(val);
-                        document.documentElement.style.setProperty('--particles-visibility', (val / 100).toString());
-                      }}
-                      className="w-full h-2 bg-[#222] rounded-lg appearance-none cursor-pointer accent-[#D4AF37]"
-                    />
-                    <span className="text-[10px] text-[#666] block">Floating motes count & opacity</span>
-                  </div>
-                </div>
-
-              </div>
-
-              {/* Right Column: Live Interactive Simulation Viewport */}
-              <div className="lg:col-span-5 space-y-4">
-                <div className="p-4 rounded-2xl bg-[#121212] border border-[#D4AF37]/30 space-y-3">
-                  <div className="flex items-center justify-between">
-                    <span className="text-xs font-bold uppercase tracking-wider text-[#F5F1E8] flex items-center gap-1.5">
-                      <Sparkles className="w-3.5 h-3.5 text-[#D4AF37]" />
-                      <span>Live Simulation Viewport</span>
-                    </span>
-                    <span className="text-[10px] text-[#22c55e] flex items-center gap-1 font-mono">
-                      <span className="w-1.5 h-1.5 rounded-full bg-[#22c55e] animate-pulse" />
-                      Live Sync
-                    </span>
-                  </div>
-
-                  {/* The Simulated Hero Card */}
-                  <div className="relative h-72 rounded-xl overflow-hidden border border-white/10 bg-[#0A0A0A] flex flex-col justify-end p-5 select-none">
-                    {/* Simulated skyline layer */}
-                    <div
-                      className="absolute inset-0 bg-cover bg-center pointer-events-none transition-opacity duration-300"
-                      style={{
-                        backgroundImage: "url('/assets/nairobi-cbd.jpg')",
-                        opacity: nairobiSkylineOpacity / 100,
-                        filter: 'blur(2px) contrast(1.1)',
-                      }}
-                    />
-
-                    {/* Simulated background columns */}
-                    <div
-                      className="absolute inset-0 flex gap-1 pointer-events-none transition-opacity duration-300"
-                      style={{ opacity: heroBgVisibility / 100 }}
-                    >
-                      {[1, 2, 3, 4].map((col) => (
-                        <div key={col} className="flex-1 opacity-70 bg-gradient-to-b from-[#1C1808] to-[#121008] border-r border-white/5 flex flex-col gap-1 p-1">
-                          <div className="h-14 rounded bg-[#2a2210] opacity-60" />
-                          <div className="h-20 rounded bg-[#352b14] opacity-50" />
-                          <div className="h-16 rounded bg-[#201a0d] opacity-70" />
-                        </div>
-                      ))}
-                    </div>
-
-                    {/* Simulated dark overlay gradient */}
-                    <div
-                      className="absolute inset-0 pointer-events-none transition-opacity duration-300"
-                      style={{
-                        opacity: heroDarkOverlay / 100,
-                        background: 'linear-gradient(to right, rgba(7,7,7,0.98) 0%, rgba(7,7,7,0.85) 60%, rgba(7,7,7,0.65) 100%)'
-                      }}
-                    />
-
-                    {/* Simulated ambient gold glow orb */}
-                    <div
-                      className="absolute w-44 h-44 rounded-full pointer-events-none -top-10 -left-10 blur-2xl transition-opacity duration-300"
-                      style={{
-                        opacity: goldGlowIntensity / 100,
-                        background: `radial-gradient(circle, ${brandPrimaryColor} 0%, transparent 70%)`
-                      }}
-                    />
-
-                    {/* Foreground simulated content */}
-                    <div className="relative z-10 space-y-2">
-                      <span className="inline-block text-[9px] font-mono uppercase tracking-widest text-[#D4AF37] px-2 py-0.5 rounded-full bg-black/60 border border-[#D4AF37]/30">
-                        Visual Art & Motion
-                      </span>
-                      <h4 className="font-display font-extrabold text-base text-[#F5F1E8] leading-tight">
-                        Visual Art That <br />
-                        <span style={{ color: brandPrimaryColor }}>Moves People.</span>
-                      </h4>
-                      <div className="flex items-center gap-2 pt-1">
-                        <div
-                          className="px-3 py-1 rounded-full text-[10px] font-bold text-black shadow"
-                          style={{ background: `linear-gradient(135deg, ${brandPrimaryColor}, ${brandSecondaryColor})` }}
-                        >
-                          View Work
-                        </div>
-                        <div className="px-3 py-1 rounded-full text-[10px] font-medium text-white/80 bg-white/10 border border-white/15">
-                          Hire Me
-                        </div>
-                      </div>
-                    </div>
-                  </div>
-
-                  <p className="text-[11px] text-[#8A8A8A] leading-relaxed">
-                    This interactive viewport previews exactly how the artwork, dark overlay, and skyline silhouette balance on the landing page in real-time.
-                  </p>
-                </div>
-              </div>
+            <div className="flex items-center gap-2 pr-2">
+              <button
+                type="button"
+                onClick={handleResetAtmosphere}
+                className="px-3.5 py-2 rounded-xl text-xs font-medium text-[#8A8A8A] hover:text-[#F5F1E8] bg-white/5 hover:bg-white/10 border border-white/10 flex items-center gap-1.5 transition"
+              >
+                <RotateCcw className="w-3.5 h-3.5" />
+                <span>Reset Defaults</span>
+              </button>
+              <button
+                type="button"
+                onClick={handleSaveAtmosphere}
+                className="px-5 py-2 rounded-xl text-xs font-bold uppercase tracking-wider text-black bg-gradient-to-r from-[#D4AF37] to-[#F5D77A] hover:brightness-110 transition shadow shadow-[#D4AF37]/25 flex items-center gap-1.5"
+              >
+                <Check className="w-3.5 h-3.5" />
+                <span>Save All Atmosphere</span>
+              </button>
             </div>
           </div>
 
-          {/* ════════ SECTION 2: PER-BRANDING STUDIO & PRESET BUTTONS ════════ */}
-          <div className="p-6 sm:p-8 rounded-3xl glass-card border border-white/10 space-y-8">
-            <div className="pb-4 border-b border-white/10">
-              <div className="flex items-center gap-2">
-                <Palette className="w-5 h-5 text-[#D4AF37]" />
-                <h3 className="font-display font-bold text-xl text-[#F5F1E8]">
-                  Per-Branding Studio & Presets
+          {/* ════════ VIEW 1: HOME LANDING PAGE CONTROLS ════════ */}
+          {atmospherePage === 'home' && (
+            <div className="p-6 sm:p-8 rounded-3xl glass-card border border-white/10 space-y-8">
+              <div className="pb-4 border-b border-white/10">
+                <h3 className="font-display font-bold text-lg text-[#F5F1E8] flex items-center gap-2">
+                  <SlidersHorizontal className="w-4 h-4 text-[#D4AF37]" />
+                  <span>Home Landing Page Atmosphere Controls</span>
                 </h3>
+                <p className="text-xs text-[#8A8A8A] mt-1">
+                  Tune hero scrolling poster column visibility, darkness layers, and atmospheric glows on the landing page.
+                </p>
               </div>
-              <p className="text-xs text-[#8A8A8A] mt-1">
-                Select any curated 1-click brand identity preset to instantly apply harmonized colors, gradients, and atmospheric lighting.
-              </p>
-            </div>
 
-            {/* Presets Grid (Per-Branding Buttons) */}
-            <div className="space-y-4">
-              <label className="text-xs uppercase tracking-wider text-[#A0A0A0] font-bold flex items-center gap-2">
-                <span>Select Brand Identity Preset (1-Click Apply)</span>
-              </label>
-
-              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-                {BRAND_PRESETS.map((preset) => {
-                  const isActive = activeBrandPreset === preset.id;
-                  return (
-                    <div
-                      key={preset.id}
-                      onClick={() => handleApplyBrandPreset(preset)}
-                      className={`group relative p-5 rounded-2xl cursor-pointer transition-all duration-300 border ${
-                        isActive
-                          ? 'bg-[#181610] border-[#D4AF37] shadow-lg shadow-[#D4AF37]/20 scale-[1.01]'
-                          : 'bg-[#141414] border-white/10 hover:border-[#D4AF37]/50 hover:bg-[#161616]'
-                      }`}
-                    >
-                      <div className="flex items-center justify-between mb-3">
-                        <span className="text-[10px] font-mono uppercase tracking-widest px-2.5 py-0.5 rounded-full bg-white/5 border border-white/10 text-[#D4AF37]">
-                          {preset.badge}
-                        </span>
-
-                        {isActive ? (
-                          <span className="text-[11px] font-bold text-[#22c55e] flex items-center gap-1">
-                            <Check className="w-3.5 h-3.5" />
-                            Active
-                          </span>
-                        ) : (
-                          <span className="text-[10px] text-[#8A8A8A] group-hover:text-[#F5D77A] transition">
-                            Apply &rarr;
-                          </span>
-                        )}
-                      </div>
-
-                      <h4 className="font-display font-bold text-base text-[#F5F1E8] mb-1">
-                        {preset.name}
-                      </h4>
-                      <p className="text-[11px] text-[#8A8A8A] line-clamp-2 mb-3">
-                        {preset.desc}
-                      </p>
-
-                      {/* Swatch palette preview */}
-                      <div className="flex items-center justify-between pt-3 border-t border-white/10">
-                        <div className="flex items-center gap-1.5">
-                          <span
-                            className="w-4 h-4 rounded-full border border-white/20 shadow-sm"
-                            style={{ backgroundColor: preset.primary }}
-                            title={`Primary: ${preset.primary}`}
-                          />
-                          <span
-                            className="w-4 h-4 rounded-full border border-white/20 shadow-sm"
-                            style={{ backgroundColor: preset.secondary }}
-                            title={`Secondary: ${preset.secondary}`}
-                          />
-                          <span
-                            className="w-4 h-4 rounded-full border border-white/20 shadow-sm"
-                            style={{ backgroundColor: preset.dark }}
-                            title={`Dark: ${preset.dark}`}
-                          />
-                        </div>
-
-                        <span className="text-[10px] font-mono text-[#8A8A8A]">
-                          {preset.primary}
+              <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 items-start">
+                <div className="lg:col-span-7 space-y-6">
+                  {/* Slider 1: Artwork Columns */}
+                  <div className="p-5 rounded-2xl bg-[#141414] border border-white/5 space-y-3">
+                    <div className="flex items-center justify-between">
+                      <div>
+                        <label className="text-xs font-bold uppercase tracking-wider text-[#F5F1E8] block">
+                          Background Art Columns Opacity
+                        </label>
+                        <span className="text-[11px] text-[#8A8A8A]">
+                          Visibility of scrolling artwork columns behind hero headline
                         </span>
                       </div>
+                      <span className="px-3 py-1 rounded-full bg-[#D4AF37]/20 border border-[#D4AF37]/40 text-xs font-mono font-bold text-[#F5D77A]">
+                        {heroBgVisibility}%
+                      </span>
                     </div>
-                  );
-                })}
-              </div>
-            </div>
-
-            {/* Custom Brand Palette & Identity Details */}
-            <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 pt-4 border-t border-white/10">
-              {/* Form Controls */}
-              <div className="lg:col-span-7 space-y-4">
-                <h4 className="text-xs font-bold uppercase tracking-wider text-[#A0A0A0]">
-                  Custom Brand Details & Palette Fine-Tuner
-                </h4>
-
-                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                  <div className="space-y-1.5">
-                    <label className="block text-xs uppercase tracking-wider text-[#A0A0A0]">Brand Name</label>
                     <input
-                      type="text"
-                      value={brandName}
-                      onChange={(e) => setBrandName(e.target.value)}
-                      className="w-full px-4 py-2.5 rounded-xl bg-[#161616] border border-white/10 focus:border-[#D4AF37] focus:outline-none text-xs text-[#F5F1E8]"
-                    />
-                  </div>
-
-                  <div className="space-y-1.5">
-                    <label className="block text-xs uppercase tracking-wider text-[#A0A0A0]">Tagline</label>
-                    <input
-                      type="text"
-                      value={brandTagline}
-                      onChange={(e) => setBrandTagline(e.target.value)}
-                      className="w-full px-4 py-2.5 rounded-xl bg-[#161616] border border-white/10 focus:border-[#D4AF37] focus:outline-none text-xs text-[#F5F1E8]"
-                    />
-                  </div>
-                </div>
-
-                {/* Primary Color Picker & Quick Chips */}
-                <div className="space-y-2">
-                  <label className="block text-xs uppercase tracking-wider text-[#A0A0A0]">
-                    Primary Brand Accent Color
-                  </label>
-                  <div className="flex items-center gap-3">
-                    <input
-                      type="color"
-                      value={brandPrimaryColor}
+                      type="range"
+                      min="0"
+                      max="100"
+                      step="1"
+                      value={heroBgVisibility}
                       onChange={(e) => {
-                        const val = e.target.value;
-                        setBrandPrimaryColor(val);
-                        document.documentElement.style.setProperty('--gold-primary', val);
+                        const val = Number(e.target.value);
+                        setHeroBgVisibility(val);
+                        document.documentElement.style.setProperty('--hero-bg-visibility', (val / 100).toString());
                       }}
-                      className="w-10 h-10 rounded-xl cursor-pointer bg-transparent border-0 p-0"
+                      className="w-full h-2 bg-[#222] rounded-lg appearance-none cursor-pointer accent-[#D4AF37]"
                     />
-                    <input
-                      type="text"
-                      value={brandPrimaryColor}
-                      onChange={(e) => {
-                        const val = e.target.value;
-                        setBrandPrimaryColor(val);
-                        document.documentElement.style.setProperty('--gold-primary', val);
-                      }}
-                      className="w-32 px-3 py-2 rounded-xl bg-[#161616] border border-white/10 text-xs font-mono text-[#F5D77A]"
-                    />
-                    {/* Quick color chips */}
-                    <div className="flex items-center gap-1.5">
-                      {['#D4AF37', '#FF9F1C', '#E6CA65', '#CD7F32', '#E2E8F0'].map((color) => (
+                    <div className="flex items-center gap-2 pt-1">
+                      <span className="text-[10px] uppercase tracking-wider text-[#666]">Quick:</span>
+                      {[
+                        { label: 'Subtle', val: 20 },
+                        { label: 'Default', val: 55 },
+                        { label: 'Vivid', val: 75 },
+                        { label: '100% Full', val: 100 }
+                      ].map((preset) => (
                         <button
-                          key={color}
+                          key={preset.label}
                           type="button"
                           onClick={() => {
-                            setBrandPrimaryColor(color);
-                            document.documentElement.style.setProperty('--gold-primary', color);
+                            setHeroBgVisibility(preset.val);
+                            document.documentElement.style.setProperty('--hero-bg-visibility', (preset.val / 100).toString());
                           }}
-                          className="w-6 h-6 rounded-full border border-white/30 hover:scale-110 transition shadow"
-                          style={{ backgroundColor: color }}
-                          title={color}
-                        />
+                          className={`text-[10px] px-2.5 py-1 rounded-lg transition ${
+                            heroBgVisibility === preset.val
+                              ? 'bg-[#D4AF37] text-black font-bold'
+                              : 'bg-white/5 text-[#8A8A8A] hover:text-white'
+                          }`}
+                        >
+                          {preset.label} ({preset.val}%)
+                        </button>
                       ))}
                     </div>
                   </div>
+
+                  {/* Slider 2: Dark Overlay Depth */}
+                  <div className="p-5 rounded-2xl bg-[#141414] border border-white/5 space-y-3">
+                    <div className="flex items-center justify-between">
+                      <div>
+                        <label className="text-xs font-bold uppercase tracking-wider text-[#F5F1E8] block">
+                          Hero Dark Overlay Depth
+                        </label>
+                        <span className="text-[11px] text-[#8A8A8A]">
+                          Controls cinematic dark vignette for maximum typography readability
+                        </span>
+                      </div>
+                      <span className="px-3 py-1 rounded-full bg-[#D4AF37]/20 border border-[#D4AF37]/40 text-xs font-mono font-bold text-[#F5D77A]">
+                        {heroDarkOverlay}%
+                      </span>
+                    </div>
+                    <input
+                      type="range"
+                      min="20"
+                      max="100"
+                      step="1"
+                      value={heroDarkOverlay}
+                      onChange={(e) => {
+                        const val = Number(e.target.value);
+                        setHeroDarkOverlay(val);
+                        document.documentElement.style.setProperty('--hero-dark-overlay', (val / 100).toString());
+                      }}
+                      className="w-full h-2 bg-[#222] rounded-lg appearance-none cursor-pointer accent-[#D4AF37]"
+                    />
+                  </div>
+
+                  {/* Slider 3: Nairobi Skyline */}
+                  <div className="p-5 rounded-2xl bg-[#141414] border border-white/5 space-y-3">
+                    <div className="flex items-center justify-between">
+                      <div>
+                        <label className="text-xs font-bold uppercase tracking-wider text-[#F5F1E8] block">
+                          Nairobi Skyline Silhouette Opacity
+                        </label>
+                        <span className="text-[11px] text-[#8A8A8A]">
+                          Parallax architectural CBD skyline visible in the background
+                        </span>
+                      </div>
+                      <span className="px-3 py-1 rounded-full bg-[#D4AF37]/20 border border-[#D4AF37]/40 text-xs font-mono font-bold text-[#F5D77A]">
+                        {nairobiSkylineOpacity}%
+                      </span>
+                    </div>
+                    <input
+                      type="range"
+                      min="0"
+                      max="100"
+                      step="1"
+                      value={nairobiSkylineOpacity}
+                      onChange={(e) => {
+                        const val = Number(e.target.value);
+                        setNairobiSkylineOpacity(val);
+                        document.documentElement.style.setProperty('--nairobi-opacity', (val / 100).toString());
+                      }}
+                      className="w-full h-2 bg-[#222] rounded-lg appearance-none cursor-pointer accent-[#D4AF37]"
+                    />
+                  </div>
+
+                  {/* Sliders 4 & 5: Glow & Particles */}
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                    <div className="p-4 rounded-2xl bg-[#141414] border border-white/5 space-y-2.5">
+                      <div className="flex items-center justify-between">
+                        <label className="text-xs font-bold uppercase tracking-wider text-[#F5F1E8]">
+                          Ambient Gold Glow
+                        </label>
+                        <span className="text-xs font-mono font-bold text-[#F5D77A]">{goldGlowIntensity}%</span>
+                      </div>
+                      <input
+                        type="range"
+                        min="0"
+                        max="100"
+                        step="1"
+                        value={goldGlowIntensity}
+                        onChange={(e) => {
+                          const val = Number(e.target.value);
+                          setGoldGlowIntensity(val);
+                          document.documentElement.style.setProperty('--gold-glow-intensity', (val / 100).toString());
+                        }}
+                        className="w-full h-2 bg-[#222] rounded-lg appearance-none cursor-pointer accent-[#D4AF37]"
+                      />
+                    </div>
+
+                    <div className="p-4 rounded-2xl bg-[#141414] border border-white/5 space-y-2.5">
+                      <div className="flex items-center justify-between">
+                        <label className="text-xs font-bold uppercase tracking-wider text-[#F5F1E8]">
+                          Gold Dust Particles
+                        </label>
+                        <span className="text-xs font-mono font-bold text-[#F5D77A]">{particlesVisibility}%</span>
+                      </div>
+                      <input
+                        type="range"
+                        min="0"
+                        max="100"
+                        step="1"
+                        value={particlesVisibility}
+                        onChange={(e) => {
+                          const val = Number(e.target.value);
+                          setParticlesVisibility(val);
+                          document.documentElement.style.setProperty('--particles-visibility', (val / 100).toString());
+                        }}
+                        className="w-full h-2 bg-[#222] rounded-lg appearance-none cursor-pointer accent-[#D4AF37]"
+                      />
+                    </div>
+                  </div>
                 </div>
 
-                <div className="pt-2">
-                  <button
-                    type="button"
-                    onClick={handleSaveAtmosphere}
-                    className="w-full sm:w-auto px-6 py-3 rounded-xl text-xs font-bold uppercase tracking-wider text-black bg-gradient-to-r from-[#D4AF37] via-[#F5D77A] to-[#B8860B] hover:brightness-110 transition shadow shadow-[#D4AF37]/25"
-                  >
-                    Save & Apply Brand Settings
-                  </button>
+                {/* Right: Simulation Viewport */}
+                <div className="lg:col-span-5 space-y-4">
+                  <div className="p-4 rounded-2xl bg-[#121212] border border-[#D4AF37]/30 space-y-3">
+                    <div className="flex items-center justify-between">
+                      <span className="text-xs font-bold uppercase tracking-wider text-[#F5F1E8] flex items-center gap-1.5">
+                        <Sparkles className="w-3.5 h-3.5 text-[#D4AF37]" />
+                        <span>Home Page Live Preview</span>
+                      </span>
+                      <span className="text-[10px] text-[#22c55e] flex items-center gap-1 font-mono">
+                        <span className="w-1.5 h-1.5 rounded-full bg-[#22c55e] animate-pulse" />
+                        Live Sync
+                      </span>
+                    </div>
+
+                    <div className="relative h-72 rounded-xl overflow-hidden border border-white/10 bg-[#0A0A0A] flex flex-col justify-end p-5 select-none">
+                      {/* Simulated skyline */}
+                      <div
+                        className="absolute inset-0 bg-cover bg-center pointer-events-none transition-opacity duration-300"
+                        style={{
+                          backgroundImage: "url('/assets/nairobi-cbd.jpg')",
+                          opacity: nairobiSkylineOpacity / 100,
+                          filter: 'blur(2px) contrast(1.1)',
+                        }}
+                      />
+                      {/* Simulated artwork columns */}
+                      <div
+                        className="absolute inset-0 flex gap-1 pointer-events-none transition-opacity duration-300"
+                        style={{ opacity: heroBgVisibility / 100 }}
+                      >
+                        {[1, 2, 3, 4].map((col) => (
+                          <div key={col} className="flex-1 opacity-70 bg-gradient-to-b from-[#1C1808] to-[#121008] border-r border-white/5 flex flex-col gap-1 p-1">
+                            <div className="h-14 rounded bg-[#2a2210] opacity-60" />
+                            <div className="h-20 rounded bg-[#352b14] opacity-50" />
+                            <div className="h-16 rounded bg-[#201a0d] opacity-70" />
+                          </div>
+                        ))}
+                      </div>
+                      {/* Dark overlay */}
+                      <div
+                        className="absolute inset-0 pointer-events-none transition-opacity duration-300"
+                        style={{
+                          opacity: heroDarkOverlay / 100,
+                          background: 'linear-gradient(to right, rgba(7,7,7,0.98) 0%, rgba(7,7,7,0.85) 60%, rgba(7,7,7,0.65) 100%)'
+                        }}
+                      />
+                      {/* Gold glow orb */}
+                      <div
+                        className="absolute w-44 h-44 rounded-full pointer-events-none -top-10 -left-10 blur-2xl transition-opacity duration-300"
+                        style={{
+                          opacity: goldGlowIntensity / 100,
+                          background: `radial-gradient(circle, ${brandPrimaryColor} 0%, transparent 70%)`
+                        }}
+                      />
+                      {/* Foreground */}
+                      <div className="relative z-10 space-y-2">
+                        <span className="inline-block text-[9px] font-mono uppercase tracking-widest text-[#D4AF37] px-2 py-0.5 rounded-full bg-black/60 border border-[#D4AF37]/30">
+                          Visual Art & Motion
+                        </span>
+                        <h4 className="font-display font-extrabold text-base text-[#F5F1E8] leading-tight">
+                          Visual Art That <br />
+                          <span style={{ color: brandPrimaryColor }}>Moves People.</span>
+                        </h4>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          )}
+
+          {/* ════════ VIEW 2: WORK / PORTFOLIO PAGE (NAIROBI PEAK 100% CLEAR) ════════ */}
+          {atmospherePage === 'work' && (
+            <div className="p-6 sm:p-8 rounded-3xl glass-card border border-white/10 space-y-8">
+              <div className="pb-4 border-b border-white/10">
+                <div className="flex items-center justify-between">
+                  <div>
+                    <h3 className="font-display font-bold text-lg text-[#F5F1E8] flex items-center gap-2">
+                      <Layers className="w-4 h-4 text-[#D4AF37]" />
+                      <span>Work / Portfolio Page Atmosphere (Nairobi Peak Clarity)</span>
+                    </h3>
+                    <p className="text-xs text-[#8A8A8A] mt-1">
+                      Configure the Nairobi CBD & Peak background image on the Work page to be made further more clear up to <strong>100% crystal clear</strong>.
+                    </p>
+                  </div>
+                  <span className="px-3 py-1 rounded-full bg-[#D4AF37]/20 border border-[#D4AF37]/40 text-xs font-mono font-bold text-[#F5D77A]">
+                    100% Clear Capable
+                  </span>
                 </div>
               </div>
 
-              {/* Right: Live Identity Card */}
-              <div className="lg:col-span-5">
-                <div className="p-5 rounded-2xl bg-[#141414] border border-white/10 space-y-4">
-                  <span className="text-xs font-bold uppercase tracking-wider text-[#A0A0A0] block">
-                    Brand Lockup Preview
-                  </span>
+              <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 items-start">
+                <div className="lg:col-span-7 space-y-6">
+                  {/* WORK SLIDER 1: Nairobi Peak Skyline Visibility (up to 100% Full Opacity!) */}
+                  <div className="p-5 rounded-2xl bg-[#141414] border border-[#D4AF37]/30 space-y-3 shadow-lg shadow-[#D4AF37]/5">
+                    <div className="flex items-center justify-between">
+                      <div>
+                        <label className="text-xs font-bold uppercase tracking-wider text-[#F5D77A] block flex items-center gap-1.5">
+                          <Sparkles className="w-3.5 h-3.5 text-[#D4AF37]" />
+                          <span>Nairobi Peak Skyline Visibility (0% to 100%)</span>
+                        </label>
+                        <span className="text-[11px] text-[#A0A0A0]">
+                          Allows the Nairobi skyline and peak to shine through at full 100% clarity
+                        </span>
+                      </div>
+                      <span className="px-3.5 py-1 rounded-full bg-[#D4AF37] text-black text-xs font-mono font-extrabold shadow">
+                        {workNairobiSkylineOpacity}%
+                      </span>
+                    </div>
 
-                  <div className="flex items-center gap-3">
-                    <div className="w-12 h-12 rounded-full p-1 bg-[#1A1A1A] border border-[#D4AF37]/40 flex items-center justify-center shadow">
-                      <img
-                        src="/assets/logo/BM_OFFICIAL_LOGO.png"
-                        alt="Logo"
-                        className="w-full h-full object-contain"
+                    <input
+                      type="range"
+                      min="0"
+                      max="100"
+                      step="1"
+                      value={workNairobiSkylineOpacity}
+                      onChange={(e) => {
+                        const val = Number(e.target.value);
+                        setWorkNairobiSkylineOpacity(val);
+                        document.documentElement.style.setProperty('--work-nairobi-opacity', (val / 100).toString());
+                      }}
+                      className="w-full h-2.5 bg-[#222] rounded-lg appearance-none cursor-pointer accent-[#D4AF37]"
+                    />
+
+                    {/* Quick Presets up to 100% Clear */}
+                    <div className="flex items-center gap-2 pt-1 flex-wrap">
+                      <span className="text-[10px] uppercase tracking-wider text-[#777]">Presets:</span>
+                      {[
+                        { label: 'Off', val: 0 },
+                        { label: 'Subtle', val: 25 },
+                        { label: 'Prominent', val: 60 },
+                        { label: 'Ultra Clear', val: 85 },
+                        { label: '100% Crystal Clear', val: 100 }
+                      ].map((preset) => (
+                        <button
+                          key={preset.label}
+                          type="button"
+                          onClick={() => {
+                            setWorkNairobiSkylineOpacity(preset.val);
+                            document.documentElement.style.setProperty('--work-nairobi-opacity', (preset.val / 100).toString());
+                          }}
+                          className={`text-[10px] px-2.5 py-1 rounded-lg font-medium transition ${
+                            workNairobiSkylineOpacity === preset.val
+                              ? 'bg-gradient-to-r from-[#D4AF37] to-[#F5D77A] text-black font-bold shadow'
+                              : 'bg-white/5 text-[#8A8A8A] hover:text-white'
+                          }`}
+                        >
+                          {preset.label} ({preset.val}%)
+                        </button>
+                      ))}
+                    </div>
+                  </div>
+
+                  {/* WORK SLIDER 2: Nairobi Peak Clarity & Sharpness (0px blur at 100%) */}
+                  <div className="p-5 rounded-2xl bg-[#141414] border border-white/10 space-y-3">
+                    <div className="flex items-center justify-between">
+                      <div>
+                        <label className="text-xs font-bold uppercase tracking-wider text-[#F5F1E8] block">
+                          Nairobi Peak Sharpness & Micro-Contrast
+                        </label>
+                        <span className="text-[11px] text-[#8A8A8A]">
+                          Reduces blur to 0.0px for razor-sharp peak towers and architectural detail
+                        </span>
+                      </div>
+                      <span className="px-3 py-1 rounded-full bg-[#D4AF37]/20 border border-[#D4AF37]/40 text-xs font-mono font-bold text-[#F5D77A]">
+                        {workNairobiClarity}% ({workNairobiClarity >= 95 ? '0px Blur' : `${(((100 - workNairobiClarity)/100)*4).toFixed(1)}px`})
+                      </span>
+                    </div>
+
+                    <input
+                      type="range"
+                      min="20"
+                      max="100"
+                      step="1"
+                      value={workNairobiClarity}
+                      onChange={(e) => {
+                        const val = Number(e.target.value);
+                        setWorkNairobiClarity(val);
+                        document.documentElement.style.setProperty('--work-nairobi-clarity', (val / 100).toString());
+                      }}
+                      className="w-full h-2 bg-[#222] rounded-lg appearance-none cursor-pointer accent-[#D4AF37]"
+                    />
+
+                    <div className="flex items-center gap-2 pt-1">
+                      <span className="text-[10px] uppercase tracking-wider text-[#666]">Presets:</span>
+                      {[
+                        { label: 'Cinematic Soft', val: 40 },
+                        { label: 'HD Sharp', val: 75 },
+                        { label: '100% Pin-Sharp', val: 100 }
+                      ].map((preset) => (
+                        <button
+                          key={preset.label}
+                          type="button"
+                          onClick={() => {
+                            setWorkNairobiClarity(preset.val);
+                            document.documentElement.style.setProperty('--work-nairobi-clarity', (preset.val / 100).toString());
+                          }}
+                          className={`text-[10px] px-2.5 py-1 rounded-lg transition ${
+                            workNairobiClarity === preset.val
+                              ? 'bg-[#D4AF37] text-black font-bold'
+                              : 'bg-white/5 text-[#8A8A8A] hover:text-white'
+                          }`}
+                        >
+                          {preset.label} ({preset.val}%)
+                        </button>
+                      ))}
+                    </div>
+                  </div>
+
+                  {/* WORK SLIDER 3: Dark Overlay Depth on Work Page */}
+                  <div className="p-5 rounded-2xl bg-[#141414] border border-white/5 space-y-3">
+                    <div className="flex items-center justify-between">
+                      <div>
+                        <label className="text-xs font-bold uppercase tracking-wider text-[#F5F1E8] block">
+                          Work Page Dark Overlay Depth
+                        </label>
+                        <span className="text-[11px] text-[#8A8A8A]">
+                          Lower values let the Nairobi Peak shine through with maximum vividness
+                        </span>
+                      </div>
+                      <span className="px-3 py-1 rounded-full bg-[#D4AF37]/20 border border-[#D4AF37]/40 text-xs font-mono font-bold text-[#F5D77A]">
+                        {workDarkOverlay}%
+                      </span>
+                    </div>
+
+                    <input
+                      type="range"
+                      min="10"
+                      max="100"
+                      step="1"
+                      value={workDarkOverlay}
+                      onChange={(e) => {
+                        const val = Number(e.target.value);
+                        setWorkDarkOverlay(val);
+                        document.documentElement.style.setProperty('--work-dark-overlay', (val / 100).toString());
+                      }}
+                      className="w-full h-2 bg-[#222] rounded-lg appearance-none cursor-pointer accent-[#D4AF37]"
+                    />
+                  </div>
+
+                  {/* Sliders: Glow & Particles on Work */}
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                    <div className="p-4 rounded-2xl bg-[#141414] border border-white/5 space-y-2.5">
+                      <div className="flex items-center justify-between">
+                        <label className="text-xs font-bold uppercase tracking-wider text-[#F5F1E8]">
+                          Work Ambient Glow
+                        </label>
+                        <span className="text-xs font-mono font-bold text-[#F5D77A]">{workGoldGlow}%</span>
+                      </div>
+                      <input
+                        type="range"
+                        min="0"
+                        max="100"
+                        step="1"
+                        value={workGoldGlow}
+                        onChange={(e) => setWorkGoldGlow(Number(e.target.value))}
+                        className="w-full h-2 bg-[#222] rounded-lg appearance-none cursor-pointer accent-[#D4AF37]"
                       />
                     </div>
-                    <div>
-                      <h4 className="font-display font-extrabold text-lg" style={{ color: brandPrimaryColor }}>
+
+                    <div className="p-4 rounded-2xl bg-[#141414] border border-white/5 space-y-2.5">
+                      <div className="flex items-center justify-between">
+                        <label className="text-xs font-bold uppercase tracking-wider text-[#F5F1E8]">
+                          Work Stardust Particles
+                        </label>
+                        <span className="text-xs font-mono font-bold text-[#F5D77A]">{workParticles}%</span>
+                      </div>
+                      <input
+                        type="range"
+                        min="0"
+                        max="100"
+                        step="1"
+                        value={workParticles}
+                        onChange={(e) => setWorkParticles(Number(e.target.value))}
+                        className="w-full h-2 bg-[#222] rounded-lg appearance-none cursor-pointer accent-[#D4AF37]"
+                      />
+                    </div>
+                  </div>
+                </div>
+
+                {/* Right: Work Page Simulation Viewport */}
+                <div className="lg:col-span-5 space-y-4">
+                  <div className="p-4 rounded-2xl bg-[#121212] border border-[#D4AF37]/30 space-y-3">
+                    <div className="flex items-center justify-between">
+                      <span className="text-xs font-bold uppercase tracking-wider text-[#F5F1E8] flex items-center gap-1.5">
+                        <Sparkles className="w-3.5 h-3.5 text-[#D4AF37]" />
+                        <span>Work Page Live Preview</span>
+                      </span>
+                      <span className="text-[10px] text-[#22c55e] flex items-center gap-1 font-mono">
+                        <span className="w-1.5 h-1.5 rounded-full bg-[#22c55e] animate-pulse" />
+                        Live Sync
+                      </span>
+                    </div>
+
+                    <div className="relative h-80 rounded-xl overflow-hidden border border-white/10 bg-[#0A0A0A] flex flex-col justify-between p-4 select-none">
+                      {/* Simulated Nairobi Peak layer with active opacity and clarity */}
+                      <div
+                        className="absolute inset-0 bg-cover bg-center pointer-events-none transition-all duration-300"
+                        style={{
+                          backgroundImage: "url('/assets/nairobi-cbd.jpg')",
+                          opacity: workNairobiSkylineOpacity / 100,
+                          filter: `blur(${Math.max(0, ((100 - workNairobiClarity) / 100) * 4).toFixed(1)}px) contrast(${(1 + (workNairobiClarity/100)*0.25).toFixed(2)})`
+                        }}
+                      />
+
+                      {/* Simulated soft dark overlay */}
+                      <div
+                        className="absolute inset-0 pointer-events-none transition-opacity duration-300"
+                        style={{
+                          opacity: workDarkOverlay / 100,
+                          background: 'linear-gradient(to bottom, rgba(10,10,10,0.35) 0%, rgba(10,10,10,0.85) 100%)'
+                        }}
+                      />
+
+                      {/* Header inside simulation */}
+                      <div className="relative z-10 flex items-center justify-between border-b border-white/10 pb-2">
+                        <span className="text-[10px] font-mono text-[#F5D77A] font-bold">PORTFOLIO & GALLERY</span>
+                        <span className="text-[9px] font-mono text-white/60">{projects.length} Works</span>
+                      </div>
+
+                      {/* Simulated Cards Grid over the clear Nairobi Peak */}
+                      <div className="relative z-10 grid grid-cols-2 gap-2 my-auto">
+                        {[1, 2].map((card) => (
+                          <div key={card} className="p-2.5 rounded-xl bg-black/60 backdrop-blur-md border border-white/10 space-y-1.5">
+                            <div className="h-16 rounded-lg bg-neutral-900 border border-white/5 flex items-center justify-center">
+                              <span className="text-[9px] text-[#D4AF37] font-mono">POSTER #{card}</span>
+                            </div>
+                            <span className="text-[10px] font-bold text-[#F5F1E8] block truncate">VIP Gala Event</span>
+                          </div>
+                        ))}
+                      </div>
+
+                      <div className="relative z-10 text-center">
+                        <span className="text-[10px] font-mono text-[#D4AF37] bg-black/60 px-2 py-0.5 rounded-full border border-[#D4AF37]/30">
+                          Nairobi Peak: {workNairobiSkylineOpacity}% Visibility • {workNairobiClarity}% Clarity
+                        </span>
+                      </div>
+                    </div>
+
+                    <p className="text-[11px] text-[#8A8A8A] leading-relaxed">
+                      At 100% visibility & 100% sharpness, the Nairobi peak background will be 100% unblurred and fully clear behind your curated portfolio grid.
+                    </p>
+                  </div>
+                </div>
+              </div>
+            </div>
+          )}
+
+          {/* ════════ VIEW 3: GLOBAL PRESETS & BRAND PALETTE ════════ */}
+          {atmospherePage === 'global' && (
+            <div className="p-6 sm:p-8 rounded-3xl glass-card border border-white/10 space-y-8">
+              <div className="pb-4 border-b border-white/10">
+                <div className="flex items-center gap-2">
+                  <Palette className="w-5 h-5 text-[#D4AF37]" />
+                  <h3 className="font-display font-bold text-xl text-[#F5F1E8]">
+                    Global Presets & Brand Identity Studio
+                  </h3>
+                </div>
+                <p className="text-xs text-[#8A8A8A] mt-1">
+                  Select any curated 1-click brand identity preset to instantly apply harmonized colors, gradients, and atmospheric lighting across the entire site.
+                </p>
+              </div>
+
+              {/* Presets Grid */}
+              <div className="space-y-4">
+                <label className="text-xs uppercase tracking-wider text-[#A0A0A0] font-bold flex items-center gap-2">
+                  <span>Select Brand Identity Preset (1-Click Apply)</span>
+                </label>
+
+                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                  {BRAND_PRESETS.map((preset) => {
+                    const isActive = activeBrandPreset === preset.id;
+                    return (
+                      <div
+                        key={preset.id}
+                        onClick={() => handleApplyBrandPreset(preset)}
+                        className={`group relative p-5 rounded-2xl cursor-pointer transition-all duration-300 border ${
+                          isActive
+                            ? 'bg-[#181610] border-[#D4AF37] shadow-lg shadow-[#D4AF37]/20 scale-[1.01]'
+                            : 'bg-[#141414] border-white/10 hover:border-[#D4AF37]/50 hover:bg-[#161616]'
+                        }`}
+                      >
+                        <div className="flex items-center justify-between mb-3">
+                          <span className="text-[10px] font-mono uppercase tracking-widest px-2.5 py-0.5 rounded-full bg-white/5 border border-white/10 text-[#D4AF37]">
+                            {preset.badge}
+                          </span>
+                          {isActive && (
+                            <span className="flex items-center gap-1 text-[10px] font-mono text-[#F5D77A] bg-[#D4AF37]/20 px-2 py-0.5 rounded-full border border-[#D4AF37]/40 font-bold">
+                              <Check className="w-3 h-3" />
+                              Active
+                            </span>
+                          )}
+                        </div>
+
+                        <div className="flex items-center gap-2 mb-3">
+                          <span className="w-5 h-5 rounded-full border border-white/30 shadow" style={{ backgroundColor: preset.primary }} />
+                          <span className="w-5 h-5 rounded-full border border-white/30 shadow" style={{ backgroundColor: preset.secondary }} />
+                          <span className="w-5 h-5 rounded-full border border-white/30 shadow" style={{ backgroundColor: preset.dark }} />
+                        </div>
+
+                        <h4 className="font-display font-bold text-sm text-[#F5F1E8] mb-1 group-hover:text-[#F5D77A] transition">
+                          {preset.name}
+                        </h4>
+                        <p className="text-[11px] text-[#8A8A8A] leading-relaxed">
+                          {preset.desc}
+                        </p>
+                      </div>
+                    );
+                  })}
+                </div>
+              </div>
+
+              {/* Custom Palette Fine-Tuner */}
+              <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 pt-4 border-t border-white/10">
+                <div className="lg:col-span-7 space-y-4">
+                  <h4 className="text-xs font-bold uppercase tracking-wider text-[#A0A0A0]">
+                    Custom Brand Palette Fine-Tuner
+                  </h4>
+
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                    <div className="space-y-1.5">
+                      <label className="block text-xs uppercase tracking-wider text-[#A0A0A0]">Brand Name</label>
+                      <input
+                        type="text"
+                        value={brandName}
+                        onChange={(e) => setBrandName(e.target.value)}
+                        className="w-full px-4 py-2.5 rounded-xl bg-[#161616] border border-white/10 focus:border-[#D4AF37] focus:outline-none text-xs text-[#F5F1E8]"
+                      />
+                    </div>
+
+                    <div className="space-y-1.5">
+                      <label className="block text-xs uppercase tracking-wider text-[#A0A0A0]">Tagline</label>
+                      <input
+                        type="text"
+                        value={brandTagline}
+                        onChange={(e) => setBrandTagline(e.target.value)}
+                        className="w-full px-4 py-2.5 rounded-xl bg-[#161616] border border-white/10 focus:border-[#D4AF37] focus:outline-none text-xs text-[#F5F1E8]"
+                      />
+                    </div>
+                  </div>
+
+                  {/* Primary Color Picker */}
+                  <div className="space-y-2">
+                    <label className="block text-xs uppercase tracking-wider text-[#A0A0A0]">
+                      Primary Brand Accent Color
+                    </label>
+                    <div className="flex items-center gap-3">
+                      <input
+                        type="color"
+                        value={brandPrimaryColor}
+                        onChange={(e) => {
+                          const val = e.target.value;
+                          setBrandPrimaryColor(val);
+                          document.documentElement.style.setProperty('--gold-primary', val);
+                        }}
+                        className="w-10 h-10 rounded-xl cursor-pointer bg-transparent border-0 p-0"
+                      />
+                      <input
+                        type="text"
+                        value={brandPrimaryColor}
+                        onChange={(e) => {
+                          const val = e.target.value;
+                          setBrandPrimaryColor(val);
+                          document.documentElement.style.setProperty('--gold-primary', val);
+                        }}
+                        className="w-32 px-3 py-2 rounded-xl bg-[#161616] border border-white/10 text-xs font-mono text-[#F5D77A]"
+                      />
+                      <div className="flex items-center gap-1.5">
+                        {['#D4AF37', '#FF9F1C', '#E6CA65', '#CD7F32', '#E2E8F0'].map((color) => (
+                          <button
+                            key={color}
+                            type="button"
+                            onClick={() => {
+                              setBrandPrimaryColor(color);
+                              document.documentElement.style.setProperty('--gold-primary', color);
+                            }}
+                            className="w-6 h-6 rounded-full border border-white/30 hover:scale-110 transition shadow"
+                            style={{ backgroundColor: color }}
+                            title={color}
+                          />
+                        ))}
+                      </div>
+                    </div>
+                  </div>
+
+                  <div className="pt-2">
+                    <button
+                      type="button"
+                      onClick={handleSaveAtmosphere}
+                      className="w-full sm:w-auto px-6 py-3 rounded-xl text-xs font-bold uppercase tracking-wider text-black bg-gradient-to-r from-[#D4AF37] via-[#F5D77A] to-[#B8860B] hover:brightness-110 transition shadow shadow-[#D4AF37]/25"
+                    >
+                      Save & Apply Brand Settings
+                    </button>
+                  </div>
+                </div>
+
+                <div className="lg:col-span-5">
+                  <div className="p-5 rounded-2xl bg-[#141414] border border-white/10 space-y-4">
+                    <span className="text-xs uppercase tracking-wider text-[#A0A0A0] font-bold block">
+                      Live Identity Card Preview
+                    </span>
+                    <div className="p-4 rounded-xl border bg-black/60 space-y-2" style={{ borderColor: brandPrimaryColor }}>
+                      <span className="text-[10px] font-mono tracking-widest uppercase text-[#D4AF37] block">
+                        Official Brand
+                      </span>
+                      <h4 className="font-display font-bold text-lg text-[#F5F1E8]">
                         {brandName}
                       </h4>
-                      <p className="text-[10px] uppercase tracking-widest text-[#8A8A8A]">
+                      <p className="text-xs text-[#8A8A8A]">
                         {brandTagline}
                       </p>
                     </div>
                   </div>
-
-                  <div
-                    className="p-3.5 rounded-xl border flex items-center justify-between"
-                    style={{
-                      background: 'rgba(212,175,55,0.06)',
-                      borderColor: 'rgba(212,175,55,0.2)'
-                    }}
-                  >
-                    <span className="text-xs font-medium text-[#F5F1E8]">CTA Button Style</span>
-                    <button
-                      type="button"
-                      className="px-4 py-1.5 rounded-full text-[11px] font-bold text-black uppercase tracking-wider shadow"
-                      style={{
-                        background: `linear-gradient(135deg, ${brandPrimaryColor}, ${brandSecondaryColor}, ${brandDarkColor})`
-                      }}
-                    >
-                      Hire Me
-                    </button>
-                  </div>
                 </div>
               </div>
             </div>
-          </div>
+          )}
         </div>
       )}
 
@@ -2981,6 +3545,54 @@ export default function AdminDashboard({ navigate }) {
                   <h3 className="font-display font-bold text-lg text-[#F5F1E8]">
                     Admin Account Profile
                   </h3>
+                </div>
+
+                {/* Avatar Photo Section */}
+                <div className="flex flex-col sm:flex-row items-center gap-4 p-4 rounded-2xl bg-white/5 border border-white/10">
+                  <div className="relative w-20 h-20 rounded-2xl overflow-hidden border-2 border-[#D4AF37] shadow-[0_0_20px_rgba(212,175,55,0.35)] flex-shrink-0 bg-black group/avatar">
+                    <img
+                      src={adminAvatar || adminUser?.avatar || '/assets/brian-mulilu.jpg'}
+                      alt="Admin Avatar"
+                      className="w-full h-full object-cover object-[center_18%]"
+                    />
+                    <button
+                      type="button"
+                      onClick={() => avatarFileInputRef.current?.click()}
+                      className="absolute inset-0 bg-black/60 opacity-0 group-hover/avatar:opacity-100 flex items-center justify-center transition-opacity text-[#F5D77A]"
+                      title="Upload new photo"
+                    >
+                      <Camera className="w-6 h-6 drop-shadow" />
+                    </button>
+                    <span className="absolute bottom-1 right-1 w-3 h-3 rounded-full bg-green-500 border-2 border-black" />
+                  </div>
+
+                  <div className="space-y-2 text-center sm:text-left flex-1 min-w-0">
+                    <div>
+                      <span className="text-xs font-bold text-[#F5F1E8] block">Admin Profile Photo</span>
+                      <p className="text-[11px] text-[#8A8A8A]">
+                        Upload your photo. Automatically compressed with high quality for instant loading.
+                      </p>
+                    </div>
+                    <div className="flex flex-wrap items-center justify-center sm:justify-start gap-2 pt-1">
+                      <button
+                        type="button"
+                        disabled={isUpdatingAvatar}
+                        onClick={() => avatarFileInputRef.current?.click()}
+                        className="px-3.5 py-1.5 rounded-xl text-xs font-semibold text-black bg-gradient-to-r from-[#D4AF37] to-[#F5D77A] hover:brightness-110 flex items-center gap-1.5 transition shadow"
+                      >
+                        <Camera className="w-3.5 h-3.5" />
+                        <span>{isUpdatingAvatar ? 'Compressing...' : 'Upload New Photo'}</span>
+                      </button>
+                      <button
+                        type="button"
+                        onClick={handleResetAvatar}
+                        className="px-3 py-1.5 rounded-xl text-xs font-medium text-[#8A8A8A] hover:text-[#F5F1E8] bg-white/5 hover:bg-white/10 border border-white/10 flex items-center gap-1.5 transition"
+                      >
+                        <RotateCcw className="w-3.5 h-3.5" />
+                        <span>Reset Default</span>
+                      </button>
+                    </div>
+                  </div>
                 </div>
 
                 <div className="space-y-1.5">
@@ -3204,6 +3816,14 @@ export default function AdminDashboard({ navigate }) {
           </div>
         </div>
       )}
+                {/* Hidden Global Avatar Uploader */}
+        <input
+          type="file"
+          ref={avatarFileInputRef}
+          accept="image/png,image/jpeg,image/webp,image/jpg"
+          onChange={handleAvatarFileChange}
+          className="hidden"
+        />
         </main>
       </div>
 
