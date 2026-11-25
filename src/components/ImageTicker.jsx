@@ -146,8 +146,46 @@ export default function ImageTicker({ navigate }) {
     }
   };
 
-  // Duplicate the array once for seamless 100% infinite continuous CSS loop
-  const tickerItems = [...allImages, ...allImages];
+  // The ticker renders TWO rows:
+  // Row 1 (visible): allImages — the real cards users interact with
+  // Row 2 (aria-hidden clone): exact copy that provides seamless loop continuity
+  // Animation moves -50% (the width of one full row) then resets — users never see both rows at once
+  const tickerSpeed = `${Math.max(50, allImages.length * 3)}s`;
+
+  const TickerCard = ({ item, hidden = false }) => (
+    <div
+      onClick={hidden ? undefined : () => handleItemClick(item)}
+      aria-hidden={hidden ? 'true' : undefined}
+      className="w-48 sm:w-56 md:w-64 aspect-[3/4] flex-shrink-0 relative rounded-2xl sm:rounded-3xl overflow-hidden glass-card border border-white/10 hover:border-[#D4AF37] shadow-xl hover:shadow-[0_15px_35px_rgba(212,175,55,0.25)] transition-all duration-500 group cursor-pointer bg-neutral-950"
+    >
+      <img
+        src={item.path}
+        alt={hidden ? '' : item.title}
+        loading="lazy"
+        decoding="async"
+        className="w-full h-full object-cover transform duration-700 ease-out group-hover:scale-105 filter group-hover:brightness-105"
+      />
+      {!hidden && (
+        <div className="absolute inset-x-0 bottom-0 p-3 sm:p-4 bg-gradient-to-t from-black/95 via-black/60 to-transparent flex flex-col justify-end translate-y-2 group-hover:translate-y-0 transition-transform duration-300">
+          <span className="text-[9px] font-mono uppercase tracking-widest text-[#D4AF37] block truncate">
+            {item.category}
+          </span>
+          <h3 className="font-display font-bold text-xs sm:text-sm text-[#F5F1E8] truncate leading-tight mt-0.5">
+            {item.title}
+          </h3>
+          <div className="flex items-center justify-between pt-2 mt-2 border-t border-white/10 opacity-0 group-hover:opacity-100 transition-opacity duration-300">
+            <span className="text-[10px] text-[#F5D77A] font-medium flex items-center gap-1">
+              <Eye className="w-3 h-3" />
+              <span>View Artwork</span>
+            </span>
+            <div className="w-5 h-5 rounded-full bg-[#D4AF37] flex items-center justify-center text-black shadow">
+              <ArrowUpRight className="w-3 h-3" />
+            </div>
+          </div>
+        </div>
+      )}
+    </div>
+  );
 
   return (
     <section className="relative w-full py-16 overflow-hidden select-none" aria-label="Endless Artwork Ticker">
@@ -171,45 +209,23 @@ export default function ImageTicker({ navigate }) {
         <div className="ticker-fade-left pointer-events-none absolute left-0 inset-y-0 w-16 sm:w-36 z-20" />
         <div className="ticker-fade-right pointer-events-none absolute right-0 inset-y-0 w-16 sm:w-36 z-20" />
 
-        {/* Continuous Animated Track */}
+        {/*
+          Single animated flex track.
+          Structure: [REAL CARDS ... | CLONE CARDS (aria-hidden) ...]
+          Width = 2 × one-set-width. Animation: 0 → -50% → instantly reset to 0.
+          At any viewport width, only the real or clone set is visible — never both simultaneously.
+        */}
         <div
-          className="image-ticker-track flex items-center gap-4 sm:gap-6 py-4"
-          style={{ '--ticker-speed': `${Math.max(45, allImages.length * 2.2)}s` }}
+          className="image-ticker-track flex items-stretch gap-4 sm:gap-5 py-4"
+          style={{ '--ticker-speed': tickerSpeed }}
         >
-          {tickerItems.map((item, idx) => (
-            <div
-              key={`${item.path}-${idx}`}
-              onClick={() => handleItemClick(item)}
-              className="w-48 sm:w-60 md:w-68 aspect-[3/4] flex-shrink-0 relative rounded-2xl sm:rounded-3xl overflow-hidden glass-card border border-white/10 hover:border-[#D4AF37] shadow-xl hover:shadow-[0_15px_35px_rgba(212,175,55,0.25)] transition-all duration-500 group cursor-pointer bg-neutral-950"
-            >
-              {/* Artwork Image */}
-              <img
-                src={item.path}
-                alt={item.title}
-                loading="lazy"
-                decoding="async"
-                className="w-full h-full object-cover transform duration-700 ease-out group-hover:scale-105 filter group-hover:brightness-105"
-              />
-
-              {/* Cinematic Bottom Gradient Overlay */}
-              <div className="absolute inset-x-0 bottom-0 p-3 sm:p-4 bg-gradient-to-t from-black/95 via-black/60 to-transparent flex flex-col justify-end translate-y-2 group-hover:translate-y-0 transition-transform duration-300">
-                <span className="text-[9px] font-mono uppercase tracking-widest text-[#D4AF37] block truncate">
-                  {item.category}
-                </span>
-                <h3 className="font-display font-bold text-xs sm:text-sm text-[#F5F1E8] truncate leading-tight mt-0.5">
-                  {item.title}
-                </h3>
-                <div className="flex items-center justify-between pt-2 mt-2 border-t border-white/10 opacity-0 group-hover:opacity-100 transition-opacity duration-300">
-                  <span className="text-[10px] text-[#F5D77A] font-medium flex items-center gap-1">
-                    <Eye className="w-3 h-3" />
-                    <span>View Artwork</span>
-                  </span>
-                  <div className="w-5 h-5 rounded-full bg-[#D4AF37] flex items-center justify-center text-black shadow">
-                    <ArrowUpRight className="w-3 h-3" />
-                  </div>
-                </div>
-              </div>
-            </div>
+          {/* Row 1: Real interactive cards */}
+          {allImages.map((item) => (
+            <TickerCard key={`real-${item.path}`} item={item} hidden={false} />
+          ))}
+          {/* Row 2: Invisible clone for seamless loop — no click handlers, no alt text */}
+          {allImages.map((item) => (
+            <TickerCard key={`clone-${item.path}`} item={item} hidden={true} />
           ))}
         </div>
       </div>
