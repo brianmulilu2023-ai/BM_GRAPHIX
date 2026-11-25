@@ -1,11 +1,15 @@
 import React, { useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { MessageCircle, X, Sparkles } from 'lucide-react';
+import { useProjects } from '../context/ProjectContext';
 
 export default function FloatingWhatsApp() {
   const [isOpen, setIsOpen] = useState(false);
+  const { adminUser } = useProjects();
+  const avatarPhoto = adminUser?.avatar || '/assets/brian-mulilu.jpg';
+  const adminName = adminUser?.name || 'Brian Mulilu';
   const phoneNumber = '254798405726';
-  const defaultMessage = 'Hello Brian! I love your portfolio at BM Graphix. I would like to discuss a project.';
+  const defaultMessage = `Hello ${adminName}! I love your portfolio at BM Graphix. I would like to discuss a project.`;
   const whatsappUrl = `https://wa.me/${phoneNumber}?text=${encodeURIComponent(defaultMessage)}`;
 
   return (
@@ -23,13 +27,13 @@ export default function FloatingWhatsApp() {
               <div className="flex items-center gap-2.5">
                 <div className="w-9 h-9 rounded-full overflow-hidden border border-[#D4AF37]/60">
                   <img
-                    src="/assets/brian-mulilu.jpg"
-                    alt="Brian Mulilu"
+                    src={avatarPhoto}
+                    alt={adminName}
                     className="w-full h-full object-cover object-[center_18%]"
                   />
                 </div>
                 <div>
-                  <h4 className="text-sm font-semibold text-[#F5F1E8]">Brian Mulilu</h4>
+                  <h4 className="text-sm font-semibold text-[#F5F1E8]">{adminName}</h4>
                   <p className="text-[11px] text-[#25D366] flex items-center gap-1 font-medium">
                     <span className="w-1.5 h-1.5 rounded-full bg-[#25D366] animate-pulse"></span>
                     Available for projects

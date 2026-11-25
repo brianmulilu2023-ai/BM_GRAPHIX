@@ -13,8 +13,13 @@ import {
   Flame,
   ArrowRight
 } from 'lucide-react';
+import { useProjects } from '../context/ProjectContext';
 
 export default function About({ navigate }) {
+  const { adminUser } = useProjects();
+  const profilePhoto = adminUser?.avatar || '/assets/brian-mulilu.jpg';
+  const profileName = adminUser?.name || 'Brian Mulilu';
+  const profileRole = adminUser?.role || 'Motion Artist & Visual Designer';
   const skills = [
     { name: 'Adobe Photoshop (Poster Art & Manipulation)', level: 98 },
     { name: 'Adobe Illustrator (Vector Branding & Logos)', level: 95 },
@@ -75,16 +80,16 @@ export default function About({ navigate }) {
         >
           <div className="relative mx-auto max-w-md rounded-3xl overflow-hidden border-2 border-[#D4AF37]/50 shadow-[0_15px_50px_rgba(212,175,55,0.25)] bg-[#121212] aspect-[3/4]">
             <img
-              src="/assets/brian-mulilu.jpg"
-              alt="Brian Mulilu — Senior Graphic Designer & Motion Artist"
+              src={profilePhoto}
+              alt={`${profileName} — ${profileRole}`}
               className="w-full h-full object-cover object-[center_18%] filter contrast-105"
             />
             <div className="absolute inset-0 bg-gradient-to-t from-black via-transparent to-transparent opacity-80" />
             <div className="absolute bottom-6 left-6 right-6 flex items-center justify-between">
               <div>
-                <h3 className="font-display font-bold text-xl text-[#F5F1E8]">Brian Mulilu</h3>
+                <h3 className="font-display font-bold text-xl text-[#F5F1E8]">{profileName}</h3>
                 <p className="text-xs text-[#D4AF37] font-mono tracking-widest uppercase">
-                  Motion Artist & Visual Designer
+                  {profileRole}
                 </p>
               </div>
               <span className="w-3 h-3 rounded-full bg-emerald-400 ring-4 ring-emerald-400/20 animate-pulse" title="Available for projects" />

@@ -47,7 +47,7 @@ function useReveal() {
 }
 
 export default function Home({ navigate }) {
-  const { projects } = useProjects();
+  const { projects, adminUser } = useProjects();
   const pageRef = useReveal();
 
   // ─── MASTERPIECE ALTERNATING & CATEGORY FILTER STATE ────────────────────────
@@ -441,13 +441,13 @@ export default function Home({ navigate }) {
             <div className="lg:col-span-5 relative reveal-left">
               <div className="relative mx-auto max-w-sm rounded-2xl overflow-hidden border-2 border-[#D4AF37]/50 shadow-[0_10px_40px_rgba(212,175,55,0.2)] aspect-[3/4]">
                 <img
-                  src="/assets/brian-mulilu.jpg"
-                  alt="Brian Mulilu — Graphic Designer & Motion Artist"
+                  src={adminUser?.avatar || "/assets/brian-mulilu.jpg"}
+                  alt={`${adminUser?.name || "Brian Mulilu"} — ${adminUser?.role || "Graphic Designer & Motion Artist"}`}
                   className="w-full h-full object-cover object-[center_18%] filter brightness-100 contrast-105"
                 />
                 <div className="absolute bottom-0 inset-x-0 bg-gradient-to-t from-black via-black/60 to-transparent p-4 text-center">
-                  <span className="text-xs font-bold tracking-widest text-[#F5D77A] uppercase">Brian Mulilu</span>
-                  <p className="text-[10px] text-[#8A8A8A]">Founder & Creative Director, BM Graphix</p>
+                  <span className="text-xs font-bold tracking-widest text-[#F5D77A] uppercase">{adminUser?.name || "Brian Mulilu"}</span>
+                  <p className="text-[10px] text-[#8A8A8A]">{adminUser?.role || "Founder & Creative Director, BM Graphix"}</p>
                 </div>
               </div>
             </div>

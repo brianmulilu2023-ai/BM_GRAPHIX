@@ -234,6 +234,12 @@ export default function AdminDashboard({ navigate }) {
   const [isUpdatingAvatar, setIsUpdatingAvatar] = useState(false);
   const avatarFileInputRef = useRef(null);
 
+  useEffect(() => {
+    if (adminUser?.avatar) {
+      setAdminAvatar(adminUser.avatar);
+    }
+  }, [adminUser?.avatar]);
+
   const handleAvatarFileChange = async (e) => {
     const file = e.target.files?.[0];
     if (!file) return;
