@@ -242,9 +242,10 @@ const BASE_PROJECTS = [
     client: "Plains of Hope",
     year: "2026",
     featured: true,
-    thumbnail: "/assets/projects/paul.jpeg",
+    thumbnail: "/assets/projects/album-launch.jpeg",
     images: [
-      "/assets/projects/paul.jpeg"
+      "/assets/projects/album-launch.jpeg",
+      "/assets/projects/worship-night.jpeg"
     ],
     videoUrl: "/videos/PLAINS OF HOPE 4TH OCT 2026.mp4",
     description: "Cinematic promotional reel produced for Plains of Hope, showcasing high-impact motion graphics and broadcast-quality video editing crafted for maximum audience engagement.",
