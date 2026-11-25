@@ -59,14 +59,16 @@ export default function NairobiBackground({ currentPath = '/' }) {
   } else if (isHomePage) {
     skylineOpacityRatio = typeof siteSettings?.nairobiSkylineOpacity === 'number'
       ? siteSettings.nairobiSkylineOpacity / 100
-      : 0.14;
-    clarityPercentage = 40;
+      : 0.70;
+    clarityPercentage = typeof siteSettings?.workNairobiClarity === 'number'
+      ? siteSettings.workNairobiClarity
+      : 85;
     glowRatio = typeof siteSettings?.goldGlowIntensity === 'number'
       ? siteSettings.goldGlowIntensity / 100
       : 0.70;
     overlayDepthRatio = typeof siteSettings?.heroDarkOverlay === 'number'
       ? siteSettings.heroDarkOverlay / 100
-      : 0.85;
+      : 0.65;
   } else {
     skylineOpacityRatio = typeof siteSettings?.globalNairobiSkylineOpacity === 'number'
       ? siteSettings.globalNairobiSkylineOpacity / 100
@@ -80,10 +82,10 @@ export default function NairobiBackground({ currentPath = '/' }) {
       : 0.80;
   }
 
-  // Allow up to 100% full clarity and opacity on Work page or as dialed by admin
+  // Allow up to 100% full clarity and opacity across pages or as dialed by admin
   const currentSkylineOpacity = isDark
     ? skylineOpacityRatio
-    : Math.min(1.0, skylineOpacityRatio * (isWorkPage ? 0.95 : 0.6));
+    : Math.min(1.0, skylineOpacityRatio * 0.95);
 
   // Clarity calculation: at 100% clarity, blur becomes 0px (100% crystal clear Nairobi peak!)
   const blurPx = Math.max(0, ((100 - clarityPercentage) / 100) * 4).toFixed(1);
@@ -130,9 +132,9 @@ export default function NairobiBackground({ currentPath = '/' }) {
             ? isWorkPage
               ? `linear-gradient(to bottom, rgba(10,10,10,${0.25 + (overlayDepthRatio * 0.55)}) 0%, rgba(10,10,10,${0.45 + (overlayDepthRatio * 0.45)}) 50%, #0A0A0A 100%)`
               : 'linear-gradient(to bottom, rgba(10,10,10,0.70) 0%, rgba(10,10,10,0.90) 50%, #0A0A0A 100%)'
-            : isWorkPage
-              ? `linear-gradient(to bottom, rgba(245,240,232,${0.25 + (overlayDepthRatio * 0.55)}) 0%, rgba(245,240,232,${0.45 + (overlayDepthRatio * 0.45)}) 50%, #F5F0E8 100%)`
-              : 'linear-gradient(to bottom, rgba(245,240,232,0.60) 0%, rgba(245,240,232,0.88) 50%, #F5F0E8 100%)',
+            : isWorkPage || isHomePage
+              ? `linear-gradient(to bottom, rgba(245,240,232,${0.15 + (overlayDepthRatio * 0.35)}) 0%, rgba(245,240,232,${0.30 + (overlayDepthRatio * 0.35)}) 50%, #F5F0E8 100%)`
+              : 'linear-gradient(to bottom, rgba(245,240,232,0.40) 0%, rgba(245,240,232,0.70) 50%, #F5F0E8 100%)',
           transition: 'background 0.5s ease',
         }}
       />

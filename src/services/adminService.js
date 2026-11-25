@@ -35,8 +35,8 @@ export const DEFAULT_SITE_SETTINGS = {
 
   // Home / Landing Page Atmosphere Controls
   heroBgVisibility: 55, // 0 to 100%
-  heroDarkOverlay: 85, // 0 to 100%
-  nairobiSkylineOpacity: 14, // 0 to 100%
+  heroDarkOverlay: 70, // 0 to 100%
+  nairobiSkylineOpacity: 70, // 0 to 100% (crystal clear & prominent)
   goldGlowIntensity: 70, // 0 to 100%
   particlesVisibility: 55, // 0 to 100%
 

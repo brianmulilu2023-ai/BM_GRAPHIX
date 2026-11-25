@@ -39,7 +39,7 @@ function AtmosphereSync({ currentPath }) {
     root.style.setProperty('--hero-dark-overlay', overlayDark.toString());
 
     // Nairobi skyline opacity (0 to 1)
-    const nairobiOp = typeof siteSettings.nairobiSkylineOpacity === 'number' ? siteSettings.nairobiSkylineOpacity / 100 : 0.14;
+    const nairobiOp = typeof siteSettings.nairobiSkylineOpacity === 'number' ? siteSettings.nairobiSkylineOpacity / 100 : 0.70;
     root.style.setProperty('--nairobi-opacity', nairobiOp.toString());
 
     // Work Page: Nairobi skyline opacity (up to 100% full clarity)

@@ -2953,17 +2953,18 @@ export default function AdminDashboard({ navigate }) {
                   </div>
 
                   {/* Slider 3: Nairobi Skyline */}
-                  <div className="p-5 rounded-2xl bg-[#141414] border border-white/5 space-y-3">
+                  <div className="p-5 rounded-2xl bg-[#141414] border border-[#D4AF37]/30 space-y-3 shadow-lg shadow-[#D4AF37]/5">
                     <div className="flex items-center justify-between">
                       <div>
-                        <label className="text-xs font-bold uppercase tracking-wider text-[#F5F1E8] block">
-                          Nairobi Skyline Silhouette Opacity
+                        <label className="text-xs font-bold uppercase tracking-wider text-[#F5F1E8] block flex items-center gap-1.5">
+                          <Sparkles className="w-3.5 h-3.5 text-[#D4AF37]" />
+                          <span>Nairobi Skyline Silhouette Opacity (0% to 100%)</span>
                         </label>
-                        <span className="text-[11px] text-[#8A8A8A]">
-                          Parallax architectural CBD skyline visible in the background
+                        <span className="text-[11px] text-[#A0A0A0]">
+                          Parallax architectural CBD skyline visible in the top hero & background (up to 100% crystal clear)
                         </span>
                       </div>
-                      <span className="px-3 py-1 rounded-full bg-[#D4AF37]/20 border border-[#D4AF37]/40 text-xs font-mono font-bold text-[#F5D77A]">
+                      <span className="px-3.5 py-1 rounded-full bg-[#D4AF37] text-black text-xs font-mono font-extrabold shadow">
                         {nairobiSkylineOpacity}%
                       </span>
                     </div>
@@ -2978,8 +2979,36 @@ export default function AdminDashboard({ navigate }) {
                         setNairobiSkylineOpacity(val);
                         document.documentElement.style.setProperty('--nairobi-opacity', (val / 100).toString());
                       }}
-                      className="w-full h-2 bg-[#222] rounded-lg appearance-none cursor-pointer accent-[#D4AF37]"
+                      className="w-full h-2.5 bg-[#222] rounded-lg appearance-none cursor-pointer accent-[#D4AF37]"
                     />
+
+                    {/* Quick Presets up to 100% Clear */}
+                    <div className="flex items-center gap-2 pt-1 flex-wrap">
+                      <span className="text-[10px] uppercase tracking-wider text-[#777]">Presets:</span>
+                      {[
+                        { label: 'Off', val: 0 },
+                        { label: 'Subtle', val: 25 },
+                        { label: 'Clear', val: 65 },
+                        { label: 'Ultra Clear', val: 85 },
+                        { label: '100% Crystal Clear', val: 100 }
+                      ].map((preset) => (
+                        <button
+                          key={preset.label}
+                          type="button"
+                          onClick={() => {
+                            setNairobiSkylineOpacity(preset.val);
+                            document.documentElement.style.setProperty('--nairobi-opacity', (preset.val / 100).toString());
+                          }}
+                          className={`text-[10px] px-2.5 py-1 rounded-lg font-medium transition ${
+                            nairobiSkylineOpacity === preset.val
+                              ? 'bg-gradient-to-r from-[#D4AF37] to-[#F5D77A] text-black font-bold shadow'
+                              : 'bg-white/5 text-[#8A8A8A] hover:text-white'
+                          }`}
+                        >
+                          {preset.label} ({preset.val}%)
+                        </button>
+                      ))}
+                    </div>
                   </div>
 
                   {/* Sliders 4 & 5: Glow & Particles */}

@@ -202,6 +202,16 @@ export default function HeroSection({ navigate }) {
   return (
     <section className="hero-section">
 
+      {/* ══ NAIROBI CBD SKYLINE BACKDROP — HIGH CLARITY & VISIBILITY ══ */}
+      <div className="hero-nairobi-backdrop" aria-hidden="true">
+        <img
+          src="/assets/nairobi-cbd.jpg"
+          alt=""
+          className="hero-nairobi-img"
+        />
+        <div className="hero-nairobi-overlay" />
+      </div>
+
       {/* ══ KIBOCHI-STYLE SCROLLING IMAGE GRID BACKGROUND ══ */}
       <div className="hero-bg-grid-wrap" aria-hidden="true">
         {COLUMNS.map((col, i) => (
