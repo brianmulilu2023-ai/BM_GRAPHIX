@@ -2,91 +2,116 @@ import React, { useMemo } from 'react';
 import { Sparkles, Eye, ArrowUpRight } from 'lucide-react';
 import { useProjects } from '../context/ProjectContext';
 
+// Map binary/visual duplicate files to their canonical primary image
+const CANONICAL_PATH_MAP = {
+  // music-live and WhatsApp versions are 100% identical to conference-summit
+  '/assets/projects/music-live.jpeg': '/assets/projects/conference-summit.jpeg',
+  '/assets/projects/WhatsApp Image 2026-10-05 at 11.51.18.jpeg': '/assets/projects/conference-summit.jpeg',
+  '/assets/projects/WhatsApp Image 2026-10-05 at 11.51.20.jpeg': '/assets/projects/conference-summit.jpeg',
+  // Identical duplicate files with WhatsApp filenames
+  '/assets/projects/WhatsApp Image 2026-10-05 at 11.51.21.jpeg': '/assets/projects/album-launch.jpeg',
+  '/assets/projects/WhatsApp Image 2026-10-05 at 11.51.19.jpeg': '/assets/projects/church-service.jpeg',
+  '/assets/projects/WhatsApp Image 2026-10-05 at 11.51.23.jpeg': '/assets/projects/creative-flyer.jpeg',
+  '/assets/projects/WhatsApp Image 2026-10-05 at 11.51.16.jpeg': '/assets/projects/event-gala.jpeg',
+  '/assets/projects/WhatsApp Image 2026-10-05 at 11.51.16.jpeg mb.jpeg': '/assets/projects/event-mb.jpeg',
+  '/assets/projects/WhatsApp Image 2026-10-05 at 11.51.19.jpeg nku.jpeg': '/assets/projects/worship-night.jpeg',
+  '/assets/projects/WhatsApp Image 2026-10-05 at 11.51.22.jpeg': '/assets/projects/youth-vibes.jpeg',
+};
+
+// Exclude UI assets, company logos, headshots, and workspace photos from the portfolio artwork ticker
+const EXCLUDED_PATTERNS = [
+  /BM_LOGO/i,
+  /BM_OFFICIAL/i,
+  /BM_ICON/i,
+  /BM_BLCK/i,
+  /\/assets\/logo\//i,
+  /brian-mulilu/i,
+  /designer-photo/i,
+  /nairobi-cbd/i,
+  /lab\.jpg/i,
+  /lap\.jpg/i,
+  /\.pdf$/i
+];
+
+// Clean canonical static gallery of all unique portfolio artwork pieces
 const STATIC_GALLERY_IMAGES = [
-  { path: '/assets/projects/zenia.jpeg', title: 'Zenia Sound Fest', category: 'Motion' },
-  { path: '/assets/projects/cleo.jpeg', title: 'Cleo Haute Couture', category: 'Posters' },
-  { path: '/assets/projects/conference-summit.jpeg', title: 'Conference Summit 2026', category: 'Posters' },
-  { path: '/assets/projects/manipulation.jpeg', title: 'Celestial Echoes', category: 'Branding' },
-  { path: '/assets/projects/paul.jpeg', title: 'Paul Live Concert', category: 'Posters' },
-  { path: '/assets/projects/music-live.jpeg', title: 'Nairobi Music Live', category: 'Motion' },
-  { path: '/assets/projects/youth-vibes.jpeg', title: 'Youth Vibes Festival', category: 'Posters' },
-  { path: '/assets/projects/sharon.jpeg', title: 'Sharon Fashion Editorial', category: 'Posters' },
-  { path: '/assets/projects/event-mb.jpeg', title: 'MB Exclusive Gala', category: 'Posters' },
-  { path: '/assets/projects/event-gala.jpeg', title: 'Annual Corporate Gala', category: 'Posters' },
-  { path: '/assets/projects/creative-flyer.jpeg', title: 'Creative Brand Flyer', category: 'Posters' },
-  { path: '/assets/projects/worship-night.jpeg', title: 'Worship Night Experience', category: 'Posters' },
-  { path: '/assets/projects/church-service.jpeg', title: 'Sunday Worship Service', category: 'Posters' },
-  { path: '/assets/projects/album-launch.jpeg', title: 'Album Launch Artwork', category: 'Posters' },
-  { path: '/assets/projects/cosmas.jpeg', title: 'Cosmas Live Tour', category: 'Posters' },
-  { path: '/assets/projects/kasyoki.jpeg', title: 'Kasyoki Cultural Identity', category: 'Branding' },
-  { path: '/assets/projects/lydia.jpeg', title: 'Lydia Portrait Visual', category: 'Posters' },
-  { path: '/assets/projects/joyce.jpeg', title: 'Joyce Gospel Concert', category: 'Posters' },
-  { path: '/assets/projects/WhatsApp Image 2026-10-05 at 11.51.16.jpeg', title: 'Nairobi Night Series', category: 'Posters' },
-  { path: '/assets/projects/WhatsApp Image 2026-10-05 at 11.51.18.jpeg', title: 'Urban Creative Poster', category: 'Posters' },
-  { path: '/assets/projects/WhatsApp Image 2026-10-05 at 11.51.20.jpeg', title: 'Vocal Showcase Tour', category: 'Posters' },
-  { path: '/assets/projects/WhatsApp Image 2026-10-05 at 11.51.22.jpeg', title: 'Kingdom Sounds Live', category: 'Posters' }
+  { path: '/assets/projects/zenia.jpeg', title: 'Zenia Sound Fest — 3D Motion Identity', category: 'Animations & Motion' },
+  { path: '/assets/projects/cleo.jpeg', title: 'Cleo Couture — High Fashion Brand Campaign', category: 'Poster & Flyer Design' },
+  { path: '/assets/projects/conference-summit.jpeg', title: 'Nairobi Leadership Summit Keynote Poster', category: 'Poster & Flyer Design' },
+  { path: '/assets/projects/manipulation.jpeg', title: 'Celestial Echoes — Digital Photo Manipulation', category: 'Logos & Branding' },
+  { path: '/assets/projects/paul.jpeg', title: 'Paul Live Concert & Tribute Poster', category: 'Poster & Flyer Design' },
+  { path: '/assets/projects/youth-vibes.jpeg', title: 'Youth Ignition Fest 2024 Campaign', category: 'Poster & Flyer Design' },
+  { path: '/assets/projects/sharon.jpeg', title: 'Sharon High Fashion Editorial', category: 'Poster & Flyer Design' },
+  { path: '/assets/projects/event-mb.jpeg', title: 'Midnight Beats Neon Gala Poster', category: 'Poster & Flyer Design' },
+  { path: '/assets/projects/event-gala.jpeg', title: 'Golden Aura Awards Night Flyer', category: 'Poster & Flyer Design' },
+  { path: '/assets/projects/creative-flyer.jpeg', title: 'Creative Brand Masterclass Flyer', category: 'Poster & Flyer Design' },
+  { path: '/assets/projects/worship-night.jpeg', title: 'Aura of Grace Worship Experience', category: 'Poster & Flyer Design' },
+  { path: '/assets/projects/church-service.jpeg', title: 'Sunday Celebration Worship Flyer', category: 'Poster & Flyer Design' },
+  { path: '/assets/projects/album-launch.jpeg', title: 'Album Launch Key Art Artwork', category: 'Poster & Flyer Design' },
+  { path: '/assets/projects/cosmas.jpeg', title: 'Cosmas Live Tour Poster', category: 'Poster & Flyer Design' },
+  { path: '/assets/projects/kasyoki.jpeg', title: 'Kasyoki Cultural Identity Series', category: 'Logos & Branding' },
+  { path: '/assets/projects/lydia.jpeg', title: 'Lydia Portrait Visual Concept', category: 'Poster & Flyer Design' },
+  { path: '/assets/projects/joyce.jpeg', title: 'Joyce Gospel Concert Artwork', category: 'Poster & Flyer Design' }
 ];
 
 export default function ImageTicker({ navigate }) {
   const { projects = [], mediaItems = [], openLightbox } = useProjects();
 
-  // Combine ALL artwork images in the codebase into a unique list
+  // Combine ALL artwork images into a strictly unique, deduplicated list
   const allImages = useMemo(() => {
     const list = [];
     const seenPaths = new Set();
 
     const isVideo = (url) => typeof url === 'string' && /\.(mp4|webm|mov|m4v)$/i.test(url);
 
-    // 1. Collect from live projects
+    const isExcluded = (url, category) => {
+      if (!url || typeof url !== 'string') return true;
+      if (category === 'logos' || category === 'portraits') return true;
+      return EXCLUDED_PATTERNS.some((pattern) => pattern.test(url));
+    };
+
+    const getCanonicalPath = (url) => {
+      if (!url || typeof url !== 'string') return '';
+      return CANONICAL_PATH_MAP[url] || url;
+    };
+
+    // Helper to register unique artwork
+    const registerArtwork = (rawPath, title, category, project = null) => {
+      if (!rawPath || isVideo(rawPath) || isExcluded(rawPath, category)) return;
+      const canonicalPath = getCanonicalPath(rawPath);
+      if (seenPaths.has(canonicalPath)) return;
+
+      seenPaths.add(canonicalPath);
+      list.push({
+        path: canonicalPath,
+        title: title || 'Portfolio Artwork',
+        category: category || 'Artwork',
+        project
+      });
+    };
+
+    // 1. Collect from live projects (ensuring each visual artwork is unique)
     projects.forEach((p) => {
-      if (p.thumbnail && !isVideo(p.thumbnail) && !seenPaths.has(p.thumbnail)) {
-        seenPaths.add(p.thumbnail);
-        list.push({
-          path: p.thumbnail,
-          title: p.title,
-          category: p.categoryLabel || p.category,
-          project: p
-        });
+      if (p.thumbnail) {
+        registerArtwork(p.thumbnail, p.title, p.categoryLabel || p.category, p);
       }
       if (Array.isArray(p.images)) {
         p.images.forEach((imgUrl) => {
-          if (imgUrl && !isVideo(imgUrl) && !seenPaths.has(imgUrl)) {
-            seenPaths.add(imgUrl);
-            list.push({
-              path: imgUrl,
-              title: p.title,
-              category: p.categoryLabel || p.category,
-              project: p
-            });
-          }
+          registerArtwork(imgUrl, p.title, p.categoryLabel || p.category, p);
         });
       }
     });
 
-    // 2. Collect from Media Vault
+    // 2. Collect from Media Vault (artwork/posters only; skip logos & system assets)
     mediaItems.forEach((m) => {
-      if (m.path && m.type !== 'video' && !isVideo(m.path) && !seenPaths.has(m.path)) {
-        seenPaths.add(m.path);
-        list.push({
-          path: m.path,
-          title: m.title || 'Studio Asset',
-          category: m.category || 'Artwork',
-          project: null
-        });
+      if (m.type === 'image' && m.path) {
+        registerArtwork(m.path, m.title, m.categoryLabel || m.category, null);
       }
     });
 
     // 3. Fallback to guarantee complete static gallery
     STATIC_GALLERY_IMAGES.forEach((s) => {
-      if (!seenPaths.has(s.path)) {
-        seenPaths.add(s.path);
-        list.push({
-          path: s.path,
-          title: s.title,
-          category: s.category,
-          project: null
-        });
-      }
+      registerArtwork(s.path, s.title, s.category, null);
     });
 
     return list;
@@ -96,7 +121,12 @@ export default function ImageTicker({ navigate }) {
     if (item.project) {
       openLightbox(item.project);
     } else {
-      const matched = projects.find((p) => p.thumbnail === item.path || (p.images && p.images.includes(item.path)));
+      const matched = projects.find(
+        (p) =>
+          p.thumbnail === item.path ||
+          (p.images && p.images.includes(item.path)) ||
+          CANONICAL_PATH_MAP[p.thumbnail] === item.path
+      );
       if (matched) {
         openLightbox(matched);
       } else {
@@ -109,14 +139,14 @@ export default function ImageTicker({ navigate }) {
           images: [item.path],
           description: `Visual artwork from the BM Graphix creative archive. Crafted with precision for high-impact visual storytelling.`,
           tools: ['Photoshop', 'Illustrator', 'Cinema 4D'],
-          likes: 38,
+          likes: 42,
           comments: []
         });
       }
     }
   };
 
-  // Duplicate for seamless 100% infinite continuous loop
+  // Duplicate the array once for seamless 100% infinite continuous CSS loop
   const tickerItems = [...allImages, ...allImages];
 
   return (
