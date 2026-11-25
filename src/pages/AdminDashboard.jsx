@@ -1,4 +1,4 @@
-import React, { useState, useRef } from 'react';
+import React, { useState, useRef, useEffect } from 'react';
 import { compressImage, compressMultipleImages, generateVideoThumbnail } from '../utils/imageCompressor';
 import { motion, AnimatePresence } from 'framer-motion';
 import {
