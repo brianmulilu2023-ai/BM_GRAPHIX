@@ -52,7 +52,9 @@ import {
   BarChart3,
   PieChart,
   Activity,
-  Zap
+  Zap,
+  ArrowUp,
+  ArrowDown
 } from 'lucide-react';
 import { optimizeVideoTikTokStyle } from '../utils/imageCompressor';
 import { useProjects } from '../context/ProjectContext';
@@ -60,6 +62,7 @@ import ResponsiveVideoPlayer from '../components/ResponsiveVideoPlayer';
 import { resolveSafeVideoUrl } from '../utils/videoHelper';
 import { storageDB } from '../utils/storageDB';
 import { fetchServerProjects, saveServerProjects, fetchServerMedia, saveServerMedia } from '../utils/apiSync';
+import { DEFAULT_SHOWCASE_ITEMS } from '../services/adminService';
 
 export default function AdminDashboard({ navigate }) {
   const {
@@ -488,6 +491,131 @@ export default function AdminDashboard({ navigate }) {
     showToast('Restored default per-page atmosphere settings.', 'info');
   };
 
+  // --- Hero Showcase Rotating Cards State & Handlers ---
+  const [showcaseItems, setShowcaseItems] = useState(() => {
+    if (Array.isArray(siteSettings?.heroShowcaseItems) && siteSettings.heroShowcaseItems.length > 0) {
+      return siteSettings.heroShowcaseItems;
+    }
+    return DEFAULT_SHOWCASE_ITEMS;
+  });
+  const [showcaseInterval, setShowcaseInterval] = useState(
+    typeof siteSettings?.heroShowcaseInterval === 'number' ? siteSettings.heroShowcaseInterval : 3200
+  );
+  const [newShowcaseLabel, setNewShowcaseLabel] = useState('');
+  const [newShowcaseImage, setNewShowcaseImage] = useState(null);
+  const [isUploadingShowcase, setIsUploadingShowcase] = useState(false);
+  const [showcaseMediaModal, setShowcaseMediaModal] = useState(false);
+  const [showcaseModalTab, setShowcaseModalTab] = useState('projects'); // 'projects' | 'media'
+  const [previewSlideIdx, setPreviewSlideIdx] = useState(0);
+  const showcaseFileInputRef = useRef(null);
+
+  // Keep showcase state in sync with siteSettings updates
+  useEffect(() => {
+    if (Array.isArray(siteSettings?.heroShowcaseItems) && siteSettings.heroShowcaseItems.length > 0) {
+      setShowcaseItems(siteSettings.heroShowcaseItems);
+    }
+    if (typeof siteSettings?.heroShowcaseInterval === 'number') {
+      setShowcaseInterval(siteSettings.heroShowcaseInterval);
+    }
+  }, [siteSettings?.heroShowcaseItems, siteSettings?.heroShowcaseInterval]);
+
+  // Live simulation rotation inside admin panel
+  useEffect(() => {
+    if (showcaseItems.length <= 1) return;
+    const t = setInterval(() => {
+      setPreviewSlideIdx((prev) => (prev + 1) % showcaseItems.length);
+    }, showcaseInterval);
+    return () => clearInterval(t);
+  }, [showcaseItems.length, showcaseInterval]);
+
+  const handleSaveShowcase = (newItems, newInterval = showcaseInterval) => {
+    setShowcaseItems(newItems);
+    setShowcaseInterval(newInterval);
+    updateSiteSettings({
+      ...siteSettings,
+      heroShowcaseItems: newItems,
+      heroShowcaseInterval: newInterval
+    });
+    showToast('Hero showcase cards updated live on home page!', 'success');
+  };
+
+  const handleUpdateSlideLabel = (id, label) => {
+    const updated = showcaseItems.map((item) => (item.id === id ? { ...item, label } : item));
+    handleSaveShowcase(updated);
+  };
+
+  const handleMoveSlide = (index, dir) => {
+    const targetIdx = dir === 'up' ? index - 1 : index + 1;
+    if (targetIdx < 0 || targetIdx >= showcaseItems.length) return;
+    const copy = [...showcaseItems];
+    const [moved] = copy.splice(index, 1);
+    copy.splice(targetIdx, 0, moved);
+    handleSaveShowcase(copy);
+  };
+
+  const handleDeleteSlide = (id) => {
+    if (showcaseItems.length <= 1) {
+      showToast('You must keep at least 1 showcase slide.', 'error');
+      return;
+    }
+    const updated = showcaseItems.filter((item) => item.id !== id);
+    handleSaveShowcase(updated);
+    if (previewSlideIdx >= updated.length) setPreviewSlideIdx(0);
+  };
+
+  const handleUploadShowcaseFile = async (e) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    try {
+      setIsUploadingShowcase(true);
+      const compressed = await compressImage(file, 1200, 0.90);
+      if (compressed) {
+        setNewShowcaseImage(compressed);
+        showToast('Image uploaded & compressed! Now add a label and click Publish.', 'gold');
+      }
+    } catch (err) {
+      console.error(err);
+      showToast('Could not process image', 'error');
+    } finally {
+      setIsUploadingShowcase(false);
+      if (e.target) e.target.value = '';
+    }
+  };
+
+  const handleAddNewSlide = () => {
+    if (!newShowcaseImage) {
+      showToast('Please upload an image first', 'error');
+      return;
+    }
+    const newSlide = {
+      id: 'sc-' + Date.now(),
+      src: newShowcaseImage,
+      label: newShowcaseLabel.trim() || 'Featured Artwork'
+    };
+    const updated = [...showcaseItems, newSlide];
+    handleSaveShowcase(updated);
+    setNewShowcaseImage(null);
+    setNewShowcaseLabel('');
+    showToast('New slide added to Hero Showcase!', 'success');
+  };
+
+  const handleAddFromExisting = (imgSrc, defaultLabel) => {
+    const newSlide = {
+      id: 'sc-' + Date.now(),
+      src: imgSrc,
+      label: defaultLabel || 'Portfolio Work'
+    };
+    const updated = [...showcaseItems, newSlide];
+    handleSaveShowcase(updated);
+    setShowcaseMediaModal(false);
+    showToast('Added artwork to Hero Showcase!', 'success');
+  };
+
+  const handleResetShowcase = () => {
+    handleSaveShowcase(DEFAULT_SHOWCASE_ITEMS, 3200);
+    showToast('Reset Hero Showcase to default artworks', 'gold');
+  };
+
   // Guard: Viewers must never see admin controls
   if (!isAdminLoggedIn) {
     return (
@@ -907,6 +1035,7 @@ export default function AdminDashboard({ navigate }) {
       items: [
         { id: 'upload', label: 'New Project', icon: FolderPlus, badge: null, highlight: true },
         { id: 'projects', label: 'Manage Projects', icon: Layers, badge: projects.length },
+        { id: 'hero-showcase', label: 'Hero Showcase Cards', icon: Film, badge: `${showcaseItems.length} slides`, badgeColor: 'bg-[#D4AF37]/20 text-[#D4AF37] border border-[#D4AF37]/40' },
         { id: 'media', label: 'Media Vault', icon: ImageIcon, badge: mediaItems.length },
       ]
     },
@@ -932,6 +1061,7 @@ export default function AdminDashboard({ navigate }) {
     media: { title: 'Media Vault', subtitle: `Centralized asset storage with ${mediaItems.length} optimized images & videos` },
     inquiries: { title: 'Client Inquiries', subtitle: 'Respond to prospective clients, custom briefs & design requests' },
     comments: { title: 'Comments Moderation', subtitle: 'Review community engagement and feedback on portfolio posts' },
+    'hero-showcase': { title: 'Hero Showcase Cards Studio', subtitle: `Customize the rotating right-hand showcase cards on the Home landing page (${showcaseItems.length} active slides)` },
     atmosphere: { title: 'Atmosphere & Per-Branding Studio', subtitle: 'Live landing page visibility controls, background depth & bespoke branding presets' },
     settings: { title: 'System Settings & Profile', subtitle: 'Manage administrator credentials, contact information & portfolio defaults' }
   };
@@ -3124,6 +3254,34 @@ export default function AdminDashboard({ navigate }) {
                       </div>
                     </div>
                   </div>
+
+                  {/* Quick Shortcut to Right-Hand Rotating Hero Showcase Cards */}
+                  <div className="p-4 rounded-2xl bg-gradient-to-r from-[#1B170B] via-[#14120B] to-[#121212] border border-[#D4AF37]/40 flex items-center justify-between gap-4 shadow-lg shadow-[#D4AF37]/5">
+                    <div className="flex items-center gap-3">
+                      <div className="w-10 h-10 rounded-xl bg-[#D4AF37]/20 border border-[#D4AF37]/40 flex items-center justify-center text-[#F5D77A] shrink-0">
+                        <Film className="w-5 h-5" />
+                      </div>
+                      <div>
+                        <h5 className="font-display font-bold text-xs text-[#F5F1E8] flex items-center gap-2">
+                          <span>Hero Right-Hand Rotating Cards</span>
+                          <span className="text-[9px] px-1.5 py-0.5 rounded-full bg-[#D4AF37] text-black font-extrabold font-mono">
+                            {showcaseItems.length} Slides
+                          </span>
+                        </h5>
+                        <p className="text-[11px] text-[#8A8A8A]">
+                          Upload new images, reorder slides, or change badge labels.
+                        </p>
+                      </div>
+                    </div>
+                    <button
+                      type="button"
+                      onClick={() => setActiveTab('hero-showcase')}
+                      className="px-3.5 py-1.5 rounded-lg bg-gradient-to-r from-[#D4AF37] to-[#F5D77A] text-black text-xs font-bold uppercase tracking-wider hover:scale-105 transition shadow shrink-0 flex items-center gap-1"
+                    >
+                      <span>Customize</span>
+                      <ChevronRight className="w-3.5 h-3.5" />
+                    </button>
+                  </div>
                 </div>
               </div>
             </div>
@@ -3573,6 +3731,527 @@ export default function AdminDashboard({ navigate }) {
                   </div>
                 </div>
               </div>
+            </div>
+          )}
+        </div>
+      )}
+
+      {/* ============================================================
+          TAB: HERO ROTATING SHOWCASE CARDS (HOME PAGE RIGHT SECTION)
+          ============================================================ */}
+      {activeTab === 'hero-showcase' && (
+        <div className="space-y-8">
+          {/* Hidden File Input */}
+          <input
+            type="file"
+            ref={showcaseFileInputRef}
+            onChange={handleUploadShowcaseFile}
+            accept="image/*"
+            className="hidden"
+          />
+
+          {/* Header Banner */}
+          <div className="p-6 sm:p-8 rounded-3xl glass-card border border-[#D4AF37]/30 bg-gradient-to-br from-[#1C180E] via-[#121212] to-[#0A0A0A] relative overflow-hidden">
+            <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-6 relative z-10">
+              <div className="space-y-3 max-w-2xl">
+                <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-[#D4AF37]/20 border border-[#D4AF37]/40 text-xs font-mono text-[#F5D77A]">
+                  <Film className="w-3.5 h-3.5 text-[#D4AF37]" />
+                  <span>Home Hero Right Section</span>
+                </div>
+                <h2 className="font-display font-extrabold text-2xl sm:text-3xl text-[#F5F1E8]">
+                  Hero Showcase Cards Customizer
+                </h2>
+                <p className="text-xs sm:text-sm text-[#A0A0A0] leading-relaxed">
+                  You have full access to customize the rotating artwork card on the right-hand side of your Home page. Upload custom designs, pick from your published projects, reorder slides, and update badge labels.
+                </p>
+              </div>
+
+              <div className="flex items-center gap-3 flex-wrap">
+                <button
+                  type="button"
+                  onClick={() => showcaseFileInputRef.current?.click()}
+                  className="px-4 py-2.5 rounded-xl bg-gradient-to-r from-[#D4AF37] to-[#F5D77A] text-black text-xs font-bold uppercase tracking-wider hover:scale-105 transition shadow-lg shadow-[#D4AF37]/20 flex items-center gap-2"
+                >
+                  <Upload className="w-4 h-4" />
+                  <span>Upload Image</span>
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setShowcaseMediaModal(true)}
+                  className="px-4 py-2.5 rounded-xl bg-white/5 border border-white/10 hover:border-[#D4AF37]/50 text-[#F5F1E8] text-xs font-semibold uppercase tracking-wider hover:bg-white/10 transition flex items-center gap-2"
+                >
+                  <Layers className="w-4 h-4 text-[#D4AF37]" />
+                  <span>Pick from Projects</span>
+                </button>
+                <button
+                  type="button"
+                  onClick={handleResetShowcase}
+                  className="px-3.5 py-2.5 rounded-xl bg-white/5 border border-white/10 hover:border-red-500/50 text-[#8A8A8A] hover:text-red-400 text-xs transition flex items-center gap-1.5"
+                  title="Reset to default showcase artworks"
+                >
+                  <RotateCcw className="w-3.5 h-3.5" />
+                  <span>Reset</span>
+                </button>
+              </div>
+            </div>
+            <div className="absolute -right-10 -bottom-10 w-72 h-72 rounded-full bg-[#D4AF37]/10 blur-3xl pointer-events-none" />
+          </div>
+
+          {/* Upload Draft Stage (Visible when an image has been picked) */}
+          {newShowcaseImage && (
+            <motion.div
+              initial={{ opacity: 0, y: -10 }}
+              animate={{ opacity: 1, y: 0 }}
+              className="p-6 rounded-3xl glass-card border-2 border-[#D4AF37] bg-gradient-to-r from-[#1E190B] via-[#14120C] to-[#121212] shadow-2xl space-y-4"
+            >
+              <div className="flex items-center justify-between pb-3 border-b border-white/10">
+                <h4 className="font-display font-bold text-sm text-[#F5D77A] flex items-center gap-2">
+                  <Sparkles className="w-4 h-4 text-[#D4AF37]" />
+                  <span>Ready to Add New Showcase Slide</span>
+                </h4>
+                <button
+                  type="button"
+                  onClick={() => setNewShowcaseImage(null)}
+                  className="text-xs text-[#8A8A8A] hover:text-white"
+                >
+                  Cancel
+                </button>
+              </div>
+
+              <div className="grid grid-cols-1 sm:grid-cols-12 gap-6 items-center">
+                <div className="sm:col-span-3">
+                  <div className="relative w-36 aspect-[3/4] rounded-2xl overflow-hidden border-2 border-[#D4AF37] shadow-lg mx-auto sm:mx-0 bg-black">
+                    <img
+                      src={newShowcaseImage}
+                      alt="New Showcase Slide Preview"
+                      className="w-full h-full object-cover"
+                    />
+                    <div className="absolute inset-x-0 bottom-0 p-2 bg-black/75 text-center text-[10px] text-[#F5D77A] font-mono">
+                      Preview
+                    </div>
+                  </div>
+                </div>
+
+                <div className="sm:col-span-9 space-y-4">
+                  <div>
+                    <label className="text-xs font-bold uppercase tracking-wider text-[#F5F1E8] block mb-1.5">
+                      Badge Label (Bottom Stinger)
+                    </label>
+                    <input
+                      type="text"
+                      value={newShowcaseLabel}
+                      onChange={(e) => setNewShowcaseLabel(e.target.value)}
+                      placeholder="e.g. Motion Identity, VIP Gala, Concert Key Art, Digital Manipulation"
+                      className="w-full px-4 py-3 rounded-xl bg-black/60 border border-white/15 focus:border-[#D4AF37] text-sm text-[#F5F1E8] focus:outline-none"
+                    />
+                    <span className="text-[11px] text-[#8A8A8A] mt-1 block">
+                      This label appears on the black/gold pill badge at the bottom of the card on the Home page.
+                    </span>
+                  </div>
+
+                  <div className="flex items-center gap-3 pt-2">
+                    <button
+                      type="button"
+                      onClick={handleAddNewSlide}
+                      className="px-6 py-3 rounded-xl bg-gradient-to-r from-[#D4AF37] to-[#F5D77A] text-black text-xs font-bold uppercase tracking-wider hover:scale-105 transition shadow-lg shadow-[#D4AF37]/30 flex items-center gap-2"
+                    >
+                      <Plus className="w-4 h-4" />
+                      <span>Add to Hero Showcase</span>
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => showcaseFileInputRef.current?.click()}
+                      className="px-4 py-3 rounded-xl bg-white/5 border border-white/10 text-xs text-[#8A8A8A] hover:text-white"
+                    >
+                      Choose Different Photo
+                    </button>
+                  </div>
+                </div>
+              </div>
+            </motion.div>
+          )}
+
+          {/* Main 2-Column Studio */}
+          <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 items-start">
+            {/* Left 8 Columns: Slide Management & Interval */}
+            <div className="lg:col-span-7 space-y-6">
+              {/* Rotation Speed Setting */}
+              <div className="p-6 rounded-3xl glass-card border border-white/10 space-y-4">
+                <div className="flex items-center justify-between">
+                  <div>
+                    <label className="text-xs font-bold uppercase tracking-wider text-[#F5F1E8] block flex items-center gap-2">
+                      <Clock className="w-4 h-4 text-[#D4AF37]" />
+                      <span>Rotation Speed / Interval</span>
+                    </label>
+                    <span className="text-[11px] text-[#8A8A8A]">
+                      How long each visual artwork stays visible before rotating to the next
+                    </span>
+                  </div>
+                  <span className="px-3.5 py-1 rounded-full bg-[#D4AF37] text-black text-xs font-mono font-extrabold shadow">
+                    {(showcaseInterval / 1000).toFixed(1)}s
+                  </span>
+                </div>
+
+                <input
+                  type="range"
+                  min="1500"
+                  max="7000"
+                  step="100"
+                  value={showcaseInterval}
+                  onChange={(e) => {
+                    const val = Number(e.target.value);
+                    handleSaveShowcase(showcaseItems, val);
+                  }}
+                  className="w-full h-2.5 bg-[#222] rounded-lg appearance-none cursor-pointer accent-[#D4AF37]"
+                />
+
+                <div className="flex items-center gap-2 flex-wrap pt-1">
+                  <span className="text-[10px] uppercase tracking-wider text-[#777]">Presets:</span>
+                  {[
+                    { label: 'Fast', ms: 2200 },
+                    { label: 'Standard', ms: 3200 },
+                    { label: 'Cinematic', ms: 4500 },
+                    { label: 'Relaxed', ms: 6000 }
+                  ].map((p) => (
+                    <button
+                      key={p.label}
+                      type="button"
+                      onClick={() => handleSaveShowcase(showcaseItems, p.ms)}
+                      className={`text-[10px] px-2.5 py-1 rounded-lg font-medium transition ${
+                        showcaseInterval === p.ms
+                          ? 'bg-gradient-to-r from-[#D4AF37] to-[#F5D77A] text-black font-bold shadow'
+                          : 'bg-white/5 text-[#8A8A8A] hover:text-white'
+                      }`}
+                    >
+                      {p.label} ({(p.ms / 1000).toFixed(1)}s)
+                    </button>
+                  ))}
+                </div>
+              </div>
+
+              {/* Active Slides Manager */}
+              <div className="p-6 rounded-3xl glass-card border border-white/10 space-y-4">
+                <div className="flex items-center justify-between pb-3 border-b border-white/10">
+                  <div className="flex items-center gap-2">
+                    <Layers className="w-4 h-4 text-[#D4AF37]" />
+                    <h3 className="font-display font-bold text-sm text-[#F5F1E8]">
+                      Active Showcase Slides ({showcaseItems.length})
+                    </h3>
+                  </div>
+                  <span className="text-[11px] text-[#A0A0A0]">
+                    Drag or use arrows to reorder
+                  </span>
+                </div>
+
+                <div className="space-y-3">
+                  {showcaseItems.map((item, index) => {
+                    const isCurrentlyPlaying = previewSlideIdx === index;
+                    return (
+                      <div
+                        key={item.id || item.src || index}
+                        className={`p-3.5 rounded-2xl border transition-all flex flex-col sm:flex-row items-center justify-between gap-4 ${
+                          isCurrentlyPlaying
+                            ? 'bg-[#18150D] border-[#D4AF37] shadow-lg shadow-[#D4AF37]/10'
+                            : 'bg-[#121212] border-white/5 hover:border-white/15'
+                        }`}
+                      >
+                        {/* Slide Thumbnail & Info */}
+                        <div className="flex items-center gap-3.5 w-full sm:w-auto">
+                          {/* Order Badge */}
+                          <div className="w-7 h-7 rounded-lg bg-black/60 border border-white/10 flex items-center justify-center text-xs font-mono font-bold text-[#F5D77A] shrink-0">
+                            #{index + 1}
+                          </div>
+
+                          {/* Image Thumbnail */}
+                          <div className="relative w-16 h-20 rounded-xl overflow-hidden border border-[#D4AF37]/40 shrink-0 bg-black">
+                            <img
+                              src={item.src}
+                              alt={item.label}
+                              className="w-full h-full object-cover"
+                            />
+                            {isCurrentlyPlaying && (
+                              <div className="absolute top-1 right-1 w-2 h-2 rounded-full bg-emerald-400 ring-2 ring-emerald-400/30 animate-pulse" />
+                            )}
+                          </div>
+
+                          {/* Label input */}
+                          <div className="flex-1 min-w-0">
+                            <label className="text-[10px] font-mono uppercase tracking-wider text-[#8A8A8A] block mb-1">
+                              Badge Label
+                            </label>
+                            <input
+                              type="text"
+                              value={item.label}
+                              onChange={(e) => handleUpdateSlideLabel(item.id, e.target.value)}
+                              className="w-full sm:w-60 px-3 py-1.5 rounded-lg bg-black/50 border border-white/10 focus:border-[#D4AF37] text-xs font-semibold text-[#F5F1E8] focus:outline-none"
+                            />
+                            {isCurrentlyPlaying && (
+                              <span className="text-[10px] text-emerald-400 font-medium flex items-center gap-1 mt-1">
+                                <span className="w-1.5 h-1.5 rounded-full bg-emerald-400" />
+                                Currently on preview
+                              </span>
+                            )}
+                          </div>
+                        </div>
+
+                        {/* Slide Controls (Reorder & Delete) */}
+                        <div className="flex items-center gap-1.5 shrink-0 self-end sm:self-center">
+                          <button
+                            type="button"
+                            onClick={() => handleMoveSlide(index, 'up')}
+                            disabled={index === 0}
+                            className={`p-2 rounded-lg border transition ${
+                              index === 0
+                                ? 'opacity-30 cursor-not-allowed border-white/5 text-[#555]'
+                                : 'bg-white/5 border-white/10 hover:border-[#D4AF37] hover:text-[#F5D77A] text-[#AAA]'
+                            }`}
+                            title="Move slide up"
+                          >
+                            <ArrowUp className="w-4 h-4" />
+                          </button>
+
+                          <button
+                            type="button"
+                            onClick={() => handleMoveSlide(index, 'down')}
+                            disabled={index === showcaseItems.length - 1}
+                            className={`p-2 rounded-lg border transition ${
+                              index === showcaseItems.length - 1
+                                ? 'opacity-30 cursor-not-allowed border-white/5 text-[#555]'
+                                : 'bg-white/5 border-white/10 hover:border-[#D4AF37] hover:text-[#F5D77A] text-[#AAA]'
+                            }`}
+                            title="Move slide down"
+                          >
+                            <ArrowDown className="w-4 h-4" />
+                          </button>
+
+                          <button
+                            type="button"
+                            onClick={() => handleDeleteSlide(item.id)}
+                            className="p-2 rounded-lg bg-red-500/10 border border-red-500/20 text-red-400 hover:bg-red-500 hover:text-white transition"
+                            title="Remove from showcase"
+                          >
+                            <Trash2 className="w-4 h-4" />
+                          </button>
+                        </div>
+                      </div>
+                    );
+                  })}
+                </div>
+              </div>
+            </div>
+
+            {/* Right 5 Columns: Live Interactive Preview */}
+            <div className="lg:col-span-5 space-y-4 lg:sticky lg:top-8">
+              <div className="p-6 rounded-3xl glass-card border border-[#D4AF37]/30 bg-[#121212] space-y-4 shadow-xl">
+                <div className="flex items-center justify-between pb-3 border-b border-white/10">
+                  <div className="flex items-center gap-2">
+                    <Eye className="w-4 h-4 text-[#D4AF37]" />
+                    <h3 className="font-display font-bold text-sm text-[#F5F1E8]">
+                      Live Synchronized Preview
+                    </h3>
+                  </div>
+                  <span className="text-[10px] text-emerald-400 font-mono flex items-center gap-1">
+                    <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse" />
+                    Real-time
+                  </span>
+                </div>
+
+                <p className="text-[11px] text-[#8A8A8A]">
+                  This is the exact component rendered on the right side of the Home hero. Changes made above reflect here and on the live site automatically.
+                </p>
+
+                {/* Simulated Showcase Card matching HeroSection.jsx */}
+                <div className="pt-2 flex justify-center">
+                  <div className="hero-showcase-card w-full max-w-[340px]">
+                    <div className="hero-card-beam" />
+                    <div className="hero-card-image-wrap aspect-[3/4]">
+                      <AnimatePresence mode="wait">
+                        {showcaseItems[previewSlideIdx] && (
+                          <motion.img
+                            key={showcaseItems[previewSlideIdx].id || showcaseItems[previewSlideIdx].src || previewSlideIdx}
+                            src={showcaseItems[previewSlideIdx].src}
+                            alt={showcaseItems[previewSlideIdx].label}
+                            initial={{ opacity: 0, scale: 1.07 }}
+                            animate={{ opacity: 1, scale: 1 }}
+                            exit={{ opacity: 0, scale: 0.95 }}
+                            transition={{ duration: 0.65, ease: 'easeInOut' }}
+                            className="hero-card-img w-full h-full object-cover"
+                          />
+                        )}
+                      </AnimatePresence>
+                      <div className="hero-card-overlay" />
+                      <AnimatePresence mode="wait">
+                        {showcaseItems[previewSlideIdx] && (
+                          <motion.div
+                            key={showcaseItems[previewSlideIdx].id || showcaseItems[previewSlideIdx].label || previewSlideIdx}
+                            initial={{ opacity: 0, y: 8 }}
+                            animate={{ opacity: 1, y: 0 }}
+                            exit={{ opacity: 0, y: -6 }}
+                            transition={{ duration: 0.35 }}
+                            className="hero-card-label"
+                          >
+                            <span className="hero-card-label-dot" />
+                            {showcaseItems[previewSlideIdx].label}
+                          </motion.div>
+                        )}
+                      </AnimatePresence>
+                    </div>
+
+                    {/* Interactive Dots Navigation */}
+                    {showcaseItems.length > 1 && (
+                      <div className="hero-card-dots">
+                        {showcaseItems.map((_, i) => (
+                          <button
+                            key={i}
+                            type="button"
+                            onClick={() => setPreviewSlideIdx(i)}
+                            className={`hero-card-dot${i === previewSlideIdx ? ' hero-card-dot--active' : ''}`}
+                            title={`Jump to slide #${i + 1}`}
+                          />
+                        ))}
+                      </div>
+                    )}
+                  </div>
+                </div>
+
+                <div className="p-3 rounded-xl bg-white/5 border border-white/5 text-[11px] text-[#A0A0A0] text-center">
+                  Click the dot buttons above to manually test each slide transition.
+                </div>
+              </div>
+            </div>
+          </div>
+
+          {/* Modal: Pick from Projects or Media Vault */}
+          {showcaseMediaModal && (
+            <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/85 backdrop-blur-md">
+              <motion.div
+                initial={{ opacity: 0, scale: 0.95 }}
+                animate={{ opacity: 1, scale: 1 }}
+                className="w-full max-w-4xl max-h-[85vh] rounded-3xl glass-card border border-[#D4AF37]/40 bg-[#121212] flex flex-col overflow-hidden shadow-2xl"
+              >
+                {/* Modal Header */}
+                <div className="p-6 border-b border-white/10 flex items-center justify-between">
+                  <div>
+                    <h3 className="font-display font-bold text-lg text-[#F5F1E8] flex items-center gap-2">
+                      <Layers className="w-5 h-5 text-[#D4AF37]" />
+                      <span>Choose Artwork for Hero Showcase</span>
+                    </h3>
+                    <p className="text-xs text-[#8A8A8A] mt-0.5">
+                      Click any artwork below to add it directly to the Home hero rotating cards.
+                    </p>
+                  </div>
+                  <button
+                    type="button"
+                    onClick={() => setShowcaseMediaModal(false)}
+                    className="p-2 rounded-xl bg-white/5 hover:bg-white/10 text-[#8A8A8A] hover:text-white"
+                  >
+                    <X className="w-5 h-5" />
+                  </button>
+                </div>
+
+                {/* Modal Tabs */}
+                <div className="px-6 pt-4 flex items-center gap-3 border-b border-white/5">
+                  <button
+                    type="button"
+                    onClick={() => setShowcaseModalTab('projects')}
+                    className={`pb-3 text-xs font-bold uppercase tracking-wider transition border-b-2 ${
+                      showcaseModalTab === 'projects'
+                        ? 'border-[#D4AF37] text-[#F5D77A]'
+                        : 'border-transparent text-[#8A8A8A] hover:text-white'
+                    }`}
+                  >
+                    Published Projects ({projects.length})
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => setShowcaseModalTab('media')}
+                    className={`pb-3 text-xs font-bold uppercase tracking-wider transition border-b-2 ${
+                      showcaseModalTab === 'media'
+                        ? 'border-[#D4AF37] text-[#F5D77A]'
+                        : 'border-transparent text-[#8A8A8A] hover:text-white'
+                    }`}
+                  >
+                    Media Vault ({mediaItems.filter((m) => m.type !== 'video').length})
+                  </button>
+                </div>
+
+                {/* Modal Content Scroll */}
+                <div className="p-6 overflow-y-auto flex-1">
+                  {showcaseModalTab === 'projects' && (
+                    <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-4">
+                      {projects
+                        .filter((p) => p.thumbnail && !/\.(mp4|webm|mov)$/i.test(p.thumbnail))
+                        .map((p) => (
+                          <div
+                            key={p.id}
+                            onClick={() => handleAddFromExisting(p.thumbnail, p.categoryLabel || p.category)}
+                            className="group relative rounded-2xl overflow-hidden border border-white/10 hover:border-[#D4AF37] aspect-[3/4] cursor-pointer bg-black shadow transition-all duration-300 hover:scale-105"
+                          >
+                            <img
+                              src={p.thumbnail}
+                              alt={p.title}
+                              className="w-full h-full object-cover"
+                            />
+                            <div className="absolute inset-0 bg-gradient-to-t from-black via-black/40 to-transparent opacity-80 group-hover:opacity-95 flex flex-col justify-end p-3 transition-opacity">
+                              <span className="text-[9px] font-mono text-[#D4AF37] uppercase tracking-wider block truncate">
+                                {p.categoryLabel || p.category}
+                              </span>
+                              <h5 className="font-display font-bold text-xs text-[#F5F1E8] truncate">
+                                {p.title}
+                              </h5>
+                              <span className="text-[10px] text-[#F5D77A] font-semibold mt-1 opacity-0 group-hover:opacity-100 transition-opacity">
+                                + Add to Showcase &rarr;
+                              </span>
+                            </div>
+                          </div>
+                        ))}
+                    </div>
+                  )}
+
+                  {showcaseModalTab === 'media' && (
+                    <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-4">
+                      {mediaItems
+                        .filter((m) => m.type !== 'video' && m.path && !/\.(mp4|webm|mov)$/i.test(m.path))
+                        .map((m) => (
+                          <div
+                            key={m.id || m.path}
+                            onClick={() => handleAddFromExisting(m.path, m.categoryLabel || m.category || 'Artwork')}
+                            className="group relative rounded-2xl overflow-hidden border border-white/10 hover:border-[#D4AF37] aspect-[3/4] cursor-pointer bg-black shadow transition-all duration-300 hover:scale-105"
+                          >
+                            <img
+                              src={m.path}
+                              alt={m.title}
+                              className="w-full h-full object-cover"
+                            />
+                            <div className="absolute inset-0 bg-gradient-to-t from-black via-black/40 to-transparent opacity-80 group-hover:opacity-95 flex flex-col justify-end p-3 transition-opacity">
+                              <span className="text-[9px] font-mono text-[#D4AF37] uppercase tracking-wider block truncate">
+                                {m.category || 'Visual Art'}
+                              </span>
+                              <h5 className="font-display font-bold text-xs text-[#F5F1E8] truncate">
+                                {m.title}
+                              </h5>
+                              <span className="text-[10px] text-[#F5D77A] font-semibold mt-1 opacity-0 group-hover:opacity-100 transition-opacity">
+                                + Add to Showcase &rarr;
+                              </span>
+                            </div>
+                          </div>
+                        ))}
+                    </div>
+                  )}
+                </div>
+
+                {/* Modal Footer */}
+                <div className="p-4 border-t border-white/10 bg-black/40 flex items-center justify-between text-xs text-[#8A8A8A]">
+                  <span>Clicking an item adds it to your active Hero Showcase immediately.</span>
+                  <button
+                    type="button"
+                    onClick={() => setShowcaseMediaModal(false)}
+                    className="px-4 py-2 rounded-xl bg-white/10 text-[#F5F1E8] hover:bg-white/20 font-medium"
+                  >
+                    Done
+                  </button>
+                </div>
+              </motion.div>
             </div>
           )}
         </div>

@@ -17,6 +17,14 @@ export const DEFAULT_ADMIN = {
   createdAt: '2024-01-01T00:00:00.000Z'
 };
 
+export const DEFAULT_SHOWCASE_ITEMS = [
+  { id: 'sc-1', src: '/assets/projects/zenia.jpeg', label: 'Motion Identity' },
+  { id: 'sc-2', src: '/assets/projects/kasyoki.jpeg', label: 'Concert Key Art' },
+  { id: 'sc-3', src: '/assets/projects/cleo.jpeg', label: 'Fashion Campaign' },
+  { id: 'sc-4', src: '/assets/projects/event-mb.jpeg', label: 'Event Promo' },
+  { id: 'sc-5', src: '/assets/projects/manipulation.jpeg', label: 'Digital Art' },
+];
+
 export const DEFAULT_SITE_SETTINGS = {
   brandName: 'BM Graphix',
   tagline: 'Designs That Move People',
@@ -29,6 +37,10 @@ export const DEFAULT_SITE_SETTINGS = {
   instagram: 'https://instagram.com',
   behance: 'https://behance.net',
   youtube: 'https://youtube.com',
+
+  // Hero Right Section Rotating Showcase Cards (Customizable & Uploadable by Admin)
+  heroShowcaseItems: DEFAULT_SHOWCASE_ITEMS,
+  heroShowcaseInterval: 3200, // milliseconds per rotation
 
   // Active Atmosphere Editing Page: 'home' | 'work' | 'global'
   atmosphereActivePage: 'home',
@@ -111,7 +123,14 @@ class AdminService {
       const data = localStorage.getItem(SITE_SETTINGS_KEY);
       if (!data) return DEFAULT_SITE_SETTINGS;
       const parsed = JSON.parse(data);
-      return { ...DEFAULT_SITE_SETTINGS, ...parsed };
+      return {
+        ...DEFAULT_SITE_SETTINGS,
+        ...parsed,
+        heroShowcaseItems:
+          Array.isArray(parsed?.heroShowcaseItems) && parsed.heroShowcaseItems.length > 0
+            ? parsed.heroShowcaseItems
+            : DEFAULT_SHOWCASE_ITEMS
+      };
     } catch {
       return DEFAULT_SITE_SETTINGS;
     }

@@ -1,6 +1,7 @@
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useState, useEffect, useRef, useMemo } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { ArrowRight, ArrowUpRight } from 'lucide-react';
+import { useProjects } from '../context/ProjectContext';
 
 /* ─────────────────────────────────────────────
    Typewriter hook
@@ -122,22 +123,40 @@ const TRUST_IMGS = [
 ];
 
 /* ─────────────────────────────────────────────
-   Showcase card (right side)
+   Showcase card (right side) — Dynamic Admin Customizable
 ───────────────────────────────────────────── */
-const SHOWCASE = [
-  { src: '/assets/projects/zenia.jpeg',      label: 'Motion Identity' },
-  { src: '/assets/projects/kasyoki.jpeg',    label: 'Concert Key Art' },
-  { src: '/assets/projects/cleo.jpeg',       label: 'Fashion Campaign' },
-  { src: '/assets/projects/event-mb.jpeg',   label: 'Event Promo' },
-  { src: '/assets/projects/manipulation.jpeg', label: 'Digital Art' },
+const DEFAULT_SHOWCASE = [
+  { id: 'sc-1', src: '/assets/projects/zenia.jpeg',      label: 'Motion Identity' },
+  { id: 'sc-2', src: '/assets/projects/kasyoki.jpeg',    label: 'Concert Key Art' },
+  { id: 'sc-3', src: '/assets/projects/cleo.jpeg',       label: 'Fashion Campaign' },
+  { id: 'sc-4', src: '/assets/projects/event-mb.jpeg',   label: 'Event Promo' },
+  { id: 'sc-5', src: '/assets/projects/manipulation.jpeg', label: 'Digital Art' },
 ];
 
 function ShowcaseCard() {
+  const { siteSettings } = useProjects();
+  const showcaseList = useMemo(() => {
+    if (Array.isArray(siteSettings?.heroShowcaseItems) && siteSettings.heroShowcaseItems.length > 0) {
+      return siteSettings.heroShowcaseItems;
+    }
+    return DEFAULT_SHOWCASE;
+  }, [siteSettings?.heroShowcaseItems]);
+
+  const rotationSpeed = typeof siteSettings?.heroShowcaseInterval === 'number' && siteSettings.heroShowcaseInterval >= 1500
+    ? siteSettings.heroShowcaseInterval
+    : 3200;
+
   const [current, setCurrent] = useState(0);
+
   useEffect(() => {
-    const t = setInterval(() => setCurrent((i) => (i + 1) % SHOWCASE.length), 3200);
+    if (showcaseList.length <= 1) return;
+    const t = setInterval(() => setCurrent((i) => (i + 1) % showcaseList.length), rotationSpeed);
     return () => clearInterval(t);
-  }, []);
+  }, [showcaseList.length, rotationSpeed]);
+
+  const activeIndex = current % (showcaseList.length || 1);
+  const activeSlide = showcaseList[activeIndex] || showcaseList[0];
+  if (!activeSlide) return null;
 
   return (
     <div className="hero-showcase-card">
@@ -145,9 +164,9 @@ function ShowcaseCard() {
       <div className="hero-card-image-wrap">
         <AnimatePresence mode="wait">
           <motion.img
-            key={current}
-            src={SHOWCASE[current].src}
-            alt={SHOWCASE[current].label}
+            key={activeSlide.id || activeSlide.src || activeIndex}
+            src={activeSlide.src}
+            alt={activeSlide.label || 'BM Graphix Masterpiece'}
             initial={{ opacity: 0, scale: 1.07 }}
             animate={{ opacity: 1, scale: 1 }}
             exit={{ opacity: 0, scale: 0.95 }}
@@ -158,7 +177,7 @@ function ShowcaseCard() {
         <div className="hero-card-overlay" />
         <AnimatePresence mode="wait">
           <motion.div
-            key={current}
+            key={activeSlide.id || activeSlide.label || activeIndex}
             initial={{ opacity: 0, y: 8 }}
             animate={{ opacity: 1, y: 0 }}
             exit={{ opacity: 0, y: -6 }}
@@ -166,19 +185,21 @@ function ShowcaseCard() {
             className="hero-card-label"
           >
             <span className="hero-card-label-dot" />
-            {SHOWCASE[current].label}
+            {activeSlide.label}
           </motion.div>
         </AnimatePresence>
       </div>
-      <div className="hero-card-dots">
-        {SHOWCASE.map((_, i) => (
-          <button
-            key={i}
-            onClick={() => setCurrent(i)}
-            className={`hero-card-dot${i === current ? ' hero-card-dot--active' : ''}`}
-          />
-        ))}
-      </div>
+      {showcaseList.length > 1 && (
+        <div className="hero-card-dots">
+          {showcaseList.map((_, i) => (
+            <button
+              key={i}
+              onClick={() => setCurrent(i)}
+              className={`hero-card-dot${i === activeIndex ? ' hero-card-dot--active' : ''}`}
+            />
+          ))}
+        </div>
+      )}
     </div>
   );
 }
