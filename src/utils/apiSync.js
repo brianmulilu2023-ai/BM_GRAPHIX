@@ -101,3 +101,33 @@ export async function saveServerMedia(mediaItems) {
     return false;
   }
 }
+
+export async function fetchServerSettings() {
+  try {
+    const res = await fetch('/api/settings');
+    const contentType = res.headers.get('content-type') || '';
+    if (res.ok && contentType.includes('application/json')) {
+      const data = await res.json();
+      if (data && typeof data === 'object' && Object.keys(data).length > 0) {
+        return data;
+      }
+    }
+  } catch {
+    // ignore
+  }
+  return null;
+}
+
+export async function saveServerSettings(settings) {
+  try {
+    const res = await fetch('/api/settings', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(settings)
+    });
+    return res.ok;
+  } catch {
+    return false;
+  }
+}
+

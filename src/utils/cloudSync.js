@@ -177,3 +177,110 @@ export async function saveCloudMedia(mediaItems) {
     return false;
   }
 }
+
+// ─── Site Settings & Hero Showcase Sync (Cross-Device) ─────────────────────────
+
+export const SETTINGS_ROW_ID = 'bm_graphix_site_settings';
+export const ADMIN_PROFILE_ROW_ID = 'bm_graphix_admin_profile';
+
+/**
+ * Fetches site settings (Hero Showcase items, atmosphere, branding) from Supabase.
+ * Returns null if unavailable so caller falls back to local storage / defaults.
+ */
+export async function fetchCloudSiteSettings() {
+  if (!isSupabaseConfigured()) return null;
+  try {
+    const supabase = getSupabaseClient();
+    const { data, error } = await supabase
+      .from('projects')
+      .select('data')
+      .eq('id', SETTINGS_ROW_ID)
+      .single();
+
+    if (error || !data || !data.data || typeof data.data !== 'object') {
+      return null;
+    }
+    return data.data;
+  } catch (err) {
+    console.warn('[CloudSync] Fetch site settings exception:', err?.message || err);
+    return null;
+  }
+}
+
+/**
+ * Persists site settings (Hero Showcase items, atmosphere, branding) to Supabase.
+ * Allows instant cross-device updates (phone, laptop, tablet, public visitors).
+ */
+export async function saveCloudSiteSettings(settings) {
+  if (!isSupabaseConfigured() || !settings) return false;
+  try {
+    const supabase = getSupabaseClient();
+    const { error } = await supabase
+      .from('projects')
+      .upsert({ id: SETTINGS_ROW_ID, data: settings }, { onConflict: 'id' });
+
+    if (error) {
+      console.warn('[CloudSync] Save site settings error:', error.message);
+      return false;
+    }
+    return true;
+  } catch (err) {
+    console.warn('[CloudSync] Save site settings exception:', err?.message || err);
+    return false;
+  }
+}
+
+/**
+ * Fetches admin profile (Avatar photo, Name, Role, Phone, Email) from Supabase.
+ * Ensures profile photo changes sync across devices to the About page and Navbar.
+ */
+export async function fetchCloudAdminProfile() {
+  if (!isSupabaseConfigured()) return null;
+  try {
+    const supabase = getSupabaseClient();
+    const { data, error } = await supabase
+      .from('projects')
+      .select('data')
+      .eq('id', ADMIN_PROFILE_ROW_ID)
+      .single();
+
+    if (error || !data || !data.data || typeof data.data !== 'object') {
+      return null;
+    }
+    return data.data;
+  } catch (err) {
+    console.warn('[CloudSync] Fetch admin profile exception:', err?.message || err);
+    return null;
+  }
+}
+
+/**
+ * Persists admin profile (Avatar photo, Name, Role, Phone, Email) to Supabase.
+ */
+export async function saveCloudAdminProfile(profile) {
+  if (!isSupabaseConfigured() || !profile) return false;
+  try {
+    const supabase = getSupabaseClient();
+    const safeProfile = {
+      name: profile.name,
+      role: profile.role,
+      phone: profile.phone,
+      email: profile.email,
+      avatar: profile.avatar,
+      updatedAt: new Date().toISOString()
+    };
+
+    const { error } = await supabase
+      .from('projects')
+      .upsert({ id: ADMIN_PROFILE_ROW_ID, data: safeProfile }, { onConflict: 'id' });
+
+    if (error) {
+      console.warn('[CloudSync] Save admin profile error:', error.message);
+      return false;
+    }
+    return true;
+  } catch (err) {
+    console.warn('[CloudSync] Save admin profile exception:', err?.message || err);
+    return false;
+  }
+}

@@ -922,6 +922,68 @@ body {
     );
 }
 
+/* Mobile Responsiveness for Nairobi CBD Hero Backdrop & Layout */
+@media (max-width: 768px) {
+  /* Hide the sliding column grid on mobile so Nairobi CBD skyline is the direct prominent background */
+  .hero-bg-grid-wrap {
+    display: none !important;
+  }
+
+  .hero-nairobi-backdrop {
+    position: absolute;
+    inset: 0;
+    z-index: 0;
+  }
+
+  .hero-nairobi-img {
+    object-position: center 30%;
+    opacity: var(--nairobi-opacity, 0.82);
+    filter: contrast(1.18) brightness(1.04);
+    transform: scale(1.08);
+  }
+
+  /* Luminous vertical vignette: readable text, crystal clear skyline view */
+  .hero-nairobi-overlay {
+    background:
+      linear-gradient(
+        to bottom,
+        rgba(7, 7, 7, 0.52) 0%,
+        rgba(7, 7, 7, 0.30) 35%,
+        rgba(7, 7, 7, 0.42) 70%,
+        rgba(10, 10, 10, 0.95) 100%
+      );
+  }
+
+  .hero-section {
+    padding: 5.5rem 1.25rem 3.5rem;
+    min-height: 100vh;
+  }
+
+  .hero-inner {
+    gap: 2.25rem;
+  }
+
+  .hero-headline {
+    font-size: clamp(2.2rem, 8.5vw, 3.2rem);
+    line-height: 1.1;
+  }
+
+  .hero-subtitle {
+    font-size: 0.92rem;
+    line-height: 1.65;
+    max-width: 100%;
+  }
+
+  .hero-showcase-card {
+    max-width: 340px;
+    margin: 0 auto;
+    box-shadow:
+      0 0 0 1px rgba(212,175,55,0.25),
+      0 20px 48px rgba(0,0,0,0.85),
+      0 0 40px rgba(212,175,55,0.15);
+  }
+}
+
 /* ============================================================
    KIBOCHI-STYLE SLIDING IMAGE GRID BACKGROUND
    ============================================================ */

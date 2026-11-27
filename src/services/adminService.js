@@ -18,10 +18,10 @@ export const DEFAULT_ADMIN = {
 };
 
 export const DEFAULT_SHOWCASE_ITEMS = [
-  { id: 'sc-1', src: '/assets/projects/zenia.jpeg', label: 'Motion Identity' },
-  { id: 'sc-2', src: '/assets/projects/kasyoki.jpeg', label: 'Concert Key Art' },
-  { id: 'sc-3', src: '/assets/projects/cleo.jpeg', label: 'Fashion Campaign' },
-  { id: 'sc-4', src: '/assets/projects/event-mb.jpeg', label: 'Event Promo' },
+  { id: 'sc-1', src: '/assets/projects/event-mb.jpeg', label: 'Event Promo' },
+  { id: 'sc-2', src: '/assets/projects/zenia.jpeg', label: 'Motion Identity' },
+  { id: 'sc-3', src: '/assets/projects/kasyoki.jpeg', label: 'Concert Key Art' },
+  { id: 'sc-4', src: '/assets/projects/cleo.jpeg', label: 'Fashion Campaign' },
   { id: 'sc-5', src: '/assets/projects/manipulation.jpeg', label: 'Digital Art' },
 ];
 
@@ -141,6 +141,46 @@ class AdminService {
     const updated = { ...current, ...newSettings, updatedAt: new Date().toISOString() };
     localStorage.setItem(SITE_SETTINGS_KEY, JSON.stringify(updated));
     return updated;
+  }
+
+  mergeSiteSettings(cloudSettings) {
+    if (!cloudSettings || typeof cloudSettings !== 'object') return this.getSiteSettings();
+    const current = this.getSiteSettings();
+    const merged = {
+      ...current,
+      ...cloudSettings,
+      heroShowcaseItems:
+        Array.isArray(cloudSettings.heroShowcaseItems) && cloudSettings.heroShowcaseItems.length > 0
+          ? cloudSettings.heroShowcaseItems
+          : current.heroShowcaseItems || DEFAULT_SHOWCASE_ITEMS,
+      updatedAt: cloudSettings.updatedAt || new Date().toISOString()
+    };
+    try {
+      localStorage.setItem(SITE_SETTINGS_KEY, JSON.stringify(merged));
+    } catch {
+      // ignore
+    }
+    return merged;
+  }
+
+  mergeAdminAccount(cloudProfile) {
+    if (!cloudProfile || typeof cloudProfile !== 'object') return this.getAdminAccount();
+    const current = this.getAdminAccount();
+    const merged = {
+      ...current,
+      name: cloudProfile.name || current.name,
+      role: cloudProfile.role || current.role,
+      phone: cloudProfile.phone || current.phone,
+      email: cloudProfile.email || current.email,
+      avatar: cloudProfile.avatar || current.avatar,
+      updatedAt: cloudProfile.updatedAt || new Date().toISOString()
+    };
+    try {
+      localStorage.setItem(ADMIN_ACCOUNT_KEY, JSON.stringify(merged));
+    } catch {
+      // ignore
+    }
+    return merged;
   }
 
   isAuthenticated() {

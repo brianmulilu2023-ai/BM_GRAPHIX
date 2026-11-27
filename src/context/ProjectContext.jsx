@@ -3,6 +3,13 @@ import { projectService } from '../services/projectService';
 import { adminService } from '../services/adminService';
 import { mediaService } from '../services/mediaService';
 import { inquiryService } from '../services/inquiryService';
+import {
+  fetchCloudSiteSettings,
+  saveCloudSiteSettings,
+  fetchCloudAdminProfile,
+  saveCloudAdminProfile
+} from '../utils/cloudSync';
+import { saveServerSettings } from '../utils/apiSync';
 
 const ProjectContext = createContext(null);
 
@@ -22,10 +29,38 @@ export function ProjectProvider({ children }) {
   // Load projects, media, inquiries, and admin auth state
   useEffect(() => {
     loadProjects();
+    // Load initial local data
     setIsAdminLoggedIn(adminService.isAuthenticated());
     setAdminUser(adminService.getAdminAccount());
     setSiteSettings(adminService.getSiteSettings());
     setInquiries(inquiryService.getInquiries());
+
+    // ─── Real-Time Cross-Device Cloud Sync ─────────────────────────────────
+    // Site settings (Hero Showcase items, atmosphere sliders, branding)
+    fetchCloudSiteSettings().then((cloudSettings) => {
+      if (cloudSettings && typeof cloudSettings === 'object' && Object.keys(cloudSettings).length > 0) {
+        const merged = adminService.mergeSiteSettings(cloudSettings);
+        setSiteSettings(merged);
+      } else {
+        const local = adminService.getSiteSettings();
+        if (local) {
+          saveCloudSiteSettings(local).catch(() => {});
+        }
+      }
+    }).catch(() => {});
+
+    // Admin profile (Profile photo / Avatar, Name, Role)
+    fetchCloudAdminProfile().then((cloudProfile) => {
+      if (cloudProfile && typeof cloudProfile === 'object' && Object.keys(cloudProfile).length > 0) {
+        const merged = adminService.mergeAdminAccount(cloudProfile);
+        setAdminUser(merged);
+      } else {
+        const local = adminService.getAdminAccount();
+        if (local) {
+          saveCloudAdminProfile(local).catch(() => {});
+        }
+      }
+    }).catch(() => {});
 
     mediaService.getAllMediaAsync().then((items) => {
       if (Array.isArray(items)) setMediaItems(items);
@@ -216,7 +251,9 @@ export function ProjectProvider({ children }) {
     try {
       const updated = adminService.updateAdminAccount(profileData);
       setAdminUser(updated);
-      showToast('Admin profile updated!', 'success');
+      // Persist to Supabase cloud so all devices (mobile, laptop, tablet) receive the new profile & photo
+      saveCloudAdminProfile(updated).catch((err) => console.warn('[CloudSync] Admin profile save error:', err));
+      showToast('Admin profile updated across all devices!', 'success');
       return updated;
     } catch (err) {
       showToast(err.message || 'Error updating profile', 'error');
@@ -240,7 +277,10 @@ export function ProjectProvider({ children }) {
     try {
       const updated = adminService.updateSiteSettings(settingsData);
       setSiteSettings(updated);
-      showToast('Website settings updated!', 'success');
+      // Persist to Supabase cloud & server API so changes are seen live on all devices
+      saveCloudSiteSettings(updated).catch((err) => console.warn('[CloudSync] Site settings save error:', err));
+      saveServerSettings(updated).catch(() => {});
+      showToast('Website settings updated across all devices!', 'success');
       return updated;
     } catch (err) {
       showToast(err.message || 'Error updating settings', 'error');

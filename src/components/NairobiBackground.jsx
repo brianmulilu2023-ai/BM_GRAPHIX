@@ -124,13 +124,13 @@ export default function NairobiBackground({ currentPath = '/' }) {
         }}
       />
 
-      {/* Base vignette — page sensitive to let Nairobi Peak shine through on Work page */}
+      {/* Base vignette — page sensitive to let Nairobi Peak shine through on Work and Home pages */}
       <div
         className="absolute inset-0"
         style={{
           background: isDark
-            ? isWorkPage
-              ? `linear-gradient(to bottom, rgba(10,10,10,${0.25 + (overlayDepthRatio * 0.55)}) 0%, rgba(10,10,10,${0.45 + (overlayDepthRatio * 0.45)}) 50%, #0A0A0A 100%)`
+            ? isWorkPage || isHomePage
+              ? `linear-gradient(to bottom, rgba(10,10,10,${0.18 + (overlayDepthRatio * 0.45)}) 0%, rgba(10,10,10,${0.35 + (overlayDepthRatio * 0.45)}) 50%, #0A0A0A 100%)`
               : 'linear-gradient(to bottom, rgba(10,10,10,0.70) 0%, rgba(10,10,10,0.90) 50%, #0A0A0A 100%)'
             : isWorkPage || isHomePage
               ? `linear-gradient(to bottom, rgba(245,240,232,${0.15 + (overlayDepthRatio * 0.35)}) 0%, rgba(245,240,232,${0.30 + (overlayDepthRatio * 0.35)}) 50%, #F5F0E8 100%)`
