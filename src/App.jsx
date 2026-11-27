@@ -153,7 +153,7 @@ export default function App() {
         className="theme-root relative min-h-screen font-sans overflow-x-hidden selection:bg-[#D4AF37] selection:text-black"
         style={{
           backgroundColor: isDark ? '#0A0A0A' : '#F5F0E8',
-          color: isDark ? '#F5F1E8' : '#1C1510',
+          color: isDark ? '#FFFFFF' : '#000000',
           transition: 'background-color 0.4s ease, color 0.4s ease',
         }}
       >

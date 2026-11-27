@@ -23,7 +23,9 @@ export default {
           glow: 'rgba(212, 175, 55, 0.25)',
           muted: '#8F7523'
         },
-        warmWhite: '#F5F1E8',
+        warmWhite: '#FFFFFF',
+        pureWhite: '#FFFFFF',
+        pureBlack: '#000000',
         mutedGrey: '#8A8A8A',
         charcoal: '#1A1A1A'
       },

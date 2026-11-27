@@ -9,8 +9,8 @@ export default function Navbar({ currentPath, navigate }) {
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const { isDark } = useTheme();
 
-  const textPrimary    = isDark ? '#F5F1E8' : '#1C1510';
-  const textSecondary  = isDark ? '#8A8A8A' : '#6B5D4F';
+  const textPrimary    = isDark ? '#FFFFFF' : '#000000';
+  const textSecondary  = isDark ? '#FFFFFF' : '#000000';
   useEffect(() => {
     const handleScroll = () => {
       setIsScrolled(window.scrollY > 25);
@@ -126,7 +126,7 @@ export default function Navbar({ currentPath, navigate }) {
                   <button
                     key={link.path}
                     onClick={() => handleNavClick(link.path)}
-                    className="relative text-xs uppercase tracking-[0.2em] font-medium transition-colors duration-300"
+                    className="relative text-xs uppercase tracking-[0.2em] font-bold transition-colors duration-300"
                     style={{ color: isActive ? '#D4AF37' : textSecondary }}
                     onMouseEnter={e => { if (!isActive) e.currentTarget.style.color = textPrimary; }}
                     onMouseLeave={e => { if (!isActive) e.currentTarget.style.color = textSecondary; }}
