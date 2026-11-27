@@ -13,6 +13,7 @@ import {
   Heart,
   Layers,
   Sparkles,
+  CheckCircle,
   CheckCircle2,
   X,
   RefreshCw,
@@ -4145,7 +4146,7 @@ export default function AdminDashboard({ navigate }) {
                   className="px-4 py-2.5 rounded-xl bg-emerald-500/15 border border-emerald-500/40 hover:bg-emerald-500/25 text-emerald-300 text-xs font-semibold uppercase tracking-wider transition flex items-center gap-2"
                   title="Force push your current slides to cloud so all phones and other devices see them immediately"
                 >
-                  <CheckCircle className="w-4 h-4" />
+                  <CheckCircle2 className="w-4 h-4" />
                   <span>Sync to All Devices</span>
                 </button>
                 <button

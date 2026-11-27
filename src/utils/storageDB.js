@@ -1,3 +1,5 @@
+
+
 /**
  * IndexedDB Storage Utility for BM Graphix Portfolio
  * Provides generous storage (~500MB+) for high-resolution posters (JPG, PNG, JPEG)
