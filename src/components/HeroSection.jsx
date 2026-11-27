@@ -217,16 +217,18 @@ const COLUMNS = [
 ];
 
 export default function HeroSection({ navigate }) {
+  const { siteSettings } = useProjects();
+  const heroBgSrc = siteSettings?.heroBgImage || '/assets/nairobi-cbd.jpg';
   const rotatingWords = ['Motion Graphics', 'Brand Identity', 'Poster Art', 'Video Animation', 'Broadcast Design'];
   const typed = useTypewriter(rotatingWords);
 
   return (
     <section className="hero-section">
 
-      {/* ══ NAIROBI CBD SKYLINE BACKDROP — HIGH CLARITY & VISIBILITY ══ */}
+      {/* ══ NAIROBI CBD / CUSTOM HERO SKYLINE BACKDROP — HIGH CLARITY & VISIBILITY ══ */}
       <div className="hero-nairobi-backdrop" aria-hidden="true">
         <img
-          src="/assets/nairobi-cbd.jpg"
+          src={heroBgSrc}
           alt=""
           className="hero-nairobi-img"
         />

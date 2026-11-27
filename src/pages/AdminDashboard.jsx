@@ -280,6 +280,9 @@ export default function AdminDashboard({ navigate }) {
   const [atmospherePage, setAtmospherePage] = useState(siteSettings?.atmosphereActivePage || 'home');
 
   // Home Page Atmosphere
+  const [heroBgImage, setHeroBgImage] = useState(
+    siteSettings?.heroBgImage || '/assets/nairobi-cbd.jpg'
+  );
   const [heroBgVisibility, setHeroBgVisibility] = useState(
     typeof siteSettings?.heroBgVisibility === 'number' ? siteSettings.heroBgVisibility : 55
   );
@@ -287,7 +290,7 @@ export default function AdminDashboard({ navigate }) {
     typeof siteSettings?.heroDarkOverlay === 'number' ? siteSettings.heroDarkOverlay : 85
   );
   const [nairobiSkylineOpacity, setNairobiSkylineOpacity] = useState(
-    typeof siteSettings?.nairobiSkylineOpacity === 'number' ? siteSettings.nairobiSkylineOpacity : 14
+    typeof siteSettings?.nairobiSkylineOpacity === 'number' ? siteSettings.nairobiSkylineOpacity : 70
   );
   const [goldGlowIntensity, setGoldGlowIntensity] = useState(
     typeof siteSettings?.goldGlowIntensity === 'number' ? siteSettings.goldGlowIntensity : 70
@@ -296,7 +299,24 @@ export default function AdminDashboard({ navigate }) {
     typeof siteSettings?.particlesVisibility === 'number' ? siteSettings.particlesVisibility : 55
   );
 
+  // Endless Masterpiece Ticker Controls
+  const [tickerEnabled, setTickerEnabled] = useState(siteSettings?.tickerEnabled !== false);
+  const [tickerSpeed, setTickerSpeed] = useState(
+    typeof siteSettings?.tickerSpeed === 'number' ? siteSettings.tickerSpeed : 55
+  );
+  const [tickerDirection, setTickerDirection] = useState(siteSettings?.tickerDirection || 'left');
+  const [tickerTitle, setTickerTitle] = useState(
+    siteSettings?.tickerTitle || 'The Endless Masterpiece Ticker'
+  );
+  const [tickerSubtitle, setTickerSubtitle] = useState(
+    siteSettings?.tickerSubtitle ||
+      'Hover to pause · Click any card to open the full project. Live feed of every published BM Graphix work.'
+  );
+
   // Work / Portfolio Page Atmosphere (supports up to 100% full crystal clear Nairobi peak)
+  const [workBgImage, setWorkBgImage] = useState(
+    siteSettings?.workBgImage || '/assets/nairobi-cbd.jpg'
+  );
   const [workNairobiSkylineOpacity, setWorkNairobiSkylineOpacity] = useState(
     typeof siteSettings?.workNairobiSkylineOpacity === 'number' ? siteSettings.workNairobiSkylineOpacity : 55
   );
@@ -314,6 +334,12 @@ export default function AdminDashboard({ navigate }) {
   );
 
   // Global Atmosphere Fallbacks
+  const [globalBgImage, setGlobalBgImage] = useState(
+    siteSettings?.globalBgImage || '/assets/nairobi-cbd.jpg'
+  );
+  const [bgUploadTarget, setBgUploadTarget] = useState('home');
+  const [isUploadingBg, setIsUploadingBg] = useState(false);
+  const bgImageInputRef = useRef(null);
   const [globalNairobiSkylineOpacity, setGlobalNairobiSkylineOpacity] = useState(
     typeof siteSettings?.globalNairobiSkylineOpacity === 'number' ? siteSettings.globalNairobiSkylineOpacity : 20
   );
@@ -436,21 +462,92 @@ export default function AdminDashboard({ navigate }) {
     showToast(`Applied "${preset.name}" branding preset!`, 'gold');
   };
 
+  // Upload custom background image for Home / Work / Global
+  const handleTriggerBgUpload = (target) => {
+    setBgUploadTarget(target);
+    setTimeout(() => bgImageInputRef.current?.click(), 0);
+  };
+
+  const handleUploadBgImage = async (e) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    try {
+      setIsUploadingBg(true);
+      const compressed = await compressImage(file, 1600, 0.82);
+      if (compressed) {
+        if (bgUploadTarget === 'home') {
+          setHeroBgImage(compressed);
+          updateSiteSettings({ heroBgImage: compressed });
+          showToast('Home landing background updated across all devices!', 'success');
+        } else if (bgUploadTarget === 'work') {
+          setWorkBgImage(compressed);
+          updateSiteSettings({ workBgImage: compressed });
+          showToast('Work page background updated across all devices!', 'success');
+        } else {
+          setGlobalBgImage(compressed);
+          updateSiteSettings({ globalBgImage: compressed });
+          showToast('Global background updated across all devices!', 'success');
+        }
+      }
+    } catch (err) {
+      console.error(err);
+      showToast('Could not process background image', 'error');
+    } finally {
+      setIsUploadingBg(false);
+      if (e.target) e.target.value = '';
+    }
+  };
+
+  const handleApplyBgToAll = (imgSrc) => {
+    setHeroBgImage(imgSrc);
+    setWorkBgImage(imgSrc);
+    setGlobalBgImage(imgSrc);
+    updateSiteSettings({
+      heroBgImage: imgSrc,
+      workBgImage: imgSrc,
+      globalBgImage: imgSrc
+    });
+    showToast('Background image applied to all pages & synced!', 'success');
+  };
+
+  const handleResetBgImage = (target) => {
+    const def = '/assets/nairobi-cbd.jpg';
+    if (target === 'home') {
+      setHeroBgImage(def);
+      updateSiteSettings({ heroBgImage: def });
+    } else if (target === 'work') {
+      setWorkBgImage(def);
+      updateSiteSettings({ workBgImage: def });
+    } else {
+      setGlobalBgImage(def);
+      updateSiteSettings({ globalBgImage: def });
+    }
+    showToast('Restored Nairobi CBD default background!', 'gold');
+  };
+
   // Save atmosphere settings from range inputs (per page & global)
   const handleSaveAtmosphere = (e) => {
     if (e && e.preventDefault) e.preventDefault();
     updateSiteSettings({
       atmosphereActivePage: atmospherePage,
+      heroBgImage,
       heroBgVisibility: Number(heroBgVisibility),
       heroDarkOverlay: Number(heroDarkOverlay),
       nairobiSkylineOpacity: Number(nairobiSkylineOpacity),
       goldGlowIntensity: Number(goldGlowIntensity),
       particlesVisibility: Number(particlesVisibility),
+      tickerEnabled: Boolean(tickerEnabled),
+      tickerSpeed: Number(tickerSpeed),
+      tickerDirection,
+      tickerTitle,
+      tickerSubtitle,
+      workBgImage,
       workNairobiSkylineOpacity: Number(workNairobiSkylineOpacity),
       workNairobiClarity: Number(workNairobiClarity),
       workDarkOverlay: Number(workDarkOverlay),
       workGoldGlow: Number(workGoldGlow),
       workParticles: Number(workParticles),
+      globalBgImage,
       globalNairobiSkylineOpacity: Number(globalNairobiSkylineOpacity),
       globalDarkOverlay: Number(globalDarkOverlay),
       globalGoldGlow: Number(globalGoldGlow),
@@ -461,27 +558,44 @@ export default function AdminDashboard({ navigate }) {
       brandSecondaryColor,
       brandDarkColor
     });
-    showToast('Per-page atmosphere & branding saved successfully!', 'gold');
+    showToast('Per-page atmosphere, background & ticker saved!', 'gold');
   };
 
   // Reset atmosphere to defaults
   const handleResetAtmosphere = () => {
+    const defBg = '/assets/nairobi-cbd.jpg';
+    setHeroBgImage(defBg);
+    setWorkBgImage(defBg);
+    setGlobalBgImage(defBg);
     setHeroBgVisibility(55);
-    setHeroDarkOverlay(85);
-    setNairobiSkylineOpacity(14);
+    setHeroDarkOverlay(70);
+    setNairobiSkylineOpacity(70);
     setGoldGlowIntensity(70);
     setParticlesVisibility(55);
+    setTickerEnabled(true);
+    setTickerSpeed(55);
+    setTickerDirection('left');
+    setTickerTitle('The Endless Masterpiece Ticker');
+    setTickerSubtitle('Hover to pause · Click any card to open the full project. Live feed of every published BM Graphix work.');
     setWorkNairobiSkylineOpacity(55);
     setWorkNairobiClarity(85);
     setWorkDarkOverlay(70);
     setWorkGoldGlow(65);
     setWorkParticles(50);
     updateSiteSettings({
+      heroBgImage: defBg,
+      workBgImage: defBg,
+      globalBgImage: defBg,
       heroBgVisibility: 55,
-      heroDarkOverlay: 85,
-      nairobiSkylineOpacity: 14,
+      heroDarkOverlay: 70,
+      nairobiSkylineOpacity: 70,
       goldGlowIntensity: 70,
       particlesVisibility: 55,
+      tickerEnabled: true,
+      tickerSpeed: 55,
+      tickerDirection: 'left',
+      tickerTitle: 'The Endless Masterpiece Ticker',
+      tickerSubtitle: 'Hover to pause · Click any card to open the full project. Live feed of every published BM Graphix work.',
       workNairobiSkylineOpacity: 55,
       workNairobiClarity: 85,
       workDarkOverlay: 70,
@@ -2901,6 +3015,15 @@ export default function AdminDashboard({ navigate }) {
           ============================================================ */}
       {activeTab === 'atmosphere' && (
         <div className="space-y-8">
+          {/* Hidden Background File Input */}
+          <input
+            type="file"
+            ref={bgImageInputRef}
+            onChange={handleUploadBgImage}
+            accept="image/*"
+            className="hidden"
+          />
+
           {/* Header Banner */}
           <div className="p-6 sm:p-8 rounded-3xl glass-card border border-[#D4AF37]/30 bg-gradient-to-br from-[#1A1810] via-[#121212] to-[#0D0D0D] relative overflow-hidden">
             <div className="max-w-3xl space-y-3 relative z-10">
@@ -2997,6 +3120,50 @@ export default function AdminDashboard({ navigate }) {
 
               <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 items-start">
                 <div className="lg:col-span-7 space-y-6">
+                  {/* Home Background Image Customizer */}
+                  <div className="p-5 rounded-2xl bg-[#141414] border border-[#D4AF37]/30 space-y-3">
+                    <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+                      <div>
+                        <label className="text-xs font-bold uppercase tracking-wider text-[#F5D77A] block">
+                          Home Landing Background Image
+                        </label>
+                        <span className="text-[11px] text-[#8A8A8A]">
+                          Upload a custom backdrop or restore the Nairobi CBD skyline (syncs across all devices)
+                        </span>
+                      </div>
+                      <div className="w-20 h-12 rounded-lg overflow-hidden border border-[#D4AF37]/40 bg-black shrink-0">
+                        <img src={heroBgImage} alt="Home background" className="w-full h-full object-cover" />
+                      </div>
+                    </div>
+                    <div className="flex flex-wrap items-center gap-2 pt-1">
+                      <button
+                        type="button"
+                        disabled={isUploadingBg}
+                        onClick={() => handleTriggerBgUpload('home')}
+                        className="px-3.5 py-2 rounded-xl bg-gradient-to-r from-[#D4AF37] to-[#F5D77A] text-black text-xs font-bold uppercase tracking-wider hover:brightness-110 transition flex items-center gap-1.5 disabled:opacity-50"
+                      >
+                        <Upload className="w-3.5 h-3.5" />
+                        <span>{isUploadingBg && bgUploadTarget === 'home' ? 'Compressing...' : 'Change Background'}</span>
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() => handleApplyBgToAll(heroBgImage)}
+                        className="px-3 py-2 rounded-xl bg-white/5 hover:bg-white/10 border border-white/10 text-xs font-medium text-[#F5F1E8] transition"
+                      >
+                        Apply to All Pages
+                      </button>
+                      {heroBgImage !== '/assets/nairobi-cbd.jpg' && (
+                        <button
+                          type="button"
+                          onClick={() => handleResetBgImage('home')}
+                          className="px-3 py-2 rounded-xl bg-white/5 hover:bg-white/10 border border-white/10 text-xs font-medium text-[#8A8A8A] hover:text-white transition"
+                        >
+                          Reset Nairobi CBD
+                        </button>
+                      )}
+                    </div>
+                  </div>
+
                   {/* Slider 1: Artwork Columns */}
                   <div className="p-5 rounded-2xl bg-[#141414] border border-white/5 space-y-3">
                     <div className="flex items-center justify-between">
@@ -3208,7 +3375,7 @@ export default function AdminDashboard({ navigate }) {
                       <div
                         className="absolute inset-0 bg-cover bg-center pointer-events-none transition-opacity duration-300"
                         style={{
-                          backgroundImage: "url('/assets/nairobi-cbd.jpg')",
+                          backgroundImage: `url('${heroBgImage}')`,
                           opacity: nairobiSkylineOpacity / 100,
                           filter: 'blur(2px) contrast(1.1)',
                         }}
@@ -3282,6 +3449,107 @@ export default function AdminDashboard({ navigate }) {
                       <ChevronRight className="w-3.5 h-3.5" />
                     </button>
                   </div>
+
+                  {/* Endless Masterpiece Ticker Controls */}
+                  <div className="p-5 rounded-2xl bg-[#141414] border border-white/10 space-y-4">
+                    <div className="flex items-center justify-between gap-3">
+                      <div>
+                        <h5 className="font-display font-bold text-xs uppercase tracking-wider text-[#F5D77A] flex items-center gap-1.5">
+                          <Sparkles className="w-3.5 h-3.5" />
+                          <span>Endless Masterpiece Ticker</span>
+                        </h5>
+                        <p className="text-[11px] text-[#8A8A8A] mt-0.5">
+                          Control visibility, scroll speed, and direction of the Home ticker
+                        </p>
+                      </div>
+                      <button
+                        type="button"
+                        onClick={() => {
+                          const next = !tickerEnabled;
+                          setTickerEnabled(next);
+                          updateSiteSettings({ tickerEnabled: next });
+                        }}
+                        className={`px-3 py-1 rounded-full text-[11px] font-bold uppercase tracking-wider border transition ${
+                          tickerEnabled
+                            ? 'bg-emerald-500/20 text-emerald-300 border-emerald-500/40'
+                            : 'bg-white/5 text-[#8A8A8A] border-white/10'
+                        }`}
+                      >
+                        {tickerEnabled ? 'Enabled' : 'Hidden'}
+                      </button>
+                    </div>
+
+                    <div className="space-y-2">
+                      <div className="flex items-center justify-between text-[11px]">
+                        <span className="text-[#A0A0A0] font-semibold">Scroll Duration (Lower = Faster)</span>
+                        <span className="font-mono font-bold text-[#F5D77A]">{tickerSpeed}s</span>
+                      </div>
+                      <input
+                        type="range"
+                        min="20"
+                        max="110"
+                        step="5"
+                        value={tickerSpeed}
+                        onChange={(e) => setTickerSpeed(Number(e.target.value))}
+                        className="w-full h-2 bg-[#222] rounded-lg appearance-none cursor-pointer accent-[#D4AF37]"
+                      />
+                      <div className="flex flex-wrap items-center justify-between gap-2 pt-1">
+                        <div className="flex items-center gap-1.5">
+                          {[
+                            { label: 'Fast', val: 30 },
+                            { label: 'Balanced', val: 55 },
+                            { label: 'Cinematic', val: 85 }
+                          ].map((p) => (
+                            <button
+                              key={p.label}
+                              type="button"
+                              onClick={() => setTickerSpeed(p.val)}
+                              className={`text-[10px] px-2 py-1 rounded-lg transition ${
+                                tickerSpeed === p.val
+                                  ? 'bg-[#D4AF37] text-black font-bold'
+                                  : 'bg-white/5 text-[#8A8A8A] hover:text-white'
+                              }`}
+                            >
+                              {p.label}
+                            </button>
+                          ))}
+                        </div>
+                        <div className="flex items-center gap-1.5">
+                          {['left', 'right'].map((dir) => (
+                            <button
+                              key={dir}
+                              type="button"
+                              onClick={() => setTickerDirection(dir)}
+                              className={`text-[10px] px-2.5 py-1 rounded-lg uppercase font-mono transition ${
+                                tickerDirection === dir
+                                  ? 'bg-[#D4AF37]/25 text-[#F5D77A] border border-[#D4AF37]/50 font-bold'
+                                  : 'bg-white/5 text-[#8A8A8A] hover:text-white border border-transparent'
+                              }`}
+                            >
+                              {dir === 'left' ? '← Left' : '→ Right'}
+                            </button>
+                          ))}
+                        </div>
+                      </div>
+                    </div>
+
+                    <div className="grid grid-cols-1 gap-2 pt-1">
+                      <input
+                        type="text"
+                        value={tickerTitle}
+                        onChange={(e) => setTickerTitle(e.target.value)}
+                        placeholder="Ticker Title"
+                        className="w-full px-3 py-2 rounded-xl bg-black/50 border border-white/10 text-xs text-[#F5F1E8] focus:border-[#D4AF37] focus:outline-none"
+                      />
+                      <input
+                        type="text"
+                        value={tickerSubtitle}
+                        onChange={(e) => setTickerSubtitle(e.target.value)}
+                        placeholder="Ticker Subtitle"
+                        className="w-full px-3 py-2 rounded-xl bg-black/50 border border-white/10 text-xs text-[#A0A0A0] focus:border-[#D4AF37] focus:outline-none"
+                      />
+                    </div>
+                  </div>
                 </div>
               </div>
             </div>
@@ -3309,6 +3577,50 @@ export default function AdminDashboard({ navigate }) {
 
               <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 items-start">
                 <div className="lg:col-span-7 space-y-6">
+                  {/* Work Page Background Image Customizer */}
+                  <div className="p-5 rounded-2xl bg-[#141414] border border-[#D4AF37]/30 space-y-3">
+                    <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+                      <div>
+                        <label className="text-xs font-bold uppercase tracking-wider text-[#F5D77A] block">
+                          Work / Portfolio Background Image
+                        </label>
+                        <span className="text-[11px] text-[#8A8A8A]">
+                          Upload a custom backdrop for your Portfolio &amp; Gallery page
+                        </span>
+                      </div>
+                      <div className="w-20 h-12 rounded-lg overflow-hidden border border-[#D4AF37]/40 bg-black shrink-0">
+                        <img src={workBgImage} alt="Work background" className="w-full h-full object-cover" />
+                      </div>
+                    </div>
+                    <div className="flex flex-wrap items-center gap-2 pt-1">
+                      <button
+                        type="button"
+                        disabled={isUploadingBg}
+                        onClick={() => handleTriggerBgUpload('work')}
+                        className="px-3.5 py-2 rounded-xl bg-gradient-to-r from-[#D4AF37] to-[#F5D77A] text-black text-xs font-bold uppercase tracking-wider hover:brightness-110 transition flex items-center gap-1.5 disabled:opacity-50"
+                      >
+                        <Upload className="w-3.5 h-3.5" />
+                        <span>{isUploadingBg && bgUploadTarget === 'work' ? 'Compressing...' : 'Change Background'}</span>
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() => handleApplyBgToAll(workBgImage)}
+                        className="px-3 py-2 rounded-xl bg-white/5 hover:bg-white/10 border border-white/10 text-xs font-medium text-[#F5F1E8] transition"
+                      >
+                        Apply to All Pages
+                      </button>
+                      {workBgImage !== '/assets/nairobi-cbd.jpg' && (
+                        <button
+                          type="button"
+                          onClick={() => handleResetBgImage('work')}
+                          className="px-3 py-2 rounded-xl bg-white/5 hover:bg-white/10 border border-white/10 text-xs font-medium text-[#8A8A8A] hover:text-white transition"
+                        >
+                          Reset Nairobi CBD
+                        </button>
+                      )}
+                    </div>
+                  </div>
+
                   {/* WORK SLIDER 1: Nairobi Peak Skyline Visibility (up to 100% Full Opacity!) */}
                   <div className="p-5 rounded-2xl bg-[#141414] border border-[#D4AF37]/30 space-y-3 shadow-lg shadow-[#D4AF37]/5">
                     <div className="flex items-center justify-between">
@@ -3515,7 +3827,7 @@ export default function AdminDashboard({ navigate }) {
                       <div
                         className="absolute inset-0 bg-cover bg-center pointer-events-none transition-all duration-300"
                         style={{
-                          backgroundImage: "url('/assets/nairobi-cbd.jpg')",
+                          backgroundImage: `url('${workBgImage}')`,
                           opacity: workNairobiSkylineOpacity / 100,
                           filter: `blur(${Math.max(0, ((100 - workNairobiClarity) / 100) * 4).toFixed(1)}px) contrast(${(1 + (workNairobiClarity/100)*0.25).toFixed(2)})`
                         }}
@@ -3577,6 +3889,50 @@ export default function AdminDashboard({ navigate }) {
                 <p className="text-xs text-[#8A8A8A] mt-1">
                   Select any curated 1-click brand identity preset to instantly apply harmonized colors, gradients, and atmospheric lighting across the entire site.
                 </p>
+              </div>
+
+              {/* Global Background Image Customizer */}
+              <div className="p-5 rounded-2xl bg-[#141414] border border-[#D4AF37]/30 space-y-3">
+                <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+                  <div>
+                    <label className="text-xs font-bold uppercase tracking-wider text-[#F5D77A] block">
+                      Global / Other Pages Background Image
+                    </label>
+                    <span className="text-[11px] text-[#8A8A8A]">
+                      Used on Services, About, and Contact pages (or apply to all pages at once)
+                    </span>
+                  </div>
+                  <div className="w-20 h-12 rounded-lg overflow-hidden border border-[#D4AF37]/40 bg-black shrink-0">
+                    <img src={globalBgImage} alt="Global background" className="w-full h-full object-cover" />
+                  </div>
+                </div>
+                <div className="flex flex-wrap items-center gap-2 pt-1">
+                  <button
+                    type="button"
+                    disabled={isUploadingBg}
+                    onClick={() => handleTriggerBgUpload('global')}
+                    className="px-3.5 py-2 rounded-xl bg-gradient-to-r from-[#D4AF37] to-[#F5D77A] text-black text-xs font-bold uppercase tracking-wider hover:brightness-110 transition flex items-center gap-1.5 disabled:opacity-50"
+                  >
+                    <Upload className="w-3.5 h-3.5" />
+                    <span>{isUploadingBg && bgUploadTarget === 'global' ? 'Compressing...' : 'Change Background'}</span>
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => handleApplyBgToAll(globalBgImage)}
+                    className="px-3 py-2 rounded-xl bg-white/5 hover:bg-white/10 border border-white/10 text-xs font-medium text-[#F5F1E8] transition"
+                  >
+                    Apply to All Pages
+                  </button>
+                  {globalBgImage !== '/assets/nairobi-cbd.jpg' && (
+                    <button
+                      type="button"
+                      onClick={() => handleResetBgImage('global')}
+                      className="px-3 py-2 rounded-xl bg-white/5 hover:bg-white/10 border border-white/10 text-xs font-medium text-[#8A8A8A] hover:text-white transition"
+                    >
+                      Reset Nairobi CBD
+                    </button>
+                  )}
+                </div>
               </div>
 
               {/* Presets Grid */}

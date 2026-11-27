@@ -95,17 +95,24 @@ export default function NairobiBackground({ currentPath = '/' }) {
     : (1.02 + (clarityPercentage / 100) * 0.12).toFixed(2);
   const filterStyle = `blur(${blurPx}px) brightness(${brightnessMultiplier}) contrast(${contrastMultiplier})`;
 
+  // Per-page background image selection (customizable in Admin Studio)
+  const activeBgImage = isWorkPage
+    ? (siteSettings?.workBgImage || '/assets/nairobi-cbd.jpg')
+    : isHomePage
+      ? (siteSettings?.heroBgImage || '/assets/nairobi-cbd.jpg')
+      : (siteSettings?.globalBgImage || '/assets/nairobi-cbd.jpg');
+
   return (
     <div
       className="fixed inset-0 pointer-events-none z-0 overflow-hidden"
       aria-hidden="true"
       style={{ transition: 'background 0.5s ease' }}
     >
-      {/* Parallax Nairobi Skyline Layer with dynamic opacity and 100% crystal clear capability */}
+      {/* Parallax Background Layer with dynamic image, opacity and 100% crystal clear capability */}
       <div
         className="absolute inset-0 bg-cover bg-center scale-105"
         style={{
-          backgroundImage: "url('/assets/nairobi-cbd.jpg')",
+          backgroundImage: `url('${activeBgImage}')`,
           transform: `translateY(-${offsetY}px)`,
           opacity: currentSkylineOpacity,
           filter: filterStyle,

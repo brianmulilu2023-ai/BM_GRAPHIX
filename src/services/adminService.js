@@ -46,13 +46,22 @@ export const DEFAULT_SITE_SETTINGS = {
   atmosphereActivePage: 'home',
 
   // Home / Landing Page Atmosphere Controls
+  heroBgImage: '/assets/nairobi-cbd.jpg',
   heroBgVisibility: 55, // 0 to 100%
   heroDarkOverlay: 70, // 0 to 100%
   nairobiSkylineOpacity: 70, // 0 to 100% (crystal clear & prominent)
   goldGlowIntensity: 70, // 0 to 100%
   particlesVisibility: 55, // 0 to 100%
 
+  // Endless Masterpiece Ticker Controls
+  tickerEnabled: true,
+  tickerSpeed: 55, // seconds per full loop (20 = fast, 55 = balanced, 95 = slow)
+  tickerDirection: 'left', // 'left' | 'right'
+  tickerTitle: 'The Endless Masterpiece Ticker',
+  tickerSubtitle: 'Hover to pause · Click any card to open the full project. Live feed of every published BM Graphix work.',
+
   // Work / Portfolio Page Atmosphere Controls (with 100% crystal clear capability)
+  workBgImage: '/assets/nairobi-cbd.jpg',
   workNairobiSkylineOpacity: 55, // 0 to 100% (allows up to 100% crystal clear Nairobi peak)
   workNairobiClarity: 85, // 0 to 100% (100% = 0px blur, high micro-contrast & razor sharpness)
   workDarkOverlay: 70, // 0 to 100%
@@ -60,6 +69,7 @@ export const DEFAULT_SITE_SETTINGS = {
   workParticles: 50, // 0 to 100%
 
   // Global Atmosphere / Other Pages
+  globalBgImage: '/assets/nairobi-cbd.jpg',
   globalNairobiSkylineOpacity: 20, // 0 to 100%
   globalDarkOverlay: 80, // 0 to 100%
   globalGoldGlow: 60, // 0 to 100%
