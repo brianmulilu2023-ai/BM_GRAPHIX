@@ -38,27 +38,31 @@ export function ProjectProvider({ children }) {
     // ─── Real-Time Cross-Device Cloud Sync ─────────────────────────────────
     // Site settings (Hero Showcase items, atmosphere sliders, branding)
     fetchCloudSiteSettings().then((cloudSettings) => {
-      if (cloudSettings && typeof cloudSettings === 'object' && Object.keys(cloudSettings).length > 0) {
+      const local = adminService.getSiteSettings();
+      const localTime = local?.updatedAt ? new Date(local.updatedAt).getTime() : 0;
+      const cloudTime = cloudSettings?.updatedAt ? new Date(cloudSettings.updatedAt).getTime() : 0;
+
+      if (cloudSettings && (!localTime || cloudTime >= localTime)) {
+        // Cloud is newer or local has no custom edits yet -> apply cloud to this device
         const merged = adminService.mergeSiteSettings(cloudSettings);
         setSiteSettings(merged);
-      } else {
-        const local = adminService.getSiteSettings();
-        if (local) {
-          saveCloudSiteSettings(local).catch(() => {});
-        }
+      } else if (local && localTime > cloudTime) {
+        // This device (e.g. laptop where admin already edited) has newer settings -> push to cloud!
+        saveCloudSiteSettings(local).catch(() => {});
       }
     }).catch(() => {});
 
     // Admin profile (Profile photo / Avatar, Name, Role)
     fetchCloudAdminProfile().then((cloudProfile) => {
-      if (cloudProfile && typeof cloudProfile === 'object' && Object.keys(cloudProfile).length > 0) {
+      const local = adminService.getAdminAccount();
+      const localTime = local?.updatedAt ? new Date(local.updatedAt).getTime() : 0;
+      const cloudTime = cloudProfile?.updatedAt ? new Date(cloudProfile.updatedAt).getTime() : 0;
+
+      if (cloudProfile && (!localTime || cloudTime >= localTime)) {
         const merged = adminService.mergeAdminAccount(cloudProfile);
         setAdminUser(merged);
-      } else {
-        const local = adminService.getAdminAccount();
-        if (local) {
-          saveCloudAdminProfile(local).catch(() => {});
-        }
+      } else if (local && localTime > cloudTime) {
+        saveCloudAdminProfile(local).catch(() => {});
       }
     }).catch(() => {});
 

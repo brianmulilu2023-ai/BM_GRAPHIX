@@ -200,7 +200,12 @@ export async function fetchCloudSiteSettings() {
     if (error || !data || !data.data || typeof data.data !== 'object') {
       return null;
     }
-    return data.data;
+    const s = data.data;
+    // Ignore non-settings payloads
+    if (!s.brandName && !Array.isArray(s.heroShowcaseItems) && !s.updatedAt) {
+      return null;
+    }
+    return s;
   } catch (err) {
     console.warn('[CloudSync] Fetch site settings exception:', err?.message || err);
     return null;

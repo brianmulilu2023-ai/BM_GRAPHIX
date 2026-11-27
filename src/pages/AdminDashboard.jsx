@@ -568,7 +568,7 @@ export default function AdminDashboard({ navigate }) {
     if (!file) return;
     try {
       setIsUploadingShowcase(true);
-      const compressed = await compressImage(file, 1200, 0.90);
+      const compressed = await compressImage(file, 960, 0.82);
       if (compressed) {
         setNewShowcaseImage(compressed);
         showToast('Image uploaded & compressed! Now add a label and click Publish.', 'gold');
@@ -3782,6 +3782,15 @@ export default function AdminDashboard({ navigate }) {
                 >
                   <Layers className="w-4 h-4 text-[#D4AF37]" />
                   <span>Pick from Projects</span>
+                </button>
+                <button
+                  type="button"
+                  onClick={() => handleSaveShowcase(showcaseItems, showcaseInterval)}
+                  className="px-4 py-2.5 rounded-xl bg-emerald-500/15 border border-emerald-500/40 hover:bg-emerald-500/25 text-emerald-300 text-xs font-semibold uppercase tracking-wider transition flex items-center gap-2"
+                  title="Force push your current slides to cloud so all phones and other devices see them immediately"
+                >
+                  <CheckCircle className="w-4 h-4" />
+                  <span>Sync to All Devices</span>
                 </button>
                 <button
                   type="button"
