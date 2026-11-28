@@ -16,11 +16,12 @@ import {
 import { useProjects } from '../context/ProjectContext';
 
 export default function About({ navigate }) {
-  const { adminUser } = useProjects();
+  const { adminUser, siteSettings } = useProjects();
+  const aboutData = siteSettings?.aboutPage || {};
   const profilePhoto = adminUser?.avatar || '/assets/brian-mulilu.jpg';
   const profileName = adminUser?.name || 'Brian Mulilu';
   const profileRole = adminUser?.role || 'Motion Artist & Visual Designer';
-  const skills = [
+  const skills = Array.isArray(aboutData.skills) && aboutData.skills.length > 0 ? aboutData.skills : [
     { name: 'Adobe Photoshop (Poster Art & Manipulation)', level: 98 },
     { name: 'Adobe Illustrator (Vector Branding & Logos)', level: 95 },
     { name: 'After Effects (2D/3D Motion Graphics)', level: 92 },
@@ -40,7 +41,7 @@ export default function About({ navigate }) {
     { name: 'InDesign', category: 'Editorial & Lookbooks', icon: 'Id' }
   ];
 
-  const timeline = [
+  const timeline = Array.isArray(aboutData.timeline) && aboutData.timeline.length > 0 ? aboutData.timeline : [
     {
       period: '2023 — Present',
       role: 'Senior Motion Graphic Designer & Broadcast Artist',
@@ -66,6 +67,16 @@ export default function About({ navigate }) {
       current: false
     }
   ];
+
+  const aboutBadge = aboutData.badge || 'The Vision Behind The Craft';
+  const aboutTitle = aboutData.title || 'I craft designs that move people and build iconic legacies.';
+  const aboutParagraphs = Array.isArray(aboutData.paragraphs) && aboutData.paragraphs.length > 0
+    ? aboutData.paragraphs
+    : [
+        'I am Brian Mulilu, a passionate Nairobi-based graphic designer and motion artist. Under my banner BM Graphix, I bridge the gap between static design precision and kinetic cinema.',
+        'My work spans broadcast motion packages for media giants like Royal Media Services, sold-out concert tour key visuals, luxury brand identities, and high-impact digital photo manipulations.',
+        'Every typography choice, lighting gradient, and keyframe is treated with surgical intentionality. I believe extraordinary brands don’t whisper—they resonate with unmistakable confidence.'
+      ];
 
   return (
     <div className="relative z-10 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pt-32 pb-28 space-y-24 page-mount">
@@ -106,23 +117,19 @@ export default function About({ navigate }) {
         >
           <div className="inline-flex items-center gap-2 px-3.5 py-1 rounded-full bg-[#161616] border border-[#D4AF37]/30 text-xs font-mono uppercase tracking-[0.25em] text-[#D4AF37]">
             <Sparkles className="w-3.5 h-3.5" />
-            <span>The Vision Behind The Craft</span>
+            <span>{aboutBadge}</span>
           </div>
 
           <h1 className="font-display font-extrabold text-3xl sm:text-5xl text-[#F5F1E8] leading-tight">
-            I craft designs that <span className="gold-gradient-text">move people</span> and build iconic legacies.
+            {aboutTitle}
           </h1>
 
           <div className="space-y-4 text-sm sm:text-base text-[#8A8A8A] leading-relaxed">
-            <p>
-              I am Brian Mulilu, a passionate Nairobi-based graphic designer and motion artist. Under my banner <strong className="text-[#F5F1E8]">BM Graphix</strong>, I bridge the gap between static design precision and kinetic cinema.
-            </p>
-            <p>
-              My work spans broadcast motion packages for media giants like <strong className="text-[#D4AF37]">Royal Media Services</strong>, sold-out concert tour key visuals, luxury brand identities, and high-impact digital photo manipulations.
-            </p>
-            <p>
-              Every typography choice, lighting gradient, and keyframe is treated with surgical intentionality. I believe extraordinary brands don't whisper—they resonate with unmistakable confidence.
-            </p>
+            {aboutParagraphs.map((para, pIdx) => (
+              <p key={pIdx}>
+                {para}
+              </p>
+            ))}
           </div>
 
           <div className="pt-4 flex flex-wrap items-center gap-4">

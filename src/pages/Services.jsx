@@ -13,70 +13,92 @@ import {
   ShieldCheck,
   Send
 } from 'lucide-react';
+import { useProjects } from '../context/ProjectContext';
+
+const ICON_MAP = {
+  Palette,
+  Layers,
+  Tv,
+  Film,
+  Zap,
+  Sparkles
+};
 
 export default function Services({ navigate }) {
-  const serviceDetails = [
-    {
-      icon: Palette,
-      title: 'Poster & Flyer Design',
-      category: 'Print & Digital Key Art',
-      desc: 'High-impact visual key visuals engineered for maximum conversions, concert attendance, and social engagement.',
-      deliverables: [
-        'Cinematic Concert & Festival Tour Posters',
-        'Church, Gospel & Worship Night Artwork',
-        'Social Media Multi-Format Ad Packs (Feed, Story, Reel Covers)',
-        '300+ DPI Print-Ready CMYK Files & Vector Source',
-        'Custom 3D & Typographic Title Treatment'
-      ],
-      turnaround: '24–72 hours',
-      popular: true
-    },
-    {
-      icon: Layers,
-      title: 'Logo & Visual Identity',
-      category: 'Comprehensive Branding Systems',
-      desc: 'Distinctive, memorable emblems and comprehensive corporate design manuals that position brands at the pinnacle of their industry.',
-      deliverables: [
-        'Primary Logo, Monogram & Sub-mark Variations',
-        'Color Palette, Typography Pairing & Hierarchy Guidelines',
-        'Business Cards, Letterheads & Brand Stationery',
-        'Social Media Brand Kit & Profile Avatars',
-        'Full Brand Style Manual PDF + Vector SVG / AI / EPS Files'
-      ],
-      turnaround: '5–10 business days',
-      popular: false
-    },
-    {
-      icon: Tv,
-      title: 'Motion Graphics & 3D Art',
-      category: 'Kinetic Visuals',
-      desc: 'Breathtaking 3D kinetic typography, LED billboard loops, and broadcast-ready package elements for live screens and TV.',
-      deliverables: [
-        'Kinetic Typography Lyric & Speech Videos',
-        '3D Stage LED Screen Loop Visuals',
-        'Broadcast News / TV Show Lower Thirds & Stingers',
-        'Animated Logo Ident Reveals & Outros',
-        'Ultra HD 4K Apple ProRes & H.264 Deliverables'
-      ],
-      turnaround: '3–7 business days',
-      popular: true
-    },
-    {
-      icon: Film,
-      title: 'Video Promo & Commercials',
-      category: 'Commercial Video Animation',
-      desc: 'Cinema-grade video trailers and promotional reels designed to captivate audiences and trigger immediate action.',
-      deliverables: [
-        'Event Countdown & Speaker Announcement Trailers',
-        'Commercial Product Teasers & 3D Mockup Displays',
-        'Vertical Short-Form Promos (TikTok & Instagram Reels)',
-        'Sound Design & Audio-Reactive Visual Synths',
-        'Multi-Aspect Ratio Deliverables (16:9, 9:16, 1:1, 4:5)'
-      ],
-      turnaround: '4–8 business days',
-      popular: false
-    }
-  ];
+  const { siteSettings } = useProjects();
+  const servicesData = siteSettings?.servicesPage || {};
+
+  const servicesList = Array.isArray(servicesData.servicesList) && servicesData.servicesList.length > 0
+    ? servicesData.servicesList.map(s => ({
+        ...s,
+        icon: ICON_MAP[s.iconName] || Palette
+      }))
+    : [
+        {
+          icon: Palette,
+          title: 'Poster & Flyer Design',
+          category: 'Print & Digital Key Art',
+          desc: 'High-impact visual key visuals engineered for maximum conversions, concert attendance, and social engagement.',
+          deliverables: [
+            'Cinematic Concert & Festival Tour Posters',
+            'Church, Gospel & Worship Night Artwork',
+            'Social Media Multi-Format Ad Packs (Feed, Story, Reel Covers)',
+            '300+ DPI Print-Ready CMYK Files & Vector Source',
+            'Custom 3D & Typographic Title Treatment'
+          ],
+          turnaround: '24–72 hours',
+          popular: true
+        },
+        {
+          icon: Layers,
+          title: 'Logo & Visual Identity',
+          category: 'Comprehensive Branding Systems',
+          desc: 'Distinctive, memorable emblems and comprehensive corporate design manuals that position brands at the pinnacle of their industry.',
+          deliverables: [
+            'Primary Logo, Monogram & Sub-mark Variations',
+            'Color Palette, Typography Pairing & Hierarchy Guidelines',
+            'Business Cards, Letterheads & Brand Stationery',
+            'Social Media Brand Kit & Profile Avatars',
+            'Full Brand Style Manual PDF + Vector SVG / AI / EPS Files'
+          ],
+          turnaround: '5–10 business days',
+          popular: false
+        },
+        {
+          icon: Tv,
+          title: 'Motion Graphics & 3D Art',
+          category: 'Kinetic Visuals',
+          desc: 'Breathtaking 3D kinetic typography, LED billboard loops, and broadcast-ready package elements for live screens and TV.',
+          deliverables: [
+            'Kinetic Typography Lyric & Speech Videos',
+            '3D Stage LED Screen Loop Visuals',
+            'Broadcast News / TV Show Lower Thirds & Stingers',
+            'Animated Logo Ident Reveals & Outros',
+            'Ultra HD 4K Apple ProRes & H.264 Deliverables'
+          ],
+          turnaround: '3–7 business days',
+          popular: true
+        },
+        {
+          icon: Film,
+          title: 'Video Promo & Commercials',
+          category: 'Commercial Video Animation',
+          desc: 'Cinema-grade video trailers and promotional reels designed to captivate audiences and trigger immediate action.',
+          deliverables: [
+            'Event Countdown & Speaker Announcement Trailers',
+            'Commercial Product Teasers & 3D Mockup Displays',
+            'Vertical Short-Form Promos (TikTok & Instagram Reels)',
+            'Sound Design & Audio-Reactive Visual Synths',
+            'Multi-Aspect Ratio Deliverables (16:9, 9:16, 1:1, 4:5)'
+          ],
+          turnaround: '4–8 business days',
+          popular: false
+        }
+      ];
+
+  const serviceBadge = servicesData.badge || 'Professional Creative Solutions';
+  const serviceTitle = servicesData.title || 'Services That Elevate';
+  const serviceSubtitle = servicesData.subtitle || 'From viral event flyers to cinema-standard broadcast packages, every piece is meticulously engineered to stand out and deliver results.';
 
   const workflowSteps = [
     {
@@ -107,19 +129,25 @@ export default function Services({ navigate }) {
       <div className="text-center max-w-3xl mx-auto">
         <div className="inline-flex items-center gap-2 px-3.5 py-1 rounded-full bg-[#161616] border border-[#D4AF37]/30 text-xs font-mono uppercase tracking-[0.25em] text-[#D4AF37] mb-4">
           <Sparkles className="w-3.5 h-3.5" />
-          <span>Professional Creative Solutions</span>
+          <span>{serviceBadge}</span>
         </div>
         <h1 className="font-display font-extrabold text-4xl sm:text-6xl text-[#F5F1E8] mb-5">
-          Services That <span className="gold-gradient-text">Elevate</span>
+          {serviceTitle.includes('Elevate') ? (
+            <>
+              Services That <span className="gold-gradient-text">Elevate</span>
+            </>
+          ) : (
+            <span className="gold-gradient-text">{serviceTitle}</span>
+          )}
         </h1>
         <p className="text-sm sm:text-base text-[#8A8A8A] leading-relaxed">
-          From viral event flyers to cinema-standard broadcast packages, every piece is meticulously engineered to stand out and deliver results.
+          {serviceSubtitle}
         </p>
       </div>
 
       {/* Services Grid */}
       <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
-        {serviceDetails.map((service, idx) => {
+        {servicesList.map((service, idx) => {
           const Icon = service.icon;
           return (
             <motion.div

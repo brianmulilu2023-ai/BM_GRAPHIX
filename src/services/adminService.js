@@ -122,6 +122,139 @@ export const DEFAULT_SITE_SETTINGS = {
       icon: '#E2AA00',
       border: '#6B3E00'
     }
+  },
+
+  // Editable Pages Content (About, Services, Contact)
+  aboutPage: {
+    badge: 'The Vision Behind The Craft',
+    title: 'I craft designs that move people and build iconic legacies.',
+    paragraphs: [
+      'I am Brian Mulilu, a passionate Nairobi-based graphic designer and motion artist. Under my banner BM Graphix, I bridge the gap between static design precision and kinetic cinema.',
+      'My work spans broadcast motion packages for media giants like Royal Media Services, sold-out concert tour key visuals, luxury brand identities, and high-impact digital photo manipulations.',
+      'Every typography choice, lighting gradient, and keyframe is treated with surgical intentionality. I believe extraordinary brands don’t whisper—they resonate with unmistakable confidence.'
+    ],
+    experienceYears: '5+ Years',
+    clientsCount: '40+ Brands',
+    projectsCompleted: '150+ Projects',
+    skills: [
+      { name: 'Adobe Photoshop (Poster Art & Manipulation)', level: 98 },
+      { name: 'Adobe Illustrator (Vector Branding & Logos)', level: 95 },
+      { name: 'After Effects (2D/3D Motion Graphics)', level: 92 },
+      { name: 'Premiere Pro (Commercial Video Editing)', level: 90 },
+      { name: 'Brand Strategy & Typographic Hierarchy', level: 94 },
+      { name: 'Cinema 4D / Blender (3D Stage Visuals)', level: 82 }
+    ],
+    timeline: [
+      {
+        period: '2023 — Present',
+        role: 'Senior Motion Graphic Designer & Broadcast Artist',
+        company: 'Royal Media Services (RMS)',
+        location: 'Nairobi, Kenya',
+        description: 'Lead broadcast graphics designer for prime-time programming, news packages, dynamic lower thirds, promotional trailers, and high-impact animated television stingers viewed by millions across Kenya daily.',
+        current: true
+      },
+      {
+        period: '2021 — Present',
+        role: 'Founder & Lead Creative Director',
+        company: 'BM Graphix',
+        location: 'Nairobi, Kenya',
+        description: 'Founded independent design studio serving over 40+ brands, recording artists, and event organizers. Delivered 150+ bespoke concert key visuals, 3D billboard motion loops, and luxury brand identity rollouts.',
+        current: true
+      },
+      {
+        period: '2019 — 2021',
+        role: 'Visual Designer & Print Specialist',
+        company: 'Digital Wave Creative Studio',
+        location: 'Nairobi, Kenya',
+        description: 'Handled high-volume corporate branding, large-format billboard print layouts, packaging graphics, and commercial social media marketing assets.',
+        current: false
+      }
+    ]
+  },
+
+  servicesPage: {
+    badge: 'Professional Creative Solutions',
+    title: 'Services That Elevate',
+    subtitle: 'From viral event flyers to cinema-standard broadcast packages, every piece is meticulously engineered to stand out and deliver results.',
+    servicesList: [
+      {
+        id: 'posters',
+        iconName: 'Palette',
+        title: 'Poster & Flyer Design',
+        category: 'Print & Digital Key Art',
+        desc: 'High-impact visual key visuals engineered for maximum conversions, concert attendance, and social engagement.',
+        deliverables: [
+          'Cinematic Concert & Festival Tour Posters',
+          'Church, Gospel & Worship Night Artwork',
+          'Social Media Multi-Format Ad Packs (Feed, Story, Reel Covers)',
+          '300+ DPI Print-Ready CMYK Files & Vector Source',
+          'Custom 3D & Typographic Title Treatment'
+        ],
+        turnaround: '24–72 hours',
+        popular: true
+      },
+      {
+        id: 'branding',
+        iconName: 'Layers',
+        title: 'Logo & Visual Identity',
+        category: 'Comprehensive Branding Systems',
+        desc: 'Distinctive, memorable emblems and comprehensive corporate design manuals that position brands at the pinnacle of their industry.',
+        deliverables: [
+          'Primary Logo, Monogram & Sub-mark Variations',
+          'Color Palette, Typography Pairing & Hierarchy Guidelines',
+          'Business Cards, Letterheads & Brand Stationery',
+          'Social Media Brand Kit & Profile Avatars',
+          'Full Brand Style Manual PDF + Vector SVG / AI / EPS Files'
+        ],
+        turnaround: '5–10 business days',
+        popular: false
+      },
+      {
+        id: 'motion',
+        iconName: 'Tv',
+        title: 'Motion Graphics & 3D Art',
+        category: 'Kinetic Visuals',
+        desc: 'Breathtaking 3D kinetic typography, LED billboard loops, and broadcast-ready package elements for live screens and TV.',
+        deliverables: [
+          'Kinetic Typography Lyric & Speech Videos',
+          '3D Stage LED Screen Loop Visuals',
+          'Broadcast News / TV Show Lower Thirds & Stingers',
+          'Animated Logo Ident Reveals & Outros',
+          'Ultra HD 4K Apple ProRes & H.264 Deliverables'
+        ],
+        turnaround: '3–7 business days',
+        popular: true
+      },
+      {
+        id: 'video',
+        iconName: 'Film',
+        title: 'Video Promo & Commercials',
+        category: 'Commercial Video Animation',
+        desc: 'Cinema-grade video trailers and promotional reels designed to captivate audiences and trigger immediate action.',
+        deliverables: [
+          'Event Countdown & Speaker Announcement Trailers',
+          'Commercial Product Teasers & 3D Mockup Displays',
+          'Vertical Short-Form Promos (TikTok & Instagram Reels)',
+          'Sound Design & Audio-Reactive Visual Synths',
+          'Multi-Aspect Ratio Deliverables (16:9, 9:16, 1:1, 4:5)'
+        ],
+        turnaround: '4–8 business days',
+        popular: false
+      }
+    ]
+  },
+
+  contactPage: {
+    badge: "Let's Build Something Iconic",
+    title: 'Get in Touch',
+    subtitle: 'Ready to launch a high-impact campaign, redesign your visual identity, or animate cinematic motion graphics? Reach out via phone, WhatsApp, or the brief form below.',
+    whatsappNumber: '+254 798 405 726',
+    whatsappMessage: 'Hi Brian! I visited your BM Graphix portfolio and would love to discuss a project.',
+    callNumber: '+254 798 405 726',
+    email: 'brianmulilu2023@gmail.com',
+    location: 'Nairobi Central Business District (CBD), Kenya',
+    workingHours: 'Monday — Saturday: 8:00 AM — 8:00 PM EAT',
+    availabilityNote: 'Currently accepting new freelance projects and corporate contracts.'
   }
 };
 
@@ -188,6 +321,18 @@ class AdminService {
         brandTheme: {
           light: { ...DEFAULT_BRAND_THEME.light, ...(parsed?.brandTheme?.light || {}) },
           dark: { ...DEFAULT_BRAND_THEME.dark, ...(parsed?.brandTheme?.dark || {}) }
+        },
+        aboutPage: {
+          ...DEFAULT_SITE_SETTINGS.aboutPage,
+          ...(parsed?.aboutPage || {})
+        },
+        servicesPage: {
+          ...DEFAULT_SITE_SETTINGS.servicesPage,
+          ...(parsed?.servicesPage || {})
+        },
+        contactPage: {
+          ...DEFAULT_SITE_SETTINGS.contactPage,
+          ...(parsed?.contactPage || {})
         }
       };
     } catch {
@@ -222,6 +367,21 @@ class AdminService {
       brandTheme: {
         light: { ...DEFAULT_BRAND_THEME.light, ...(current?.brandTheme?.light || {}), ...(cloudSettings?.brandTheme?.light || {}) },
         dark: { ...DEFAULT_BRAND_THEME.dark, ...(current?.brandTheme?.dark || {}), ...(cloudSettings?.brandTheme?.dark || {}) }
+      },
+      aboutPage: {
+        ...DEFAULT_SITE_SETTINGS.aboutPage,
+        ...(current?.aboutPage || {}),
+        ...(cloudSettings?.aboutPage || {})
+      },
+      servicesPage: {
+        ...DEFAULT_SITE_SETTINGS.servicesPage,
+        ...(current?.servicesPage || {}),
+        ...(cloudSettings?.servicesPage || {})
+      },
+      contactPage: {
+        ...DEFAULT_SITE_SETTINGS.contactPage,
+        ...(current?.contactPage || {}),
+        ...(cloudSettings?.contactPage || {})
       },
       updatedAt: cloudSettings.updatedAt || new Date().toISOString()
     };

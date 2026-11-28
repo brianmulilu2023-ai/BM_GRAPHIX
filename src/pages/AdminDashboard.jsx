@@ -531,6 +531,112 @@ export default function AdminDashboard({ navigate }) {
     showToast('Changes discarded.', 'gold');
   };
 
+  // --- Pages & Content Studio State (About, Services, Contact) ---
+  const [pagesActiveSection, setPagesActiveSection] = useState('about'); // 'about' | 'services' | 'contact'
+  
+  // About Page State
+  const [aboutBadge, setAboutBadge] = useState(siteSettings?.aboutPage?.badge || 'The Vision Behind The Craft');
+  const [aboutTitle, setAboutTitle] = useState(siteSettings?.aboutPage?.title || 'I craft designs that move people and build iconic legacies.');
+  const [aboutBio1, setAboutBio1] = useState(siteSettings?.aboutPage?.paragraphs?.[0] || 'I am Brian Mulilu, a passionate Nairobi-based graphic designer and motion artist. Under my banner BM Graphix, I bridge the gap between static design precision and kinetic cinema.');
+  const [aboutBio2, setAboutBio2] = useState(siteSettings?.aboutPage?.paragraphs?.[1] || 'My work spans broadcast motion packages for media giants like Royal Media Services, sold-out concert tour key visuals, luxury brand identities, and high-impact digital photo manipulations.');
+  const [aboutBio3, setAboutBio3] = useState(siteSettings?.aboutPage?.paragraphs?.[2] || 'Every typography choice, lighting gradient, and keyframe is treated with surgical intentionality. I believe extraordinary brands don’t whisper—they resonate with unmistakable confidence.');
+  const [aboutExpYears, setAboutExpYears] = useState(siteSettings?.aboutPage?.experienceYears || '5+ Years');
+  const [aboutClientsCount, setAboutClientsCount] = useState(siteSettings?.aboutPage?.clientsCount || '40+ Brands');
+  const [aboutProjectsCount, setAboutProjectsCount] = useState(siteSettings?.aboutPage?.projectsCompleted || '150+ Projects');
+
+  // Services Page State
+  const [servicesBadge, setServicesBadge] = useState(siteSettings?.servicesPage?.badge || 'Professional Creative Solutions');
+  const [servicesTitle, setServicesTitle] = useState(siteSettings?.servicesPage?.title || 'Services That Elevate');
+  const [servicesSubtitle, setServicesSubtitle] = useState(siteSettings?.servicesPage?.subtitle || 'From viral event flyers to cinema-standard broadcast packages, every piece is meticulously engineered to stand out and deliver results.');
+  const [servicesListItems, setServicesListItems] = useState(
+    Array.isArray(siteSettings?.servicesPage?.servicesList) && siteSettings.servicesPage.servicesList.length > 0
+      ? siteSettings.servicesPage.servicesList
+      : [
+          {
+            id: 'posters',
+            iconName: 'Palette',
+            title: 'Poster & Flyer Design',
+            category: 'Print & Digital Key Art',
+            desc: 'High-impact visual key visuals engineered for maximum conversions, concert attendance, and social engagement.',
+            turnaround: '24–72 hours',
+            popular: true
+          },
+          {
+            id: 'branding',
+            iconName: 'Layers',
+            title: 'Logo & Visual Identity',
+            category: 'Comprehensive Branding Systems',
+            desc: 'Distinctive, memorable emblems and comprehensive corporate design manuals that position brands at the pinnacle of their industry.',
+            turnaround: '5–10 business days',
+            popular: false
+          },
+          {
+            id: 'motion',
+            iconName: 'Tv',
+            title: 'Motion Graphics & 3D Art',
+            category: 'Kinetic Visuals',
+            desc: 'Breathtaking 3D kinetic typography, LED billboard loops, and broadcast-ready package elements for live screens and TV.',
+            turnaround: '3–7 business days',
+            popular: true
+          },
+          {
+            id: 'video',
+            iconName: 'Film',
+            title: 'Video Promo & Commercials',
+            category: 'Commercial Video Animation',
+            desc: 'Cinema-grade video trailers and promotional reels designed to captivate audiences and trigger immediate action.',
+            turnaround: '4–8 business days',
+            popular: false
+          }
+        ]
+  );
+
+  // Contact Page State
+  const [contactBadge, setContactBadge] = useState(siteSettings?.contactPage?.badge || "Let's Build Something Iconic");
+  const [contactTitle, setContactTitle] = useState(siteSettings?.contactPage?.title || "Get in Touch");
+  const [contactSubtitle, setContactSubtitle] = useState(siteSettings?.contactPage?.subtitle || "Ready to launch a high-impact campaign, redesign your visual identity, or animate cinematic motion graphics? Reach out via phone, WhatsApp, or the brief form below.");
+  const [contactWhatsapp, setContactWhatsapp] = useState(siteSettings?.contactPage?.whatsappNumber || '+254 798 405 726');
+  const [contactWhatsappMsg, setContactWhatsappMsg] = useState(siteSettings?.contactPage?.whatsappMessage || 'Hi Brian! I visited your BM Graphix portfolio and would love to discuss a project.');
+  const [contactPhone, setContactPhone] = useState(siteSettings?.contactPage?.callNumber || '+254 798 405 726');
+  const [contactEmail, setContactEmail] = useState(siteSettings?.contactPage?.email || 'brianmulilu2023@gmail.com');
+  const [contactLocation, setContactLocation] = useState(siteSettings?.contactPage?.location || 'Nairobi Central Business District (CBD), Kenya');
+  const [contactHours, setContactHours] = useState(siteSettings?.contactPage?.workingHours || 'Monday — Saturday: 8:00 AM — 8:00 PM EAT');
+  const [contactAvailability, setContactAvailability] = useState(siteSettings?.contactPage?.availabilityNote || 'Currently accepting new freelance projects and corporate contracts.');
+
+  const handleSavePagesContent = () => {
+    updateSiteSettings({
+      aboutPage: {
+        badge: aboutBadge,
+        title: aboutTitle,
+        paragraphs: [aboutBio1, aboutBio2, aboutBio3].filter(p => p.trim().length > 0),
+        experienceYears: aboutExpYears,
+        clientsCount: aboutClientsCount,
+        projectsCompleted: aboutProjectsCount,
+        skills: siteSettings?.aboutPage?.skills,
+        timeline: siteSettings?.aboutPage?.timeline
+      },
+      servicesPage: {
+        badge: servicesBadge,
+        title: servicesTitle,
+        subtitle: servicesSubtitle,
+        servicesList: servicesListItems
+      },
+      contactPage: {
+        badge: contactBadge,
+        title: contactTitle,
+        subtitle: contactSubtitle,
+        whatsappNumber: contactWhatsapp,
+        whatsappMessage: contactWhatsappMsg,
+        callNumber: contactPhone,
+        email: contactEmail,
+        location: contactLocation,
+        workingHours: contactHours,
+        availabilityNote: contactAvailability
+      }
+    });
+    showToast('Page content saved and synchronized to cloud!', 'gold');
+  };
+
   const BRAND_PRESETS = [
     {
       id: 'royal-gold',
@@ -1419,6 +1525,7 @@ export default function AdminDashboard({ navigate }) {
     {
       group: 'Content Studio',
       items: [
+        { id: 'pages', label: 'Pages & Bio Editor', icon: FileText, badge: 'Live', badgeColor: 'bg-emerald-500/20 text-emerald-300 border border-emerald-500/40' },
         { id: 'upload', label: 'New Project', icon: FolderPlus, badge: null, highlight: true },
         { id: 'projects', label: 'Manage Projects', icon: Layers, badge: projects.length },
         { id: 'hero-showcase', label: 'Hero Showcase Cards', icon: Film, badge: `${showcaseItems.length} slides`, badgeColor: 'bg-[#D4AF37]/20 text-[#D4AF37] border border-[#D4AF37]/40' },
@@ -1449,6 +1556,7 @@ export default function AdminDashboard({ navigate }) {
     inquiries: { title: 'Client Inquiries', subtitle: 'Respond to prospective clients, custom briefs & design requests' },
     comments: { title: 'Comments Moderation', subtitle: 'Review community engagement and feedback on portfolio posts' },
     'hero-showcase': { title: 'Hero Showcase Cards Studio', subtitle: `Customize the rotating right-hand showcase cards on the Home landing page (${showcaseItems.length} active slides)` },
+    pages: { title: 'Pages & Bio Editor', subtitle: 'Edit About Me bio, Services list & Contact channels across the website' },
     ticker: { title: 'Ticker Studio', subtitle: `Manage the Endless Masterpiece Ticker — upload images, control size, speed & source (${tickerItems.length} custom images)` },
     atmosphere: { title: 'Atmosphere & Per-Branding Studio', subtitle: 'Live landing page visibility controls, background depth & bespoke branding presets' },
     'brand-theme': { title: 'Brand & Theme Settings', subtitle: 'Customize Light & Dark mode brand colours independently — changes sync to all devices instantly' },
@@ -5547,6 +5655,346 @@ export default function AdminDashboard({ navigate }) {
             </div>
             <p className="text-[11px] text-[#8A8A8A]">Click any swatch to copy HEX to clipboard. Paste into any colour field above.</p>
           </div>
+        </div>
+      )}
+
+      {/* ============================================================
+          TAB: PAGES & CONTENT STUDIO (ABOUT, SERVICES, CONTACT)
+          ============================================================ */}
+      {activeTab === 'pages' && (
+        <div className="space-y-8">
+          {/* Top Header & Save Button */}
+          <div className="flex flex-wrap items-center justify-between gap-4 pb-4 border-b border-white/10">
+            <div>
+              <div className="flex items-center gap-2 mb-1">
+                <FileText className="w-5 h-5 text-[#E2AA00]" />
+                <span className="text-xs font-mono uppercase tracking-widest text-[#E2AA00]">Page Content Studio</span>
+              </div>
+              <p className="text-xs text-[#8A8A8A] max-w-lg">
+                Edit the text, bio, services, and contact details displayed on your About, Services, and Contact pages. All updates persist to the database.
+              </p>
+            </div>
+            <button
+              onClick={handleSavePagesContent}
+              className="flex items-center gap-2 px-5 py-2.5 rounded-xl text-xs font-bold uppercase tracking-wider text-black bg-[#E2AA00] hover:bg-[#FECD00] transition active:scale-95 shadow-lg shadow-[#E2AA00]/20"
+            >
+              <CheckCircle2 className="w-4 h-4" />
+              <span>Save & Publish Changes</span>
+            </button>
+          </div>
+
+          {/* Sub-navigation tabs: About | Services | Contact */}
+          <div className="flex items-center gap-2 p-1.5 bg-white/5 rounded-2xl w-fit border border-white/10">
+            {[
+              { id: 'about', label: 'About Me & Bio' },
+              { id: 'services', label: 'Services & Offerings' },
+              { id: 'contact', label: 'Contact & Channels' }
+            ].map((tab) => (
+              <button
+                key={tab.id}
+                onClick={() => setPagesActiveSection(tab.id)}
+                className={`px-4 py-2 rounded-xl text-xs font-bold transition-all ${
+                  pagesActiveSection === tab.id
+                    ? 'bg-gradient-to-r from-[#D4AF37] to-[#F5D77A] text-black shadow-md'
+                    : 'text-[#8A8A8A] hover:text-white'
+                }`}
+              >
+                {tab.label}
+              </button>
+            ))}
+          </div>
+
+          {/* ========================================== */}
+          {/* 1. ABOUT PAGE EDITOR */}
+          {/* ========================================== */}
+          {pagesActiveSection === 'about' && (
+            <div className="space-y-6">
+              <div className="p-6 rounded-3xl glass-card border border-white/10 space-y-5">
+                <div className="flex items-center gap-2 pb-3 border-b border-white/10">
+                  <Sparkles className="w-4 h-4 text-[#D4AF37]" />
+                  <h3 className="font-display font-bold text-base text-[#F5F1E8]">Hero Section & Headings</h3>
+                </div>
+
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                  <div className="space-y-1.5">
+                    <label className="text-xs font-semibold text-[#8A8A8A] uppercase tracking-wider">Top Badge Text</label>
+                    <input
+                      type="text"
+                      value={aboutBadge}
+                      onChange={(e) => setAboutBadge(e.target.value)}
+                      placeholder="e.g. The Vision Behind The Craft"
+                      className="w-full px-3.5 py-2.5 rounded-xl bg-black/40 border border-white/10 text-xs text-white focus:border-[#D4AF37] outline-none"
+                    />
+                  </div>
+                  <div className="space-y-1.5 sm:col-span-2">
+                    <label className="text-xs font-semibold text-[#8A8A8A] uppercase tracking-wider">Main Headline</label>
+                    <input
+                      type="text"
+                      value={aboutTitle}
+                      onChange={(e) => setAboutTitle(e.target.value)}
+                      placeholder="e.g. I craft designs that move people..."
+                      className="w-full px-3.5 py-2.5 rounded-xl bg-black/40 border border-white/10 text-xs text-white focus:border-[#D4AF37] outline-none"
+                    />
+                  </div>
+                </div>
+              </div>
+
+              {/* Bio Paragraphs */}
+              <div className="p-6 rounded-3xl glass-card border border-white/10 space-y-5">
+                <div className="flex items-center gap-2 pb-3 border-b border-white/10">
+                  <FileText className="w-4 h-4 text-[#D4AF37]" />
+                  <h3 className="font-display font-bold text-base text-[#F5F1E8]">About Who I Am (Bio Paragraphs)</h3>
+                </div>
+
+                <div className="space-y-4">
+                  <div className="space-y-1.5">
+                    <label className="text-xs font-semibold text-[#8A8A8A] uppercase tracking-wider">Paragraph 1 — Introduction & Identity</label>
+                    <textarea
+                      rows={3}
+                      value={aboutBio1}
+                      onChange={(e) => setAboutBio1(e.target.value)}
+                      placeholder="Who you are and your design philosophy..."
+                      className="w-full px-3.5 py-2.5 rounded-xl bg-black/40 border border-white/10 text-xs text-white focus:border-[#D4AF37] outline-none leading-relaxed"
+                    />
+                  </div>
+
+                  <div className="space-y-1.5">
+                    <label className="text-xs font-semibold text-[#8A8A8A] uppercase tracking-wider">Paragraph 2 — Commercial Work & Highlights</label>
+                    <textarea
+                      rows={3}
+                      value={aboutBio2}
+                      onChange={(e) => setAboutBio2(e.target.value)}
+                      placeholder="Your notable client projects, broadcast work, concerts..."
+                      className="w-full px-3.5 py-2.5 rounded-xl bg-black/40 border border-white/10 text-xs text-white focus:border-[#D4AF37] outline-none leading-relaxed"
+                    />
+                  </div>
+
+                  <div className="space-y-1.5">
+                    <label className="text-xs font-semibold text-[#8A8A8A] uppercase tracking-wider">Paragraph 3 — Approach & Creative Standards</label>
+                    <textarea
+                      rows={3}
+                      value={aboutBio3}
+                      onChange={(e) => setAboutBio3(e.target.value)}
+                      placeholder="Your philosophy on typography, motion, quality..."
+                      className="w-full px-3.5 py-2.5 rounded-xl bg-black/40 border border-white/10 text-xs text-white focus:border-[#D4AF37] outline-none leading-relaxed"
+                    />
+                  </div>
+                </div>
+              </div>
+
+              {/* Quick Stats */}
+              <div className="p-6 rounded-3xl glass-card border border-white/10 space-y-5">
+                <div className="flex items-center gap-2 pb-3 border-b border-white/10">
+                  <Award className="w-4 h-4 text-[#D4AF37]" />
+                  <h3 className="font-display font-bold text-base text-[#F5F1E8]">Key Career Highlights</h3>
+                </div>
+
+                <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+                  <div className="space-y-1.5">
+                    <label className="text-xs font-semibold text-[#8A8A8A] uppercase tracking-wider">Experience</label>
+                    <input
+                      type="text"
+                      value={aboutExpYears}
+                      onChange={(e) => setAboutExpYears(e.target.value)}
+                      placeholder="e.g. 5+ Years"
+                      className="w-full px-3.5 py-2.5 rounded-xl bg-black/40 border border-white/10 text-xs text-white focus:border-[#D4AF37] outline-none font-mono"
+                    />
+                  </div>
+                  <div className="space-y-1.5">
+                    <label className="text-xs font-semibold text-[#8A8A8A] uppercase tracking-wider">Brands Served</label>
+                    <input
+                      type="text"
+                      value={aboutClientsCount}
+                      onChange={(e) => setAboutClientsCount(e.target.value)}
+                      placeholder="e.g. 40+ Brands"
+                      className="w-full px-3.5 py-2.5 rounded-xl bg-black/40 border border-white/10 text-xs text-white focus:border-[#D4AF37] outline-none font-mono"
+                    />
+                  </div>
+                  <div className="space-y-1.5">
+                    <label className="text-xs font-semibold text-[#8A8A8A] uppercase tracking-wider">Projects Completed</label>
+                    <input
+                      type="text"
+                      value={aboutProjectsCount}
+                      onChange={(e) => setAboutProjectsCount(e.target.value)}
+                      placeholder="e.g. 150+ Projects"
+                      className="w-full px-3.5 py-2.5 rounded-xl bg-black/40 border border-white/10 text-xs text-white focus:border-[#D4AF37] outline-none font-mono"
+                    />
+                  </div>
+                </div>
+              </div>
+            </div>
+          )}
+
+          {/* ========================================== */}
+          {/* 2. SERVICES PAGE EDITOR */}
+          {/* ========================================== */}
+          {pagesActiveSection === 'services' && (
+            <div className="space-y-6">
+              <div className="p-6 rounded-3xl glass-card border border-white/10 space-y-5">
+                <div className="flex items-center gap-2 pb-3 border-b border-white/10">
+                  <Layers className="w-4 h-4 text-[#D4AF37]" />
+                  <h3 className="font-display font-bold text-base text-[#F5F1E8]">Services Page Header</h3>
+                </div>
+
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                  <div className="space-y-1.5">
+                    <label className="text-xs font-semibold text-[#8A8A8A] uppercase tracking-wider">Badge</label>
+                    <input
+                      type="text"
+                      value={servicesBadge}
+                      onChange={(e) => setServicesBadge(e.target.value)}
+                      className="w-full px-3.5 py-2.5 rounded-xl bg-black/40 border border-white/10 text-xs text-white focus:border-[#D4AF37] outline-none"
+                    />
+                  </div>
+                  <div className="space-y-1.5">
+                    <label className="text-xs font-semibold text-[#8A8A8A] uppercase tracking-wider">Title</label>
+                    <input
+                      type="text"
+                      value={servicesTitle}
+                      onChange={(e) => setServicesTitle(e.target.value)}
+                      className="w-full px-3.5 py-2.5 rounded-xl bg-black/40 border border-white/10 text-xs text-white focus:border-[#D4AF37] outline-none"
+                    />
+                  </div>
+                  <div className="space-y-1.5 sm:col-span-2">
+                    <label className="text-xs font-semibold text-[#8A8A8A] uppercase tracking-wider">Subtitle</label>
+                    <textarea
+                      rows={2}
+                      value={servicesSubtitle}
+                      onChange={(e) => setServicesSubtitle(e.target.value)}
+                      className="w-full px-3.5 py-2.5 rounded-xl bg-black/40 border border-white/10 text-xs text-white focus:border-[#D4AF37] outline-none leading-relaxed"
+                    />
+                  </div>
+                </div>
+              </div>
+
+              {/* Service Cards List */}
+              <div className="space-y-4">
+                <h4 className="text-xs font-bold uppercase tracking-wider text-[#8A8A8A]">Active Service Offerings ({servicesListItems.length})</h4>
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  {servicesListItems.map((srv, idx) => (
+                    <div key={srv.id || idx} className="p-5 rounded-2xl bg-white/5 border border-white/10 space-y-3">
+                      <div className="flex items-center justify-between">
+                        <span className="text-[10px] font-mono text-[#D4AF37] uppercase tracking-wider">{srv.category}</span>
+                        <span className="text-[10px] font-mono px-2 py-0.5 rounded bg-white/10 text-[#8A8A8A]">Est. {srv.turnaround}</span>
+                      </div>
+                      <input
+                        type="text"
+                        value={srv.title}
+                        onChange={(e) => {
+                          const updated = [...servicesListItems];
+                          updated[idx] = { ...updated[idx], title: e.target.value };
+                          setServicesListItems(updated);
+                        }}
+                        className="w-full px-3 py-2 rounded-lg bg-black/40 border border-white/10 text-xs font-bold text-white focus:border-[#D4AF37] outline-none"
+                      />
+                      <textarea
+                        rows={3}
+                        value={srv.desc}
+                        onChange={(e) => {
+                          const updated = [...servicesListItems];
+                          updated[idx] = { ...updated[idx], desc: e.target.value };
+                          setServicesListItems(updated);
+                        }}
+                        className="w-full px-3 py-2 rounded-lg bg-black/40 border border-white/10 text-xs text-[#CCCCCC] focus:border-[#D4AF37] outline-none leading-relaxed"
+                      />
+                    </div>
+                  ))}
+                </div>
+              </div>
+            </div>
+          )}
+
+          {/* ========================================== */}
+          {/* 3. CONTACT PAGE EDITOR */}
+          {/* ========================================== */}
+          {pagesActiveSection === 'contact' && (
+            <div className="space-y-6">
+              <div className="p-6 rounded-3xl glass-card border border-white/10 space-y-5">
+                <div className="flex items-center gap-2 pb-3 border-b border-white/10">
+                  <Mail className="w-4 h-4 text-[#D4AF37]" />
+                  <h3 className="font-display font-bold text-base text-[#F5F1E8]">Contact Channels & Details</h3>
+                </div>
+
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                  <div className="space-y-1.5">
+                    <label className="text-xs font-semibold text-[#8A8A8A] uppercase tracking-wider">WhatsApp Number</label>
+                    <input
+                      type="text"
+                      value={contactWhatsapp}
+                      onChange={(e) => setContactWhatsapp(e.target.value)}
+                      placeholder="+254 798 405 726"
+                      className="w-full px-3.5 py-2.5 rounded-xl bg-black/40 border border-white/10 text-xs text-white focus:border-[#D4AF37] outline-none font-mono"
+                    />
+                  </div>
+
+                  <div className="space-y-1.5">
+                    <label className="text-xs font-semibold text-[#8A8A8A] uppercase tracking-wider">Voice Call Number</label>
+                    <input
+                      type="text"
+                      value={contactPhone}
+                      onChange={(e) => setContactPhone(e.target.value)}
+                      placeholder="+254 798 405 726"
+                      className="w-full px-3.5 py-2.5 rounded-xl bg-black/40 border border-white/10 text-xs text-white focus:border-[#D4AF37] outline-none font-mono"
+                    />
+                  </div>
+
+                  <div className="space-y-1.5">
+                    <label className="text-xs font-semibold text-[#8A8A8A] uppercase tracking-wider">Official Email</label>
+                    <input
+                      type="email"
+                      value={contactEmail}
+                      onChange={(e) => setContactEmail(e.target.value)}
+                      placeholder="brianmulilu2023@gmail.com"
+                      className="w-full px-3.5 py-2.5 rounded-xl bg-black/40 border border-white/10 text-xs text-white focus:border-[#D4AF37] outline-none"
+                    />
+                  </div>
+
+                  <div className="space-y-1.5">
+                    <label className="text-xs font-semibold text-[#8A8A8A] uppercase tracking-wider">Studio Location</label>
+                    <input
+                      type="text"
+                      value={contactLocation}
+                      onChange={(e) => setContactLocation(e.target.value)}
+                      placeholder="Nairobi Central Business District (CBD), Kenya"
+                      className="w-full px-3.5 py-2.5 rounded-xl bg-black/40 border border-white/10 text-xs text-white focus:border-[#D4AF37] outline-none"
+                    />
+                  </div>
+
+                  <div className="space-y-1.5 sm:col-span-2">
+                    <label className="text-xs font-semibold text-[#8A8A8A] uppercase tracking-wider">Default WhatsApp Opening Message</label>
+                    <input
+                      type="text"
+                      value={contactWhatsappMsg}
+                      onChange={(e) => setContactWhatsappMsg(e.target.value)}
+                      className="w-full px-3.5 py-2.5 rounded-xl bg-black/40 border border-white/10 text-xs text-white focus:border-[#D4AF37] outline-none"
+                    />
+                  </div>
+
+                  <div className="space-y-1.5">
+                    <label className="text-xs font-semibold text-[#8A8A8A] uppercase tracking-wider">Operating Working Hours</label>
+                    <input
+                      type="text"
+                      value={contactHours}
+                      onChange={(e) => setContactHours(e.target.value)}
+                      placeholder="Monday — Saturday: 8:00 AM — 8:00 PM EAT"
+                      className="w-full px-3.5 py-2.5 rounded-xl bg-black/40 border border-white/10 text-xs text-white focus:border-[#D4AF37] outline-none"
+                    />
+                  </div>
+
+                  <div className="space-y-1.5">
+                    <label className="text-xs font-semibold text-[#8A8A8A] uppercase tracking-wider">Availability Status Note</label>
+                    <input
+                      type="text"
+                      value={contactAvailability}
+                      onChange={(e) => setContactAvailability(e.target.value)}
+                      placeholder="Currently accepting new freelance projects and corporate contracts."
+                      className="w-full px-3.5 py-2.5 rounded-xl bg-black/40 border border-white/10 text-xs text-white focus:border-[#D4AF37] outline-none"
+                    />
+                  </div>
+                </div>
+              </div>
+            </div>
+          )}
         </div>
       )}
 

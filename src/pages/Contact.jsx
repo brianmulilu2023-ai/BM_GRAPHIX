@@ -15,7 +15,20 @@ import confetti from 'canvas-confetti';
 import { useProjects } from '../context/ProjectContext';
 
 export default function Contact() {
-  const { showToast, addInquiry } = useProjects();
+  const { showToast, addInquiry, siteSettings, adminUser } = useProjects();
+  const contactData = siteSettings?.contactPage || {};
+
+  const contactBadge = contactData.badge || "Let's Build Something Iconic";
+  const contactTitle = contactData.title || "Get in Touch";
+  const contactSubtitle = contactData.subtitle || "Ready to launch a high-impact campaign, redesign your visual identity, or animate cinematic motion graphics? Reach out via phone, WhatsApp, or the brief form below.";
+  const whatsappNum = contactData.whatsappNumber || adminUser?.phone || '+254 798 405 726';
+  const cleanWaNumber = whatsappNum.replace(/[^0-9]/g, '');
+  const whatsappMsg = encodeURIComponent(contactData.whatsappMessage || 'Hi Brian! I visited your BM Graphix portfolio and would love to discuss a project.');
+  const phoneNum = contactData.callNumber || adminUser?.phone || '+254 798 405 726';
+  const emailAddr = contactData.email || adminUser?.email || 'brianmulilu2023@gmail.com';
+  const locationText = contactData.location || adminUser?.location || 'Nairobi Central Business District (CBD), Kenya';
+  const workingHoursText = contactData.workingHours || 'Monday — Saturday: 8:00 AM — 8:00 PM EAT';
+  const availabilityNoteText = contactData.availabilityNote || 'Currently accepting new freelance projects and corporate contracts.';
   const [formData, setFormData] = useState({
     name: '',
     email: '',
@@ -91,13 +104,19 @@ export default function Contact() {
       <div className="text-center max-w-3xl mx-auto">
         <div className="inline-flex items-center gap-2 px-3.5 py-1 rounded-full bg-[#161616] border border-[#D4AF37]/30 text-xs font-mono uppercase tracking-[0.25em] text-[#D4AF37] mb-4">
           <Sparkles className="w-3.5 h-3.5" />
-          <span>Let's Build Something Iconic</span>
+          <span>{contactBadge}</span>
         </div>
         <h1 className="font-display font-extrabold text-4xl sm:text-6xl text-[#F5F1E8] mb-5">
-          Get in <span className="gold-gradient-text">Touch</span>
+          {contactTitle.includes('Touch') ? (
+            <>
+              Get in <span className="gold-gradient-text">Touch</span>
+            </>
+          ) : (
+            <span className="gold-gradient-text">{contactTitle}</span>
+          )}
         </h1>
         <p className="text-sm sm:text-base text-[#8A8A8A] leading-relaxed">
-          Ready to launch a high-impact campaign, redesign your visual identity, or animate cinematic motion graphics? Reach out via phone, WhatsApp, or the brief form below.
+          {contactSubtitle}
         </p>
       </div>
 
@@ -107,7 +126,7 @@ export default function Contact() {
         <div className="lg:col-span-5 space-y-6">
           {/* WhatsApp Direct Card */}
           <a
-            href="https://wa.me/254798405726?text=Hi%20Brian!%20I%20visited%20your%20BM%20Graphix%20portfolio%20and%20would%20love%20to%20discuss%20a%20project."
+            href={`https://wa.me/${cleanWaNumber}?text=${whatsappMsg}`}
             target="_blank"
             rel="noopener noreferrer"
             className="group block p-6 rounded-2xl glass-card border border-[#25D366]/30 hover:border-[#25D366] transition-all duration-300 shadow-lg hover:shadow-[0_10px_30px_rgba(37,211,102,0.15)]"
@@ -124,7 +143,7 @@ export default function Contact() {
                   <h3 className="font-display font-bold text-lg text-[#F5F1E8] group-hover:text-[#25D366] transition-colors">
                     Chat on WhatsApp
                   </h3>
-                  <p className="text-xs text-[#8A8A8A] mt-0.5">+254 798 405 726</p>
+                  <p className="text-xs text-[#8A8A8A] mt-0.5">{whatsappNum}</p>
                 </div>
               </div>
               <ArrowUpRight className="w-5 h-5 text-[#8A8A8A] group-hover:text-[#25D366] transition-colors" />
@@ -133,7 +152,7 @@ export default function Contact() {
 
           {/* Click to Call Card */}
           <a
-            href="tel:+254798405726"
+            href={`tel:${phoneNum}`}
             className="group block p-6 rounded-2xl glass-card border border-white/10 hover:border-[#D4AF37]/50 transition-all duration-300 shadow-lg hover:shadow-[0_10px_30px_rgba(212,175,55,0.15)]"
           >
             <div className="flex items-center justify-between">
@@ -148,7 +167,7 @@ export default function Contact() {
                   <h3 className="font-display font-bold text-lg text-[#F5F1E8] group-hover:text-[#F5D77A] transition-colors">
                     Click to Call
                   </h3>
-                  <p className="text-xs text-[#8A8A8A] mt-0.5">+254 798 405 726</p>
+                  <p className="text-xs text-[#8A8A8A] mt-0.5">{phoneNum}</p>
                 </div>
               </div>
               <ArrowUpRight className="w-5 h-5 text-[#8A8A8A] group-hover:text-[#F5D77A] transition-colors" />
@@ -157,7 +176,7 @@ export default function Contact() {
 
           {/* Email Direct Card */}
           <a
-            href="mailto:brianmulilu2023@gmail.com?subject=Project%20Inquiry%20%E2%80%94%20BM%20Graphix"
+            href={`mailto:${emailAddr}?subject=Project%20Inquiry%20%E2%80%94%20BM%20Graphix`}
             className="group block p-6 rounded-2xl glass-card border border-white/10 hover:border-[#D4AF37]/50 transition-all duration-300 shadow-lg hover:shadow-[0_10px_30px_rgba(212,175,55,0.15)]"
           >
             <div className="flex items-center justify-between">
@@ -172,7 +191,7 @@ export default function Contact() {
                   <h3 className="font-display font-bold text-lg text-[#F5F1E8] group-hover:text-[#F5D77A] transition-colors">
                     Send An Email
                   </h3>
-                  <p className="text-xs text-[#8A8A8A] mt-0.5 break-all">brianmulilu2023@gmail.com</p>
+                  <p className="text-xs text-[#8A8A8A] mt-0.5 break-all">{emailAddr}</p>
                 </div>
               </div>
               <ArrowUpRight className="w-5 h-5 text-[#8A8A8A] group-hover:text-[#F5D77A] transition-colors" />
@@ -183,15 +202,15 @@ export default function Contact() {
           <div className="p-6 rounded-2xl bg-[#121212] border border-white/5 space-y-4">
             <div className="flex items-center gap-3 text-xs text-[#8A8A8A]">
               <MapPin className="w-4 h-4 text-[#D4AF37]" />
-              <span>Nairobi Central Business District (CBD), Kenya</span>
+              <span>{locationText}</span>
             </div>
             <div className="flex items-center gap-3 text-xs text-[#8A8A8A]">
               <Clock className="w-4 h-4 text-[#D4AF37]" />
-              <span>Monday — Saturday: 8:00 AM — 8:00 PM EAT</span>
+              <span>{workingHoursText}</span>
             </div>
             <div className="p-3 rounded-xl bg-[#D4AF37]/10 border border-[#D4AF37]/20 text-[11px] text-[#F5D77A] flex items-center gap-2">
               <span className="w-2 h-2 rounded-full bg-emerald-400 animate-ping shrink-0" />
-              <span>Currently accepting new freelance projects and corporate contracts.</span>
+              <span>{availabilityNoteText}</span>
             </div>
           </div>
         </div>
