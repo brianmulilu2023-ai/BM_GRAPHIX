@@ -133,7 +133,7 @@ export default function ImageTicker({ navigate }) {
           <Sparkles className="w-3 h-3" />
           <span>Live Portfolio Stream</span>
         </div>
-        <h2 className="font-display font-extrabold text-xl sm:text-3xl md:text-4xl text-[#FFFFFF]">
+        <h2 className="font-display font-extrabold text-xl sm:text-3xl md:text-4xl" style={{ color: 'var(--bm-heading, #FFFFFF)' }}>
           {tickerTitle.includes('Masterpiece Ticker') ? (
             <>
               The Endless <span className="gold-gradient-text">Masterpiece Ticker</span>

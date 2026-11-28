@@ -63,6 +63,7 @@ import {
 } from 'lucide-react';
 import { optimizeVideoTikTokStyle } from '../utils/imageCompressor';
 import { useProjects } from '../context/ProjectContext';
+import { useTheme } from '../context/ThemeContext';
 import ResponsiveVideoPlayer from '../components/ResponsiveVideoPlayer';
 import { resolveSafeVideoUrl } from '../utils/videoHelper';
 import { storageDB } from '../utils/storageDB';
@@ -70,6 +71,7 @@ import { fetchServerProjects, saveServerProjects, fetchServerMedia, saveServerMe
 import { DEFAULT_SHOWCASE_ITEMS, DEFAULT_TICKER_IMAGES, DEFAULT_BRAND_THEME } from '../services/adminService';
 
 export default function AdminDashboard({ navigate }) {
+  const { isDark, toggleTheme } = useTheme();
   const {
     projects,
     isAdminLoggedIn,
@@ -452,6 +454,72 @@ export default function AdminDashboard({ navigate }) {
     setHexErrors({});
     window.dispatchEvent(new CustomEvent('bm-brand-preview', { detail: BM_OFFICIAL_THEME }));
     showToast('Reset to BM GRAPHIX official brand colours — click Save to apply.', 'gold');
+  };
+
+  const handleApplyPreset = (presetName) => {
+    let newTheme = { ...brandTheme };
+    if (presetName === 'high-contrast') {
+      newTheme = {
+        light: {
+          ...newTheme.light,
+          heading: '#000000',
+          body: '#000000',
+          secondaryText: '#461F00',
+          primary: '#E2AA00',
+          secondary: '#8C5800',
+          accent: '#C38C00',
+          shapeButton: '#E2AA00',
+          buttonText: '#000000',
+          border: '#C38C00'
+        },
+        dark: {
+          ...newTheme.dark,
+          heading: '#FFFFFF',
+          body: '#FFFFFF',
+          secondaryText: '#FECD00',
+          primary: '#E2AA00',
+          secondary: '#C38C00',
+          accent: '#FECD00',
+          shapeButton: '#E2AA00',
+          buttonText: '#000000',
+          border: '#6B3E00'
+        }
+      };
+      showToast('Applied Ultra High Contrast Preset (#000000 / #FFFFFF)!', 'gold');
+    } else if (presetName === 'deep-gold') {
+      newTheme = {
+        light: {
+          ...newTheme.light,
+          heading: '#250C00',
+          body: '#250C00',
+          secondaryText: '#6B3E00',
+          primary: '#8C5800',
+          secondary: '#6B3E00',
+          accent: '#E2AA00',
+          shapeButton: '#8C5800',
+          buttonText: '#FFFFFF',
+          border: '#8C5800'
+        },
+        dark: {
+          ...newTheme.dark,
+          heading: '#FFFFFF',
+          body: '#FFFFFF',
+          secondaryText: '#E2AA00',
+          primary: '#E2AA00',
+          secondary: '#C38C00',
+          accent: '#FFF200',
+          shapeButton: '#E2AA00',
+          buttonText: '#250C00',
+          border: '#8C5800'
+        }
+      };
+      showToast('Applied Deep Gold Signature Preset!', 'gold');
+    }
+    setBrandTheme(newTheme);
+    setBrandThemePreview(newTheme);
+    setBrandThemeUnsaved(true);
+    setHexErrors({});
+    window.dispatchEvent(new CustomEvent('bm-brand-preview', { detail: newTheme }));
   };
 
   const handleCancelBrandTheme = () => {
@@ -5283,18 +5351,57 @@ export default function AdminDashboard({ navigate }) {
             </div>
           </div>
 
-          {/* Mode Switcher: Edit Light or Dark */}
-          <div className="flex items-center gap-2 p-1 bg-white/5 rounded-xl w-fit border border-white/10">
-            {(['dark', 'light']).map((m) => (
+          {/* One-Click Presets & Mode Switcher */}
+          <div className="flex flex-wrap items-center justify-between gap-4 p-4 rounded-2xl bg-white/5 border border-white/10">
+            {/* Mode Switcher */}
+            <div className="flex items-center gap-2">
+              <span className="text-xs font-bold text-[#8A8A8A] uppercase tracking-wider mr-1">Editing Mode:</span>
+              <div className="flex items-center gap-1 p-1 bg-black/40 rounded-xl border border-white/10">
+                {(['dark', 'light']).map((m) => (
+                  <button
+                    key={m}
+                    onClick={() => {
+                      setBrandThemeMode(m);
+                      if ((m === 'dark' && !isDark) || (m === 'light' && isDark)) {
+                        toggleTheme();
+                      }
+                    }}
+                    className={`flex items-center gap-2 px-3.5 py-1.5 rounded-lg text-xs font-bold uppercase tracking-wider transition ${brandThemeMode === m ? 'bg-[#E2AA00] text-[#250C00] shadow' : 'text-[#8A8A8A] hover:text-[#F5F1E8]'}`}
+                  >
+                    {m === 'dark' ? <Moon className="w-3.5 h-3.5" /> : <Sun className="w-3.5 h-3.5" />}
+                    {m === 'dark' ? 'Dark Mode' : 'Light Mode'}
+                  </button>
+                ))}
+              </div>
+            </div>
+
+            {/* 1-Click Fast Presets */}
+            <div className="flex items-center gap-2 flex-wrap">
+              <span className="text-xs font-bold text-[#8A8A8A] uppercase tracking-wider mr-1">1-Click Presets:</span>
               <button
-                key={m}
-                onClick={() => setBrandThemeMode(m)}
-                className={`flex items-center gap-2 px-4 py-2 rounded-lg text-xs font-bold uppercase tracking-wider transition ${brandThemeMode === m ? 'bg-[#E2AA00] text-[#250C00]' : 'text-[#8A8A8A] hover:text-[#F5F1E8]'}`}
+                onClick={() => handleApplyPreset('high-contrast')}
+                className="px-3 py-1.5 rounded-xl bg-white/10 hover:bg-white/20 border border-white/20 text-xs font-bold text-white transition flex items-center gap-1.5 active:scale-95 shadow"
+                title="Sets pure #FFFFFF for Dark Mode & #000000 for Light Mode"
               >
-                {m === 'dark' ? <Moon className="w-3.5 h-3.5" /> : <Sun className="w-3.5 h-3.5" />}
-                {m === 'dark' ? 'Dark Mode' : 'Light Mode'}
+                <Zap className="w-3 h-3 text-[#E2AA00]" />
+                Pure #000000 / #FFFFFF Contrast
               </button>
-            ))}
+              <button
+                onClick={() => handleApplyPreset('deep-gold')}
+                className="px-3 py-1.5 rounded-xl bg-[#8C5800]/20 hover:bg-[#8C5800]/30 border border-[#8C5800]/50 text-xs font-bold text-[#FECD00] transition flex items-center gap-1.5 active:scale-95 shadow"
+                title="Applies rich deep gold typography and warm accents"
+              >
+                <Sparkles className="w-3 h-3 text-[#E2AA00]" />
+                Signature Deep Gold
+              </button>
+              <button
+                onClick={handleResetBrandTheme}
+                className="px-3 py-1.5 rounded-xl bg-[#E2AA00]/20 hover:bg-[#E2AA00]/30 border border-[#E2AA00]/40 text-xs font-bold text-[#E2AA00] transition flex items-center gap-1.5 active:scale-95 shadow"
+              >
+                <RotateCcw className="w-3 h-3" />
+                BM Official
+              </button>
+            </div>
           </div>
 
           {/* Colour Fields Grid */}

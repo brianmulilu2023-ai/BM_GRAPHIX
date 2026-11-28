@@ -99,6 +99,58 @@ function AtmosphereSync({ currentPath }) {
     root.style.setProperty('--gold-dark', activeColors.secondary);
     root.style.setProperty('--text-primary', activeColors.body);
     root.style.setProperty('--text-secondary', activeColors.secondaryText || (isDark ? activeColors.accent : '#6B3E00'));
+
+    // Inject dynamic style tag to guarantee light/dark mode CSS overrides apply with highest specificity
+    let dynamicBrandStyle = document.getElementById('bm-dynamic-brand-theme-style');
+    if (!dynamicBrandStyle) {
+      dynamicBrandStyle = document.createElement('style');
+      dynamicBrandStyle.id = 'bm-dynamic-brand-theme-style';
+      document.head.appendChild(dynamicBrandStyle);
+    }
+
+    const lightColors = { ...DEFAULT_BRAND_THEME.light, ...(activeBrandTheme?.light || {}) };
+    const darkColors = { ...DEFAULT_BRAND_THEME.dark, ...(activeBrandTheme?.dark || {}) };
+
+    dynamicBrandStyle.textContent = `
+      html.light {
+        --bm-primary: ${lightColors.primary} !important;
+        --bm-secondary: ${lightColors.secondary} !important;
+        --bm-accent: ${lightColors.accent} !important;
+        --bm-heading: ${lightColors.heading} !important;
+        --bm-body: ${lightColors.body} !important;
+        --bm-shape-btn: ${lightColors.shapeButton} !important;
+        --bm-btn-text: ${lightColors.buttonText || '#250C00'} !important;
+        --bm-secondary-text: ${lightColors.secondaryText || '#6B3E00'} !important;
+        --bm-icon: ${lightColors.icon || lightColors.secondary} !important;
+        --bm-border: ${lightColors.border || lightColors.accent} !important;
+        --bm-nav-link: ${lightColors.heading} !important;
+        --bm-nav-active: ${lightColors.secondary} !important;
+        --gold-primary: ${lightColors.primary} !important;
+        --gold-light: ${lightColors.accent} !important;
+        --gold-dark: ${lightColors.secondary} !important;
+        --text-primary: ${lightColors.body} !important;
+        --text-secondary: ${lightColors.secondaryText || '#6B3E00'} !important;
+      }
+      html.dark {
+        --bm-primary: ${darkColors.primary} !important;
+        --bm-secondary: ${darkColors.secondary} !important;
+        --bm-accent: ${darkColors.accent} !important;
+        --bm-heading: ${darkColors.heading} !important;
+        --bm-body: ${darkColors.body} !important;
+        --bm-shape-btn: ${darkColors.shapeButton} !important;
+        --bm-btn-text: ${darkColors.buttonText || '#250C00'} !important;
+        --bm-secondary-text: ${darkColors.secondaryText || darkColors.accent} !important;
+        --bm-icon: ${darkColors.icon || darkColors.primary} !important;
+        --bm-border: ${darkColors.border || '#6B3E00'} !important;
+        --bm-nav-link: ${darkColors.heading} !important;
+        --bm-nav-active: ${darkColors.primary} !important;
+        --gold-primary: ${darkColors.primary} !important;
+        --gold-light: ${darkColors.accent} !important;
+        --gold-dark: ${darkColors.secondary} !important;
+        --text-primary: ${darkColors.body} !important;
+        --text-secondary: ${darkColors.secondaryText || darkColors.accent} !important;
+      }
+    `;
   }, [siteSettings, currentPath, isDark, previewBrandTheme]);
 
   return null;

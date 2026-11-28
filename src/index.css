@@ -125,6 +125,7 @@ html.light .admin-dark p {
   background: linear-gradient(135deg, var(--bm-accent, #FECD00) 0%, var(--bm-primary, #E2AA00) 55%, var(--bm-secondary, #C38C00) 100%);
   -webkit-background-clip: text;
   -webkit-text-fill-color: transparent;
+  color: var(--bm-primary, #E2AA00);
 }
 
 .gold-gradient-border {
