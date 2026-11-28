@@ -59,7 +59,8 @@ import {
   ArrowLeft,
   ArrowRight,
   RotateCw,
-  Moon
+  Moon,
+  Award
 } from 'lucide-react';
 import { optimizeVideoTikTokStyle } from '../utils/imageCompressor';
 import { useProjects } from '../context/ProjectContext';
