@@ -25,6 +25,17 @@ export const DEFAULT_SHOWCASE_ITEMS = [
   { id: 'sc-5', src: '/assets/projects/manipulation.jpeg', label: 'Digital Art' },
 ];
 
+export const DEFAULT_TICKER_IMAGES = [
+  { id: 'tk-1', src: '/assets/projects/cleo.jpeg', title: 'Double Exposure Portrait', category: 'Creative Artwork' },
+  { id: 'tk-2', src: '/assets/projects/event-mb.jpeg', title: 'Mbaka Orea Gospel Live', category: 'Broadcast & Event' },
+  { id: 'tk-3', src: '/assets/projects/kasyoki.jpeg', title: 'Kasyoki Concert Promo', category: 'Music & Concert' },
+  { id: 'tk-4', src: '/assets/projects/zenia.jpeg', title: 'Motion Brand Identity', category: 'Motion Art' },
+  { id: 'tk-5', src: '/assets/projects/manipulation.jpeg', title: 'Conceptual Photo Manipulation', category: 'Digital Art' },
+  { id: 'tk-6', src: '/assets/projects/event-gala.jpeg', title: 'Exclusive Gala Night', category: 'Event Branding' },
+  { id: 'tk-7', src: '/assets/projects/creative-flyer.jpeg', title: 'Modern Creative Flyer', category: 'Poster Design' },
+  { id: 'tk-8', src: '/assets/projects/worship-night.jpeg', title: 'Worship Experience', category: 'Key Visual' },
+];
+
 export const DEFAULT_SITE_SETTINGS = {
   brandName: 'BM Graphix',
   tagline: 'Designs That Move People',
@@ -53,10 +64,14 @@ export const DEFAULT_SITE_SETTINGS = {
   goldGlowIntensity: 70, // 0 to 100%
   particlesVisibility: 55, // 0 to 100%
 
-  // Endless Masterpiece Ticker Controls
+  // Endless Masterpiece Ticker Controls (Customizable & Uploadable by Admin)
   tickerEnabled: true,
   tickerSpeed: 55, // seconds per full loop (20 = fast, 55 = balanced, 95 = slow)
   tickerDirection: 'left', // 'left' | 'right'
+  tickerSize: 'small', // 'small' | 'medium' | 'large'
+  tickerPadding: 'small', // 'small' | 'medium' | 'large'
+  tickerSource: 'both', // 'custom' | 'projects' | 'both'
+  tickerCustomImages: DEFAULT_TICKER_IMAGES,
   tickerTitle: 'The Endless Masterpiece Ticker',
   tickerSubtitle: 'Hover to pause · Click any card to open the full project. Live feed of every published BM Graphix work.',
 
@@ -163,6 +178,13 @@ class AdminService {
         Array.isArray(cloudSettings.heroShowcaseItems) && cloudSettings.heroShowcaseItems.length > 0
           ? cloudSettings.heroShowcaseItems
           : current.heroShowcaseItems || DEFAULT_SHOWCASE_ITEMS,
+      tickerCustomImages:
+        Array.isArray(cloudSettings.tickerCustomImages) && cloudSettings.tickerCustomImages.length > 0
+          ? cloudSettings.tickerCustomImages
+          : current.tickerCustomImages || DEFAULT_TICKER_IMAGES,
+      tickerSize: cloudSettings.tickerSize || current.tickerSize || 'small',
+      tickerPadding: cloudSettings.tickerPadding || current.tickerPadding || 'small',
+      tickerSource: cloudSettings.tickerSource || current.tickerSource || 'both',
       updatedAt: cloudSettings.updatedAt || new Date().toISOString()
     };
     try {

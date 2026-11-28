@@ -55,7 +55,10 @@ import {
   Activity,
   Zap,
   ArrowUp,
-  ArrowDown
+  ArrowDown,
+  ArrowLeft,
+  ArrowRight,
+  RotateCw
 } from 'lucide-react';
 import { optimizeVideoTikTokStyle } from '../utils/imageCompressor';
 import { useProjects } from '../context/ProjectContext';
@@ -63,7 +66,7 @@ import ResponsiveVideoPlayer from '../components/ResponsiveVideoPlayer';
 import { resolveSafeVideoUrl } from '../utils/videoHelper';
 import { storageDB } from '../utils/storageDB';
 import { fetchServerProjects, saveServerProjects, fetchServerMedia, saveServerMedia } from '../utils/apiSync';
-import { DEFAULT_SHOWCASE_ITEMS } from '../services/adminService';
+import { DEFAULT_SHOWCASE_ITEMS, DEFAULT_TICKER_IMAGES } from '../services/adminService';
 
 export default function AdminDashboard({ navigate }) {
   const {
@@ -306,6 +309,15 @@ export default function AdminDashboard({ navigate }) {
     typeof siteSettings?.tickerSpeed === 'number' ? siteSettings.tickerSpeed : 55
   );
   const [tickerDirection, setTickerDirection] = useState(siteSettings?.tickerDirection || 'left');
+  const [tickerSize, setTickerSize] = useState(siteSettings?.tickerSize || 'small');
+  const [tickerPadding, setTickerPadding] = useState(siteSettings?.tickerPadding || 'small');
+  const [tickerSource, setTickerSource] = useState(siteSettings?.tickerSource || 'both');
+  const [tickerItems, setTickerItems] = useState(() => {
+    if (Array.isArray(siteSettings?.tickerCustomImages) && siteSettings.tickerCustomImages.length > 0) {
+      return siteSettings.tickerCustomImages;
+    }
+    return DEFAULT_TICKER_IMAGES;
+  });
   const [tickerTitle, setTickerTitle] = useState(
     siteSettings?.tickerTitle || 'The Endless Masterpiece Ticker'
   );
@@ -313,6 +325,14 @@ export default function AdminDashboard({ navigate }) {
     siteSettings?.tickerSubtitle ||
       'Hover to pause · Click any card to open the full project. Live feed of every published BM Graphix work.'
   );
+
+  const [newTickerImage, setNewTickerImage] = useState(null);
+  const [newTickerTitle, setNewTickerTitle] = useState('');
+  const [newTickerCategory, setNewTickerCategory] = useState('');
+  const [isUploadingTicker, setIsUploadingTicker] = useState(false);
+  const [showTickerMediaModal, setShowTickerMediaModal] = useState(false);
+  const [tickerModalTab, setTickerModalTab] = useState('projects'); // 'projects' | 'media'
+  const tickerFileInputRef = useRef(null);
 
   // Work / Portfolio Page Atmosphere (supports up to 100% full crystal clear Nairobi peak)
   const [workBgImage, setWorkBgImage] = useState(
@@ -540,6 +560,10 @@ export default function AdminDashboard({ navigate }) {
       tickerEnabled: Boolean(tickerEnabled),
       tickerSpeed: Number(tickerSpeed),
       tickerDirection,
+      tickerSize,
+      tickerPadding,
+      tickerSource,
+      tickerCustomImages: tickerItems,
       tickerTitle,
       tickerSubtitle,
       workBgImage,
@@ -729,6 +753,103 @@ export default function AdminDashboard({ navigate }) {
   const handleResetShowcase = () => {
     handleSaveShowcase(DEFAULT_SHOWCASE_ITEMS, 3200);
     showToast('Reset Hero Showcase to default artworks', 'gold');
+  };
+
+  // ── TICKER IMAGE MANAGEMENT ──────────────────────────────────────────────
+  const handleSaveTicker = (newItems) => {
+    setTickerItems(newItems);
+    updateSiteSettings({
+      ...siteSettings,
+      tickerCustomImages: newItems,
+      tickerSize,
+      tickerPadding,
+      tickerSource,
+      tickerEnabled: Boolean(tickerEnabled),
+      tickerSpeed: Number(tickerSpeed),
+      tickerDirection,
+      tickerTitle,
+      tickerSubtitle,
+    });
+    showToast('Ticker updated live on website!', 'success');
+  };
+
+  const handleSaveTickerSettings = () => {
+    updateSiteSettings({
+      ...siteSettings,
+      tickerCustomImages: tickerItems,
+      tickerSize,
+      tickerPadding,
+      tickerSource,
+      tickerEnabled: Boolean(tickerEnabled),
+      tickerSpeed: Number(tickerSpeed),
+      tickerDirection,
+      tickerTitle,
+      tickerSubtitle,
+    });
+    showToast('Ticker settings saved & synced to all devices!', 'gold');
+  };
+
+  const handleUploadTickerFile = async (e) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    try {
+      setIsUploadingTicker(true);
+      const compressed = await compressImage(file, 960, 0.82);
+      if (compressed) {
+        setNewTickerImage(compressed);
+        showToast('Image uploaded! Add a title and category, then click Add to Ticker.', 'gold');
+      }
+    } catch (err) {
+      console.error(err);
+      showToast('Could not process image', 'error');
+    } finally {
+      setIsUploadingTicker(false);
+      if (e.target) e.target.value = '';
+    }
+  };
+
+  const handleAddTickerImage = () => {
+    if (!newTickerImage) {
+      showToast('Please upload an image first', 'error');
+      return;
+    }
+    const newItem = {
+      id: 'tk-' + Date.now(),
+      src: newTickerImage,
+      title: newTickerTitle.trim() || 'Masterpiece Artwork',
+      category: newTickerCategory.trim() || 'Artwork',
+    };
+    const updated = [...tickerItems, newItem];
+    handleSaveTicker(updated);
+    setNewTickerImage(null);
+    setNewTickerTitle('');
+    setNewTickerCategory('');
+    showToast('Image added to Ticker!', 'success');
+  };
+
+  const handleAddTickerFromProject = (p) => {
+    const newItem = {
+      id: 'tk-' + Date.now(),
+      src: p.thumbnail,
+      title: p.title,
+      category: p.categoryLabel || p.category || 'Artwork',
+      projectId: p.id,
+    };
+    const updated = [...tickerItems, newItem];
+    handleSaveTicker(updated);
+    setShowTickerMediaModal(false);
+    showToast('Project added to Ticker!', 'success');
+  };
+
+  const handleRemoveTickerImage = (id) => {
+    const updated = tickerItems.filter((item) => item.id !== id);
+    handleSaveTicker(updated);
+  };
+
+  const handleResetTicker = () => {
+    setTickerItems(DEFAULT_TICKER_IMAGES);
+    updateSiteSettings({ ...siteSettings, tickerCustomImages: DEFAULT_TICKER_IMAGES });
+    showToast('Ticker reset to defaults', 'gold');
   };
 
   // Guard: Viewers must never see admin controls
@@ -1151,6 +1272,7 @@ export default function AdminDashboard({ navigate }) {
         { id: 'upload', label: 'New Project', icon: FolderPlus, badge: null, highlight: true },
         { id: 'projects', label: 'Manage Projects', icon: Layers, badge: projects.length },
         { id: 'hero-showcase', label: 'Hero Showcase Cards', icon: Film, badge: `${showcaseItems.length} slides`, badgeColor: 'bg-[#D4AF37]/20 text-[#D4AF37] border border-[#D4AF37]/40' },
+        { id: 'ticker', label: 'Ticker Studio', icon: Play, badge: `${tickerItems.length} images`, badgeColor: 'bg-purple-500/20 text-purple-300 border border-purple-500/40' },
         { id: 'media', label: 'Media Vault', icon: ImageIcon, badge: mediaItems.length },
       ]
     },
@@ -1177,6 +1299,7 @@ export default function AdminDashboard({ navigate }) {
     inquiries: { title: 'Client Inquiries', subtitle: 'Respond to prospective clients, custom briefs & design requests' },
     comments: { title: 'Comments Moderation', subtitle: 'Review community engagement and feedback on portfolio posts' },
     'hero-showcase': { title: 'Hero Showcase Cards Studio', subtitle: `Customize the rotating right-hand showcase cards on the Home landing page (${showcaseItems.length} active slides)` },
+    ticker: { title: 'Ticker Studio', subtitle: `Manage the Endless Masterpiece Ticker — upload images, control size, speed & source (${tickerItems.length} custom images)` },
     atmosphere: { title: 'Atmosphere & Per-Branding Studio', subtitle: 'Live landing page visibility controls, background depth & bespoke branding presets' },
     settings: { title: 'System Settings & Profile', subtitle: 'Manage administrator credentials, contact information & portfolio defaults' }
   };
@@ -4614,6 +4737,419 @@ export default function AdminDashboard({ navigate }) {
                     onClick={() => setShowcaseMediaModal(false)}
                     className="px-4 py-2 rounded-xl bg-white/10 text-[#F5F1E8] hover:bg-white/20 font-medium"
                   >
+                    Done
+                  </button>
+                </div>
+              </motion.div>
+            </div>
+          )}
+        </div>
+      )}
+
+      {/* ============================================================
+          TAB: TICKER STUDIO
+          Full control over the Endless Masterpiece Ticker —
+          upload custom images, adjust size, padding, speed, source
+          ============================================================ */}
+      {activeTab === 'ticker' && (
+        <div className="space-y-6">
+          {/* Hidden File Input */}
+          <input
+            type="file"
+            ref={tickerFileInputRef}
+            onChange={handleUploadTickerFile}
+            accept="image/*"
+            className="hidden"
+          />
+
+          {/* ── Header Banner ── */}
+          <div className="p-6 sm:p-8 rounded-3xl glass-card border border-purple-500/30 bg-gradient-to-br from-[#120E1E] via-[#121212] to-[#0A0A0A] relative overflow-hidden">
+            <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-5 relative z-10">
+              <div className="space-y-2 max-w-2xl">
+                <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-purple-500/20 border border-purple-500/40 text-xs font-mono text-purple-300">
+                  <Play className="w-3.5 h-3.5" />
+                  <span>Ticker Studio</span>
+                </div>
+                <h2 className="font-display font-extrabold text-2xl sm:text-3xl text-[#F5F1E8]">
+                  Endless Masterpiece Ticker
+                </h2>
+                <p className="text-xs sm:text-sm text-[#A0A0A0] leading-relaxed">
+                  Upload your own artwork images to run in the ticker, control the card size, section padding, scroll speed, and direction. Changes go live instantly across all devices.
+                </p>
+              </div>
+              <div className="flex items-center gap-3 flex-wrap">
+                <button
+                  type="button"
+                  onClick={() => tickerFileInputRef.current?.click()}
+                  disabled={isUploadingTicker}
+                  className="px-4 py-2.5 rounded-xl bg-gradient-to-r from-purple-500 to-purple-400 text-white text-xs font-bold uppercase tracking-wider hover:scale-105 transition shadow-lg flex items-center gap-2 disabled:opacity-50"
+                >
+                  <Upload className="w-4 h-4" />
+                  <span>{isUploadingTicker ? 'Uploading...' : 'Upload Image'}</span>
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setShowTickerMediaModal(true)}
+                  className="px-4 py-2.5 rounded-xl bg-white/5 border border-white/10 hover:border-purple-500/50 text-[#F5F1E8] text-xs font-semibold uppercase tracking-wider hover:bg-white/10 transition flex items-center gap-2"
+                >
+                  <Layers className="w-4 h-4 text-purple-400" />
+                  <span>Pick from Projects</span>
+                </button>
+                <button
+                  type="button"
+                  onClick={handleSaveTickerSettings}
+                  className="px-4 py-2.5 rounded-xl bg-emerald-500/15 border border-emerald-500/40 hover:bg-emerald-500/25 text-emerald-300 text-xs font-semibold uppercase tracking-wider transition flex items-center gap-2"
+                >
+                  <CheckCircle2 className="w-4 h-4" />
+                  <span>Save & Sync</span>
+                </button>
+                <button
+                  type="button"
+                  onClick={handleResetTicker}
+                  className="px-3.5 py-2.5 rounded-xl bg-white/5 border border-white/10 hover:border-red-500/50 text-[#8A8A8A] hover:text-red-400 text-xs transition flex items-center gap-1.5"
+                >
+                  <RotateCcw className="w-3.5 h-3.5" />
+                  <span>Reset</span>
+                </button>
+              </div>
+            </div>
+            <div className="absolute -right-10 -bottom-10 w-64 h-64 rounded-full bg-purple-500/10 blur-3xl pointer-events-none" />
+          </div>
+
+          {/* ── Upload New Image Staging Area ── */}
+          {newTickerImage && (
+            <motion.div
+              initial={{ opacity: 0, y: -10 }}
+              animate={{ opacity: 1, y: 0 }}
+              className="p-5 rounded-2xl glass-card border-2 border-purple-500 bg-gradient-to-r from-[#1A1030] via-[#14120C] to-[#121212] space-y-4"
+            >
+              <div className="flex items-center justify-between pb-3 border-b border-white/10">
+                <h4 className="font-display font-bold text-sm text-purple-300 flex items-center gap-2">
+                  <Sparkles className="w-4 h-4 text-purple-400" />
+                  <span>New Ticker Image — Set Details</span>
+                </h4>
+                <button type="button" onClick={() => setNewTickerImage(null)} className="p-1.5 rounded-lg bg-white/5 hover:bg-white/10 text-[#8A8A8A] hover:text-red-400 transition">
+                  <X className="w-4 h-4" />
+                </button>
+              </div>
+              <div className="flex flex-col sm:flex-row gap-4">
+                <div className="w-28 sm:w-36 aspect-[3/4] rounded-xl overflow-hidden border border-purple-500/50 flex-shrink-0">
+                  <img src={newTickerImage} alt="Preview" className="w-full h-full object-cover" />
+                </div>
+                <div className="flex-1 space-y-3">
+                  <div>
+                    <label className="block text-xs font-semibold text-[#A0A0A0] uppercase tracking-wider mb-1">Artwork Title</label>
+                    <input
+                      type="text"
+                      value={newTickerTitle}
+                      onChange={(e) => setNewTickerTitle(e.target.value)}
+                      placeholder="e.g. Gospel Night Promo"
+                      className="w-full px-3 py-2 rounded-xl bg-black/50 border border-white/10 focus:border-purple-500 focus:outline-none text-sm text-[#F5F1E8] placeholder-[#555]"
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-xs font-semibold text-[#A0A0A0] uppercase tracking-wider mb-1">Category</label>
+                    <input
+                      type="text"
+                      value={newTickerCategory}
+                      onChange={(e) => setNewTickerCategory(e.target.value)}
+                      placeholder="e.g. Poster Design, Motion, Branding"
+                      className="w-full px-3 py-2 rounded-xl bg-black/50 border border-white/10 focus:border-purple-500 focus:outline-none text-sm text-[#F5F1E8] placeholder-[#555]"
+                    />
+                  </div>
+                  <button
+                    type="button"
+                    onClick={handleAddTickerImage}
+                    className="w-full py-2.5 rounded-xl bg-gradient-to-r from-purple-600 to-purple-400 text-white text-xs font-bold uppercase tracking-wider hover:scale-[1.02] transition shadow-lg"
+                  >
+                    + Add to Ticker
+                  </button>
+                </div>
+              </div>
+            </motion.div>
+          )}
+
+          {/* ── Settings Grid ── */}
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-5">
+
+            {/* Left: Display Settings */}
+            <div className="p-5 rounded-2xl glass-card border border-white/10 space-y-5">
+              <h3 className="font-display font-bold text-sm text-[#F5F1E8] flex items-center gap-2 pb-2 border-b border-white/10">
+                <SlidersHorizontal className="w-4 h-4 text-purple-400" />
+                Display Settings
+              </h3>
+
+              {/* Enable/Disable */}
+              <div className="flex items-center justify-between">
+                <div>
+                  <p className="text-xs font-semibold text-[#F5F1E8]">Ticker Visibility</p>
+                  <p className="text-[11px] text-[#8A8A8A] mt-0.5">Show or hide the ticker on the Home page</p>
+                </div>
+                <button
+                  type="button"
+                  onClick={() => { const next = !tickerEnabled; setTickerEnabled(next); updateSiteSettings({ tickerEnabled: next }); }}
+                  className={`px-3.5 py-1.5 rounded-full text-[11px] font-bold uppercase tracking-wider border transition ${
+                    tickerEnabled ? 'bg-emerald-500/20 text-emerald-300 border-emerald-500/40' : 'bg-white/5 text-[#8A8A8A] border-white/10'
+                  }`}
+                >
+                  {tickerEnabled ? 'Visible' : 'Hidden'}
+                </button>
+              </div>
+
+              {/* Card Size */}
+              <div>
+                <p className="text-xs font-semibold text-[#F5F1E8] mb-2">Card Size</p>
+                <div className="flex gap-2">
+                  {[
+                    { id: 'small', label: 'Small', desc: 'Compact' },
+                    { id: 'medium', label: 'Medium', desc: 'Balanced' },
+                    { id: 'large', label: 'Large', desc: 'Bold' },
+                  ].map((s) => (
+                    <button
+                      key={s.id}
+                      type="button"
+                      onClick={() => setTickerSize(s.id)}
+                      className={`flex-1 py-2 px-2 rounded-xl text-[11px] font-bold border transition text-center ${
+                        tickerSize === s.id
+                          ? 'bg-purple-500/25 border-purple-500/60 text-purple-300'
+                          : 'bg-white/5 border-white/10 text-[#8A8A8A] hover:text-white'
+                      }`}
+                    >
+                      <div className="font-bold">{s.label}</div>
+                      <div className="text-[9px] opacity-70 mt-0.5">{s.desc}</div>
+                    </button>
+                  ))}
+                </div>
+              </div>
+
+              {/* Section Padding */}
+              <div>
+                <p className="text-xs font-semibold text-[#F5F1E8] mb-2">Section Padding</p>
+                <div className="flex gap-2">
+                  {[
+                    { id: 'small', label: 'Tight' },
+                    { id: 'medium', label: 'Normal' },
+                    { id: 'large', label: 'Spacious' },
+                  ].map((p) => (
+                    <button
+                      key={p.id}
+                      type="button"
+                      onClick={() => setTickerPadding(p.id)}
+                      className={`flex-1 py-2 rounded-xl text-[11px] font-bold border transition ${
+                        tickerPadding === p.id
+                          ? 'bg-purple-500/25 border-purple-500/60 text-purple-300'
+                          : 'bg-white/5 border-white/10 text-[#8A8A8A] hover:text-white'
+                      }`}
+                    >
+                      {p.label}
+                    </button>
+                  ))}
+                </div>
+              </div>
+
+              {/* Image Source */}
+              <div>
+                <p className="text-xs font-semibold text-[#F5F1E8] mb-1.5">Image Source</p>
+                <p className="text-[11px] text-[#8A8A8A] mb-2">Which images to display in the ticker</p>
+                <div className="flex gap-2">
+                  {[
+                    { id: 'both', label: 'Custom + Projects' },
+                    { id: 'custom', label: 'Custom Only' },
+                    { id: 'projects', label: 'Projects Only' },
+                  ].map((s) => (
+                    <button
+                      key={s.id}
+                      type="button"
+                      onClick={() => setTickerSource(s.id)}
+                      className={`flex-1 py-2 px-1 rounded-xl text-[10px] font-bold border transition text-center leading-tight ${
+                        tickerSource === s.id
+                          ? 'bg-purple-500/25 border-purple-500/60 text-purple-300'
+                          : 'bg-white/5 border-white/10 text-[#8A8A8A] hover:text-white'
+                      }`}
+                    >
+                      {s.label}
+                    </button>
+                  ))}
+                </div>
+              </div>
+            </div>
+
+            {/* Right: Motion Settings */}
+            <div className="p-5 rounded-2xl glass-card border border-white/10 space-y-5">
+              <h3 className="font-display font-bold text-sm text-[#F5F1E8] flex items-center gap-2 pb-2 border-b border-white/10">
+                <Activity className="w-4 h-4 text-purple-400" />
+                Motion & Text Settings
+              </h3>
+
+              {/* Speed */}
+              <div>
+                <div className="flex items-center justify-between mb-2">
+                  <p className="text-xs font-semibold text-[#F5F1E8]">Scroll Speed</p>
+                  <span className="text-xs font-mono text-purple-300 bg-purple-500/20 px-2 py-0.5 rounded-lg">{tickerSpeed}s loop</span>
+                </div>
+                <input
+                  type="range"
+                  min="20"
+                  max="110"
+                  step="5"
+                  value={tickerSpeed}
+                  onChange={(e) => setTickerSpeed(Number(e.target.value))}
+                  className="w-full h-2 bg-[#222] rounded-lg appearance-none cursor-pointer accent-purple-500"
+                />
+                <div className="flex gap-2 mt-2">
+                  {[{ label: 'Fast', val: 25 }, { label: 'Balanced', val: 55 }, { label: 'Cinematic', val: 90 }].map((p) => (
+                    <button
+                      key={p.label}
+                      type="button"
+                      onClick={() => setTickerSpeed(p.val)}
+                      className={`flex-1 py-1.5 rounded-lg text-[10px] font-bold transition ${
+                        tickerSpeed === p.val ? 'bg-purple-500 text-white' : 'bg-white/5 text-[#8A8A8A] hover:text-white'
+                      }`}
+                    >
+                      {p.label}
+                    </button>
+                  ))}
+                </div>
+              </div>
+
+              {/* Direction */}
+              <div>
+                <p className="text-xs font-semibold text-[#F5F1E8] mb-2">Scroll Direction</p>
+                <div className="flex gap-2">
+                  {[
+                    { id: 'left', label: '← Left' },
+                    { id: 'right', label: '→ Right' },
+                  ].map((d) => (
+                    <button
+                      key={d.id}
+                      type="button"
+                      onClick={() => setTickerDirection(d.id)}
+                      className={`flex-1 py-2 rounded-xl text-xs font-bold border transition ${
+                        tickerDirection === d.id
+                          ? 'bg-purple-500/25 border-purple-500/60 text-purple-300'
+                          : 'bg-white/5 border-white/10 text-[#8A8A8A] hover:text-white'
+                      }`}
+                    >
+                      {d.label}
+                    </button>
+                  ))}
+                </div>
+              </div>
+
+              {/* Title */}
+              <div>
+                <label className="block text-xs font-semibold text-[#A0A0A0] uppercase tracking-wider mb-1.5">Section Title</label>
+                <input
+                  type="text"
+                  value={tickerTitle}
+                  onChange={(e) => setTickerTitle(e.target.value)}
+                  placeholder="Ticker heading…"
+                  className="w-full px-3 py-2 rounded-xl bg-black/50 border border-white/10 focus:border-purple-500 focus:outline-none text-xs text-[#F5F1E8]"
+                />
+              </div>
+
+              {/* Subtitle */}
+              <div>
+                <label className="block text-xs font-semibold text-[#A0A0A0] uppercase tracking-wider mb-1.5">Section Subtitle</label>
+                <input
+                  type="text"
+                  value={tickerSubtitle}
+                  onChange={(e) => setTickerSubtitle(e.target.value)}
+                  placeholder="Short description under the heading…"
+                  className="w-full px-3 py-2 rounded-xl bg-black/50 border border-white/10 focus:border-purple-500 focus:outline-none text-xs text-[#A0A0A0]"
+                />
+              </div>
+            </div>
+          </div>
+
+          {/* ── Custom Images Grid ── */}
+          <div className="p-5 rounded-2xl glass-card border border-white/10 space-y-4">
+            <div className="flex items-center justify-between pb-3 border-b border-white/10">
+              <h3 className="font-display font-bold text-sm text-[#F5F1E8] flex items-center gap-2">
+                <ImageIcon className="w-4 h-4 text-purple-400" />
+                Custom Ticker Images ({tickerItems.length})
+              </h3>
+              <span className="text-[11px] text-[#8A8A8A]">Click × to remove</span>
+            </div>
+
+            {tickerItems.length === 0 ? (
+              <div className="py-10 text-center text-[#555] text-sm">
+                No custom images yet — upload some above or pick from projects.
+              </div>
+            ) : (
+              <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6 gap-3">
+                {tickerItems.map((item) => (
+                  <div key={item.id} className="relative group aspect-[3/4] rounded-xl overflow-hidden border border-white/10 hover:border-purple-500/60 transition">
+                    <img
+                      src={item.src || item.path}
+                      alt={item.title}
+                      className="w-full h-full object-cover"
+                    />
+                    <div className="absolute inset-x-0 bottom-0 bg-gradient-to-t from-black/90 to-transparent p-2">
+                      <p className="text-[9px] text-purple-300 font-mono uppercase tracking-wider truncate">{item.category}</p>
+                      <p className="text-[10px] text-white font-bold truncate leading-tight mt-0.5">{item.title}</p>
+                    </div>
+                    <button
+                      type="button"
+                      onClick={() => handleRemoveTickerImage(item.id)}
+                      className="absolute top-1.5 right-1.5 w-6 h-6 rounded-full bg-red-500/90 hover:bg-red-600 text-white flex items-center justify-center opacity-0 group-hover:opacity-100 transition shadow-lg"
+                      title="Remove from ticker"
+                    >
+                      <X className="w-3.5 h-3.5" />
+                    </button>
+                  </div>
+                ))}
+              </div>
+            )}
+          </div>
+
+          {/* ── Pick from Projects Modal ── */}
+          {showTickerMediaModal && (
+            <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/85 backdrop-blur-md">
+              <motion.div
+                initial={{ opacity: 0, scale: 0.95 }}
+                animate={{ opacity: 1, scale: 1 }}
+                className="w-full max-w-4xl max-h-[85vh] rounded-3xl glass-card border border-purple-500/40 bg-[#121212] flex flex-col overflow-hidden shadow-2xl"
+              >
+                <div className="p-6 border-b border-white/10 flex items-center justify-between">
+                  <div>
+                    <h3 className="font-display font-bold text-lg text-[#F5F1E8] flex items-center gap-2">
+                      <Layers className="w-5 h-5 text-purple-400" />
+                      <span>Add Project to Ticker</span>
+                    </h3>
+                    <p className="text-xs text-[#8A8A8A] mt-0.5">Click any artwork to add it to the Ticker image list.</p>
+                  </div>
+                  <button type="button" onClick={() => setShowTickerMediaModal(false)} className="p-2 rounded-xl bg-white/5 hover:bg-white/10 text-[#8A8A8A] hover:text-white">
+                    <X className="w-5 h-5" />
+                  </button>
+                </div>
+                <div className="p-6 overflow-y-auto flex-1">
+                  <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-4">
+                    {projects
+                      .filter((p) => p.thumbnail && !/\.(mp4|webm|mov)$/i.test(p.thumbnail))
+                      .map((p) => (
+                        <button
+                          key={p.id}
+                          type="button"
+                          onClick={() => handleAddTickerFromProject(p)}
+                          className="relative group aspect-[3/4] rounded-xl overflow-hidden border border-white/10 hover:border-purple-500 transition text-left"
+                        >
+                          <img src={p.thumbnail} alt={p.title} className="w-full h-full object-cover group-hover:scale-105 transition duration-300" />
+                          <div className="absolute inset-0 bg-black/50 opacity-0 group-hover:opacity-100 flex items-center justify-center transition">
+                            <div className="bg-purple-500 rounded-full p-2">
+                              <Plus className="w-5 h-5 text-white" />
+                            </div>
+                          </div>
+                          <div className="absolute inset-x-0 bottom-0 p-2 bg-gradient-to-t from-black/90 to-transparent">
+                            <p className="text-[10px] text-white font-bold truncate">{p.title}</p>
+                            <p className="text-[9px] text-purple-300 font-mono truncate">{p.category}</p>
+                          </div>
+                        </button>
+                      ))}
+                  </div>
+                </div>
+                <div className="p-4 border-t border-white/10 bg-black/40 flex justify-end">
+                  <button type="button" onClick={() => setShowTickerMediaModal(false)} className="px-4 py-2 rounded-xl bg-white/10 text-[#F5F1E8] hover:bg-white/20 font-medium text-sm">
                     Done
                   </button>
                 </div>

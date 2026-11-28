@@ -267,20 +267,20 @@ html.light p {
 }
 .image-ticker-track {
   display: flex;
+  align-items: stretch;
   width: max-content;
-  animation: image-ticker-scroll var(--ticker-speed, 55s) linear infinite;
   will-change: transform;
 }
 .image-ticker-track:hover {
   animation-play-state: paused;
 }
-@keyframes image-ticker-scroll {
-  0% {
-    transform: translate3d(0, 0, 0);
-  }
-  100% {
-    transform: translate3d(-50%, 0, 0);
-  }
+
+/* Fade masks */
+.ticker-fade-left {
+  background: linear-gradient(to right, var(--bg, #0A0A0A) 0%, transparent 100%);
+}
+.ticker-fade-right {
+  background: linear-gradient(to left, var(--bg, #0A0A0A) 0%, transparent 100%);
 }
 
 /* ============================================================
@@ -1624,22 +1624,13 @@ html.light p {
 
 .image-ticker-track {
   display: flex;
+  align-items: stretch;
   width: max-content;
-  animation: image-ticker-scroll var(--ticker-speed, 55s) linear infinite;
   will-change: transform;
 }
 
 .image-ticker-track:hover {
   animation-play-state: paused;
-}
-
-@keyframes image-ticker-scroll {
-  0% {
-    transform: translate3d(0, 0, 0);
-  }
-  100% {
-    transform: translate3d(-50%, 0, 0);
-  }
 }
 
 .ticker-fade-left {
