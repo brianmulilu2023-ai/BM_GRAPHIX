@@ -58,7 +58,8 @@ import {
   ArrowDown,
   ArrowLeft,
   ArrowRight,
-  RotateCw
+  RotateCw,
+  Moon
 } from 'lucide-react';
 import { optimizeVideoTikTokStyle } from '../utils/imageCompressor';
 import { useProjects } from '../context/ProjectContext';
@@ -66,7 +67,7 @@ import ResponsiveVideoPlayer from '../components/ResponsiveVideoPlayer';
 import { resolveSafeVideoUrl } from '../utils/videoHelper';
 import { storageDB } from '../utils/storageDB';
 import { fetchServerProjects, saveServerProjects, fetchServerMedia, saveServerMedia } from '../utils/apiSync';
-import { DEFAULT_SHOWCASE_ITEMS, DEFAULT_TICKER_IMAGES } from '../services/adminService';
+import { DEFAULT_SHOWCASE_ITEMS, DEFAULT_TICKER_IMAGES, DEFAULT_BRAND_THEME } from '../services/adminService';
 
 export default function AdminDashboard({ navigate }) {
   const {
@@ -377,10 +378,90 @@ export default function AdminDashboard({ navigate }) {
   // --- Per-Branding Presets & Identity State ---
   const [brandName, setBrandName] = useState(siteSettings?.brandName || 'BM Graphix');
   const [brandTagline, setBrandTagline] = useState(siteSettings?.tagline || 'Designs That Move People');
-  const [activeBrandPreset, setActiveBrandPreset] = useState(siteSettings?.activeBrandPreset || 'royal-gold');
-  const [brandPrimaryColor, setBrandPrimaryColor] = useState(siteSettings?.brandPrimaryColor || '#D4AF37');
-  const [brandSecondaryColor, setBrandSecondaryColor] = useState(siteSettings?.brandSecondaryColor || '#F5D77A');
-  const [brandDarkColor, setBrandDarkColor] = useState(siteSettings?.brandDarkColor || '#B8860B');
+  const [activeBrandPreset, setActiveBrandPreset] = useState(siteSettings?.activeBrandPreset || 'bm-official');
+  const [brandPrimaryColor, setBrandPrimaryColor] = useState(siteSettings?.brandPrimaryColor || '#E2AA00');
+  const [brandSecondaryColor, setBrandSecondaryColor] = useState(siteSettings?.brandSecondaryColor || '#FECD00');
+  const [brandDarkColor, setBrandDarkColor] = useState(siteSettings?.brandDarkColor || '#8C5800');
+
+  // --- Brand & Theme Settings (independent Light/Dark mode colour editors) ---
+  const initBrandTheme = () => ({
+    light: { ...DEFAULT_BRAND_THEME.light, ...(siteSettings?.brandTheme?.light || {}) },
+    dark: { ...DEFAULT_BRAND_THEME.dark, ...(siteSettings?.brandTheme?.dark || {}) }
+  });
+  const [brandTheme, setBrandTheme] = useState(initBrandTheme);
+  const [brandThemePreview, setBrandThemePreview] = useState(null); // null = not in preview mode
+  const [brandThemeMode, setBrandThemeMode] = useState('dark'); // 'dark' | 'light' — which mode is being edited
+  const [brandThemeUnsaved, setBrandThemeUnsaved] = useState(false);
+  const [hexErrors, setHexErrors] = useState({});
+
+  const BM_OFFICIAL_THEME = DEFAULT_BRAND_THEME;
+  const THEME_FIELDS_DARK = [
+    { key: 'primary', label: 'Primary Gold', desc: 'Main brand gold — buttons, active links, highlights' },
+    { key: 'secondary', label: 'Secondary Gold', desc: 'Supporting gold — icons, decorative shapes' },
+    { key: 'accent', label: 'Accent / Warm Gold', desc: 'Accent tones — secondary text in dark mode' },
+    { key: 'heading', label: 'Heading Text', desc: 'H1, H2, H3 heading colour' },
+    { key: 'body', label: 'Body Text', desc: 'Paragraph and body copy colour' },
+    { key: 'secondaryText', label: 'Secondary Text', desc: 'Subtitles, captions, muted labels' },
+    { key: 'shapeButton', label: 'Primary Button Fill', desc: 'Hire Me / CTA button background' },
+    { key: 'buttonText', label: 'Button Text', desc: 'Text colour on primary CTA buttons' },
+    { key: 'icon', label: 'Icon Colour', desc: 'Navigation icons, feature icons' },
+    { key: 'border', label: 'Border / Divider', desc: 'Card borders, section dividers' },
+  ];
+  const THEME_FIELDS_LIGHT = THEME_FIELDS_DARK; // same fields, different defaults
+
+  const isValidHex = (val) => /^#([0-9A-Fa-f]{3}|[0-9A-Fa-f]{6})$/.test(val.trim());
+
+  const handleBrandThemeChange = (mode, key, value) => {
+    setBrandTheme(prev => ({
+      ...prev,
+      [mode]: { ...prev[mode], [key]: value }
+    }));
+    setBrandThemeUnsaved(true);
+    // Validate hex
+    if (value && !isValidHex(value)) {
+      setHexErrors(prev => ({ ...prev, [`${mode}-${key}`]: 'Invalid hex' }));
+    } else {
+      setHexErrors(prev => { const n = { ...prev }; delete n[`${mode}-${key}`]; return n; });
+    }
+    // Live preview via custom event
+    const previewTheme = {
+      ...(brandThemePreview || brandTheme),
+      [mode]: { ...(brandThemePreview?.[mode] || brandTheme[mode]), [key]: value }
+    };
+    setBrandThemePreview(previewTheme);
+    window.dispatchEvent(new CustomEvent('bm-brand-preview', { detail: previewTheme }));
+  };
+
+  const handleSaveBrandTheme = () => {
+    const hasErrors = Object.keys(hexErrors).length > 0;
+    if (hasErrors) {
+      showToast('Please fix invalid HEX colour codes before saving.', 'error');
+      return;
+    }
+    updateSiteSettings({ brandTheme });
+    setBrandThemeUnsaved(false);
+    setBrandThemePreview(null);
+    window.dispatchEvent(new CustomEvent('bm-brand-preview', { detail: null }));
+    showToast('Brand & Theme colours saved and synced across all devices!', 'gold');
+  };
+
+  const handleResetBrandTheme = () => {
+    setBrandTheme(BM_OFFICIAL_THEME);
+    setBrandThemePreview(BM_OFFICIAL_THEME);
+    setBrandThemeUnsaved(true);
+    setHexErrors({});
+    window.dispatchEvent(new CustomEvent('bm-brand-preview', { detail: BM_OFFICIAL_THEME }));
+    showToast('Reset to BM GRAPHIX official brand colours — click Save to apply.', 'gold');
+  };
+
+  const handleCancelBrandTheme = () => {
+    setBrandTheme(initBrandTheme());
+    setBrandThemePreview(null);
+    setBrandThemeUnsaved(false);
+    setHexErrors({});
+    window.dispatchEvent(new CustomEvent('bm-brand-preview', { detail: null }));
+    showToast('Changes discarded.', 'gold');
+  };
 
   const BRAND_PRESETS = [
     {
@@ -1263,7 +1344,8 @@ export default function AdminDashboard({ navigate }) {
       group: 'Core',
       items: [
         { id: 'overview', label: 'Overview', icon: Sparkles, badge: null },
-        { id: 'atmosphere', label: 'Atmosphere & Branding', icon: SlidersHorizontal, badge: 'Studio', badgeColor: 'bg-[#D4AF37]/20 text-[#D4AF37] border border-[#D4AF37]/40' },
+        { id: 'atmosphere', label: 'Atmosphere & Branding', icon: SlidersHorizontal, badge: 'Studio', badgeColor: 'bg-[#E2AA00]/20 text-[#E2AA00] border border-[#E2AA00]/40' },
+        { id: 'brand-theme', label: 'Brand & Theme Settings', icon: Palette, badge: brandThemeUnsaved ? 'Unsaved' : null, badgeColor: 'bg-orange-500/20 text-orange-300 border border-orange-500/40' },
       ]
     },
     {
@@ -1301,6 +1383,7 @@ export default function AdminDashboard({ navigate }) {
     'hero-showcase': { title: 'Hero Showcase Cards Studio', subtitle: `Customize the rotating right-hand showcase cards on the Home landing page (${showcaseItems.length} active slides)` },
     ticker: { title: 'Ticker Studio', subtitle: `Manage the Endless Masterpiece Ticker — upload images, control size, speed & source (${tickerItems.length} custom images)` },
     atmosphere: { title: 'Atmosphere & Per-Branding Studio', subtitle: 'Live landing page visibility controls, background depth & bespoke branding presets' },
+    'brand-theme': { title: 'Brand & Theme Settings', subtitle: 'Customize Light & Dark mode brand colours independently — changes sync to all devices instantly' },
     settings: { title: 'System Settings & Profile', subtitle: 'Manage administrator credentials, contact information & portfolio defaults' }
   };
 
@@ -5160,10 +5243,210 @@ export default function AdminDashboard({ navigate }) {
       )}
 
       {/* ============================================================
+          TAB: BRAND & THEME SETTINGS
+          ============================================================ */}
+      {activeTab === 'brand-theme' && (
+        <div className="space-y-8">
+          {/* Header row */}
+          <div className="flex flex-wrap items-center justify-between gap-4 pb-4 border-b border-white/10">
+            <div>
+              <div className="flex items-center gap-2 mb-1">
+                <Palette className="w-5 h-5 text-[#E2AA00]" />
+                <span className="text-xs font-mono uppercase tracking-widest text-[#E2AA00]">Brand Colour System</span>
+              </div>
+              <p className="text-xs text-[#8A8A8A] max-w-lg">
+                Customize Light Mode & Dark Mode brand colours independently. Changes apply live across the entire website and sync to all devices via cloud.
+              </p>
+            </div>
+            <div className="flex items-center gap-2 flex-wrap">
+              <button
+                onClick={handleResetBrandTheme}
+                className="flex items-center gap-1.5 px-3.5 py-2 rounded-xl bg-white/5 border border-white/10 text-xs font-semibold text-[#8A8A8A] hover:text-[#F5F1E8] hover:border-white/20 transition"
+              >
+                <RotateCcw className="w-3.5 h-3.5" />
+                Reset to BM Defaults
+              </button>
+              <button
+                onClick={handleCancelBrandTheme}
+                className="px-3.5 py-2 rounded-xl bg-white/5 border border-white/10 text-xs font-semibold text-[#8A8A8A] hover:text-[#F5F1E8] transition"
+              >
+                Cancel
+              </button>
+              <button
+                onClick={handleSaveBrandTheme}
+                disabled={!brandThemeUnsaved}
+                className="flex items-center gap-1.5 px-4 py-2 rounded-xl text-xs font-bold uppercase tracking-wider text-black bg-[#E2AA00] hover:bg-[#FECD00] transition disabled:opacity-40 disabled:cursor-not-allowed"
+              >
+                <CheckCircle2 className="w-3.5 h-3.5" />
+                {brandThemeUnsaved ? 'Save & Sync' : 'Saved'}
+              </button>
+            </div>
+          </div>
+
+          {/* Mode Switcher: Edit Light or Dark */}
+          <div className="flex items-center gap-2 p-1 bg-white/5 rounded-xl w-fit border border-white/10">
+            {(['dark', 'light']).map((m) => (
+              <button
+                key={m}
+                onClick={() => setBrandThemeMode(m)}
+                className={`flex items-center gap-2 px-4 py-2 rounded-lg text-xs font-bold uppercase tracking-wider transition ${brandThemeMode === m ? 'bg-[#E2AA00] text-[#250C00]' : 'text-[#8A8A8A] hover:text-[#F5F1E8]'}`}
+              >
+                {m === 'dark' ? <Moon className="w-3.5 h-3.5" /> : <Sun className="w-3.5 h-3.5" />}
+                {m === 'dark' ? 'Dark Mode' : 'Light Mode'}
+              </button>
+            ))}
+          </div>
+
+          {/* Colour Fields Grid */}
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
+            {(brandThemeMode === 'dark' ? THEME_FIELDS_DARK : THEME_FIELDS_LIGHT).map((field) => {
+              const modeKey = brandThemeMode;
+              const currentVal = brandTheme[modeKey]?.[field.key] || '';
+              const errKey = `${modeKey}-${field.key}`;
+              const hasErr = !!hexErrors[errKey];
+              return (
+                <div key={field.key} className="p-4 rounded-2xl bg-white/5 border border-white/10 space-y-3 hover:border-[#E2AA00]/30 transition">
+                  <div className="flex items-start justify-between gap-3">
+                    <div>
+                      <p className="text-xs font-bold text-[#F5F1E8] uppercase tracking-widest">{field.label}</p>
+                      <p className="text-[11px] text-[#8A8A8A] mt-0.5">{field.desc}</p>
+                    </div>
+                    {/* Colour Swatch Preview */}
+                    <div
+                      className="w-10 h-10 rounded-xl border-2 border-white/20 flex-shrink-0 shadow-inner"
+                      style={{ backgroundColor: isValidHex(currentVal) ? currentVal : '#333' }}
+                      title={currentVal}
+                    />
+                  </div>
+                  <div className="flex items-center gap-2">
+                    {/* Native colour picker */}
+                    <div className="relative">
+                      <input
+                        type="color"
+                        value={isValidHex(currentVal) ? currentVal : '#E2AA00'}
+                        onChange={(e) => handleBrandThemeChange(modeKey, field.key, e.target.value)}
+                        className="w-10 h-9 rounded-lg cursor-pointer border-0 p-0.5 bg-transparent"
+                        style={{ accentColor: currentVal }}
+                      />
+                    </div>
+                    {/* HEX text input */}
+                    <div className="flex-1 relative">
+                      <input
+                        type="text"
+                        value={currentVal}
+                        maxLength={7}
+                        placeholder="#E2AA00"
+                        onChange={(e) => handleBrandThemeChange(modeKey, field.key, e.target.value)}
+                        className={`w-full px-3 py-2 rounded-lg bg-black/40 text-xs font-mono font-bold border transition outline-none focus:ring-1 ${
+                          hasErr
+                            ? 'border-red-500/70 text-red-400 focus:ring-red-500/40'
+                            : 'border-white/15 text-[#F5F1E8] focus:border-[#E2AA00]/60 focus:ring-[#E2AA00]/30'
+                        }`}
+                      />
+                      {hasErr && (
+                        <p className="text-[10px] text-red-400 mt-0.5 ml-1">{hexErrors[errKey]}</p>
+                      )}
+                    </div>
+                  </div>
+                </div>
+              );
+            })}
+          </div>
+
+          {/* Live Preview Panel */}
+          <div className="p-5 rounded-2xl bg-black/40 border border-[#E2AA00]/30 space-y-4">
+            <div className="flex items-center gap-2 mb-2">
+              <Eye className="w-4 h-4 text-[#E2AA00]" />
+              <span className="text-xs font-bold uppercase tracking-widest text-[#E2AA00]">Live Preview — {brandThemeMode === 'dark' ? 'Dark Mode' : 'Light Mode'}</span>
+            </div>
+            <div
+              className="rounded-xl p-5 space-y-3 border"
+              style={{
+                backgroundColor: brandThemeMode === 'dark' ? '#0A0A0A' : '#F5F0E8',
+                borderColor: brandTheme[brandThemeMode]?.border || '#6B3E00'
+              }}
+            >
+              <h3 className="font-display font-extrabold text-2xl" style={{ color: brandTheme[brandThemeMode]?.heading || '#FFFFFF' }}>
+                BM GRAPHIX
+              </h3>
+              <p className="text-sm" style={{ color: brandTheme[brandThemeMode]?.body || '#FFFFFF' }}>
+                Designs That Move People — Visual Art & Motion Designer
+              </p>
+              <p className="text-xs" style={{ color: brandTheme[brandThemeMode]?.secondaryText || '#FECD00' }}>
+                Motion Graphics · Brand Identity · Poster Art
+              </p>
+              <div className="flex items-center gap-3 pt-2">
+                <button
+                  className="px-4 py-2 rounded-full text-xs font-bold uppercase tracking-wide"
+                  style={{ backgroundColor: brandTheme[brandThemeMode]?.shapeButton || '#E2AA00', color: brandTheme[brandThemeMode]?.buttonText || '#250C00' }}
+                >
+                  Hire Me ↗
+                </button>
+                <button
+                  className="px-4 py-2 rounded-full text-xs font-bold uppercase tracking-wide border"
+                  style={{ borderColor: brandTheme[brandThemeMode]?.primary || '#E2AA00', color: brandTheme[brandThemeMode]?.primary || '#E2AA00', backgroundColor: 'transparent' }}
+                >
+                  View Work
+                </button>
+                <span className="text-xs" style={{ color: brandTheme[brandThemeMode]?.icon || '#E2AA00' }}>
+                  ✦ Available
+                </span>
+              </div>
+              <div className="pt-2 border-t" style={{ borderColor: brandTheme[brandThemeMode]?.border || '#6B3E00' }}>
+                <span className="text-[11px] font-bold uppercase tracking-widest" style={{ color: brandTheme[brandThemeMode]?.primary || '#E2AA00' }}>
+                  — Active Nav Link
+                </span>
+                <span className="text-[11px] ml-4 font-medium" style={{ color: brandTheme[brandThemeMode]?.heading || '#FFFFFF' }}>
+                  Home · Work · Services
+                </span>
+              </div>
+            </div>
+          </div>
+
+          {/* Official BM GRAPHIX Colour Reference */}
+          <div className="p-5 rounded-2xl bg-white/5 border border-white/10 space-y-4">
+            <div className="flex items-center gap-2 mb-1">
+              <Star className="w-4 h-4 text-[#E2AA00]" />
+              <span className="text-xs font-bold uppercase tracking-widest text-[#F5F1E8]">Official BM GRAPHIX Brand Palette Reference</span>
+            </div>
+            <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
+              {[
+                { name: 'Primary Gold', hex: '#E2AA00' },
+                { name: 'Deep Gold', hex: '#8C5800' },
+                { name: 'Rich Gold', hex: '#C38C00' },
+                { name: 'Dark Gold/Brown', hex: '#6B3E00' },
+                { name: 'Dark Brown', hex: '#250C00' },
+                { name: 'Secondary Brown', hex: '#461F00' },
+                { name: 'Bright Yellow', hex: '#FFF200' },
+                { name: 'Warm Yellow', hex: '#FECD00' },
+              ].map((swatch) => (
+                <button
+                  key={swatch.hex}
+                  onClick={() => {
+                    // Copy to clipboard
+                    navigator.clipboard?.writeText(swatch.hex).catch(() => {});
+                    showToast(`Copied ${swatch.hex} to clipboard!`, 'gold');
+                  }}
+                  className="flex items-center gap-2 p-2 rounded-xl bg-white/5 border border-white/10 hover:border-[#E2AA00]/40 transition group text-left"
+                  title={`Click to copy ${swatch.hex}`}
+                >
+                  <div className="w-7 h-7 rounded-lg flex-shrink-0 shadow" style={{ backgroundColor: swatch.hex }} />
+                  <div className="min-w-0">
+                    <p className="text-[10px] font-bold text-[#F5F1E8] truncate leading-tight">{swatch.name}</p>
+                    <p className="text-[9px] font-mono text-[#8A8A8A] group-hover:text-[#E2AA00] transition">{swatch.hex}</p>
+                  </div>
+                </button>
+              ))}
+            </div>
+            <p className="text-[11px] text-[#8A8A8A]">Click any swatch to copy HEX to clipboard. Paste into any colour field above.</p>
+          </div>
+        </div>
+      )}
+
+      {/* ============================================================
           TAB 7: ADMIN ACCOUNT PROFILE & WEBSITE SETTINGS
           ============================================================ */}
-      {activeTab === 'settings' && (
-        <div className="space-y-8">
+      {activeTab === 'settings' && (        <div className="space-y-8">
           <div className="grid grid-cols-1 lg:grid-cols-12 gap-8">
             {/* Left: Admin Profile & Credentials */}
             <div className="lg:col-span-6 space-y-6">

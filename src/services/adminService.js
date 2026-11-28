@@ -91,11 +91,41 @@ export const DEFAULT_SITE_SETTINGS = {
   globalParticles: 45, // 0 to 100%
 
   // Per-Branding Presets & Custom Palette
-  activeBrandPreset: 'royal-gold',
-  brandPrimaryColor: '#D4AF37',
-  brandSecondaryColor: '#F5D77A',
-  brandDarkColor: '#B8860B'
+  activeBrandPreset: 'bm-official',
+  brandPrimaryColor: '#E2AA00',
+  brandSecondaryColor: '#FECD00',
+  brandDarkColor: '#8C5800',
+
+  // Centralized Light & Dark Mode Brand Theme (Editable in Admin -> Brand & Theme Settings)
+  brandTheme: {
+    light: {
+      primary: '#E2AA00',
+      secondary: '#8C5800',
+      accent: '#C38C00',
+      heading: '#250C00',
+      body: '#250C00',
+      shapeButton: '#E2AA00',
+      secondaryText: '#6B3E00',
+      buttonText: '#250C00',
+      icon: '#8C5800',
+      border: '#C38C00'
+    },
+    dark: {
+      primary: '#E2AA00',
+      secondary: '#C38C00',
+      accent: '#FECD00',
+      heading: '#FFFFFF',
+      body: '#FFFFFF',
+      shapeButton: '#E2AA00',
+      secondaryText: '#FECD00',
+      buttonText: '#250C00',
+      icon: '#E2AA00',
+      border: '#6B3E00'
+    }
+  }
 };
+
+export const DEFAULT_BRAND_THEME = DEFAULT_SITE_SETTINGS.brandTheme;
 
 class AdminService {
   constructor() {
@@ -154,7 +184,11 @@ class AdminService {
         heroShowcaseItems:
           Array.isArray(parsed?.heroShowcaseItems) && parsed.heroShowcaseItems.length > 0
             ? parsed.heroShowcaseItems
-            : DEFAULT_SHOWCASE_ITEMS
+            : DEFAULT_SHOWCASE_ITEMS,
+        brandTheme: {
+          light: { ...DEFAULT_BRAND_THEME.light, ...(parsed?.brandTheme?.light || {}) },
+          dark: { ...DEFAULT_BRAND_THEME.dark, ...(parsed?.brandTheme?.dark || {}) }
+        }
       };
     } catch {
       return DEFAULT_SITE_SETTINGS;
@@ -185,6 +219,10 @@ class AdminService {
       tickerSize: cloudSettings.tickerSize || current.tickerSize || 'small',
       tickerPadding: cloudSettings.tickerPadding || current.tickerPadding || 'small',
       tickerSource: cloudSettings.tickerSource || current.tickerSource || 'both',
+      brandTheme: {
+        light: { ...DEFAULT_BRAND_THEME.light, ...(current?.brandTheme?.light || {}), ...(cloudSettings?.brandTheme?.light || {}) },
+        dark: { ...DEFAULT_BRAND_THEME.dark, ...(current?.brandTheme?.dark || {}), ...(cloudSettings?.brandTheme?.dark || {}) }
+      },
       updatedAt: cloudSettings.updatedAt || new Date().toISOString()
     };
     try {

@@ -5,9 +5,23 @@
 
 /* ── Root CSS custom properties ── */
 :root {
-  --gold-primary: #D4AF37;
-  --gold-light: #F5D77A;
-  --gold-dark: #B8860B;
+  --gold-primary: #E2AA00;
+  --gold-light: #FECD00;
+  --gold-dark: #8C5800;
+
+  /* Centralized BM GRAPHIX Brand Tokens (Dark Mode Defaults) */
+  --bm-primary: #E2AA00;
+  --bm-secondary: #C38C00;
+  --bm-accent: #FECD00;
+  --bm-heading: #FFFFFF;
+  --bm-body: #FFFFFF;
+  --bm-secondary-text: #FECD00;
+  --bm-shape-btn: #E2AA00;
+  --bm-btn-text: #250C00;
+  --bm-icon: #E2AA00;
+  --bm-border: #6B3E00;
+  --bm-nav-link: #FFFFFF;
+  --bm-nav-active: #E2AA00;
 
   /* Dark mode tokens (defaults) */
   --bg: #0A0A0A;
@@ -15,12 +29,12 @@
   --bg-surface: #171717;
   --bg-elevated: #1F1F1F;
   --bg-hover: rgba(255,255,255,0.04);
-  --border: rgba(255,255,255,0.06);
-  --border-gold: rgba(212,175,55,0.22);
+  --border: rgba(107,62,0,0.45);
+  --border-gold: rgba(226,170,0,0.28);
   --text-primary: #FFFFFF;
-  --text-secondary: #CCCCCC;
-  --text-muted: #9E9E9E;
-  --text-inverse: #000000;
+  --text-secondary: #FECD00;
+  --text-muted: #FECD00;
+  --text-inverse: #250C00;
   --navbar-bg: rgba(10,10,10,0.95);
   --navbar-blur-bg: rgba(10,10,10,0.75);
   --mobile-menu-bg: rgba(10,10,10,0.98);
@@ -65,17 +79,30 @@
 
 /* ── Light mode token overrides ── */
 html.light {
+  --bm-primary: #E2AA00;
+  --bm-secondary: #8C5800;
+  --bm-accent: #C38C00;
+  --bm-heading: #250C00;
+  --bm-body: #250C00;
+  --bm-secondary-text: #6B3E00;
+  --bm-shape-btn: #E2AA00;
+  --bm-btn-text: #250C00;
+  --bm-icon: #8C5800;
+  --bm-border: #C38C00;
+  --bm-nav-link: #250C00;
+  --bm-nav-active: #8C5800;
+
   --bg: #F5F0E8;
   --bg-card: #FDFAF5;
   --bg-surface: #F0EAE0;
   --bg-elevated: #EDE6DA;
-  --bg-hover: rgba(0,0,0,0.03);
-  --border: rgba(0,0,0,0.07);
-  --border-gold: rgba(180,140,20,0.3);
-  --text-primary: #000000;
-  --text-secondary: #000000;
-  --text-muted: #1A1A1A;
-  --text-lead: #000000;
+  --bg-hover: rgba(140,88,0,0.05);
+  --border: rgba(195,140,0,0.25);
+  --border-gold: rgba(140,88,0,0.35);
+  --text-primary: #250C00;
+  --text-secondary: #6B3E00;
+  --text-muted: #6B3E00;
+  --text-lead: #250C00;
   --text-inverse: #FFFFFF;
   --navbar-bg: rgba(248,243,235,0.97);
   --navbar-blur-bg: rgba(248,243,235,0.82);
@@ -123,7 +150,7 @@ html.light {
 html.light body,
 html.light .theme-root {
   background-color: #F5F0E8;
-  color: #000000;
+  color: var(--bm-body, #250C00);
 }
 
 /* ── Global base overrides ── */
@@ -169,27 +196,25 @@ html.light .navbar-top {
 }
 
 /* Nav link text */
-html.light header button.text-\[\#8A8A8A\] { color: #000000 !important; }
-html.light header button:hover.text-\[\#8A8A8A\] { color: #000000 !important; }
-html.light header .text-\[\#F5F1E8\] { color: #000000 !important; }
-html.light header .text-\[\#F5D77A\] { color: #8B6914 !important; }
+html.light header button.text-\[\#8A8A8A\] { color: var(--bm-nav-link, #250C00) !important; }
+html.light header button:hover.text-\[\#8A8A8A\] { color: var(--bm-nav-active, #8C5800) !important; }
+html.light header .text-\[\#F5F1E8\] { color: var(--bm-heading, #250C00) !important; }
+html.light header .text-\[\#F5D77A\] { color: var(--bm-secondary, #8C5800) !important; }
 
 /* Logo inner disc — dark glass to warm white */
 html.light header .bg-\[\#0E0E0E\]\/90 {
-  background: rgba(253,250,245,0.95) !important;
+  background: rgba(255,249,232,0.95) !important;
 }
-
-/* Nav indicator line stays gold */
 
 /* Mobile menu */
 .mobile-menu-bg {
   background: var(--mobile-menu-bg) !important;
 }
-html.light .mobile-menu-bg { border-bottom-color: rgba(212,175,55,0.2); }
-html.light .mobile-menu-bg button { color: #000000 !important; }
-html.light .mobile-menu-bg button:hover { color: #000000 !important; }
-html.light .mobile-menu-bg .text-\[\#F5D77A\] { color: #8B6914 !important; }
-html.light .mobile-menu-bg .border-white\/10 { border-color: rgba(0,0,0,0.08) !important; }
+html.light .mobile-menu-bg { border-bottom-color: var(--bm-border, #C38C00); }
+html.light .mobile-menu-bg button { color: var(--bm-nav-link, #250C00) !important; }
+html.light .mobile-menu-bg button:hover { color: var(--bm-nav-active, #8C5800) !important; }
+html.light .mobile-menu-bg .text-\[\#F5D77A\] { color: var(--bm-secondary, #8C5800) !important; }
+html.light .mobile-menu-bg .border-white\/10 { border-color: rgba(195,140,0,0.22) !important; }
 
 /* ── HERO SECTION ── */
 html.light .hero-section {
@@ -263,44 +288,44 @@ html.light .hero-bg-orb--gold {
   background: radial-gradient(circle, rgba(212,175,55,0.1) 0%, transparent 70%);
 }
 
-/* ── Master Gold Gradient in Light Mode (Deep Antique Bronze Gold Foil) ── */
+/* ── Master Gold Gradient in Light Mode (BM GRAPHIX Brand Gold) ── */
 html.light .gold-gradient-text {
-  background: linear-gradient(135deg, #A86D00 0%, #C98A12 35%, #8B5400 70%, #6E3F00 100%) !important;
+  background: linear-gradient(135deg, var(--bm-secondary, #8C5800) 0%, var(--bm-accent, #C38C00) 45%, var(--bm-primary, #E2AA00) 100%) !important;
   -webkit-background-clip: text !important;
   -webkit-text-fill-color: transparent !important;
-  filter: drop-shadow(0 1px 1px rgba(110, 63, 0, 0.12));
+  filter: drop-shadow(0 1px 1px rgba(37, 12, 0, 0.12));
   font-weight: 900;
 }
 
 /* Hero headline, subtitle & typewriter */
 html.light .hero-headline {
-  color: #000000 !important;
+  color: var(--bm-heading, #250C00) !important;
   font-weight: 900 !important;
   letter-spacing: -0.03em;
 }
 html.light .hero-subtitle {
-  color: #000000 !important;
+  color: var(--bm-body, #250C00) !important;
   font-weight: 550 !important;
   line-height: 1.8 !important;
   text-shadow: 0 1px 2px rgba(255,255,255,0.7);
 }
 html.light .hero-typewriter-prefix {
-  color: #000000 !important;
+  color: var(--bm-heading, #250C00) !important;
   font-weight: 800 !important;
 }
 html.light .hero-typewriter-text {
-  color: #8C5900 !important;
+  color: var(--bm-secondary, #8C5800) !important;
   font-weight: 800 !important;
 }
 html.light .hero-cursor {
-  background: #8C5900 !important;
+  background: var(--bm-secondary, #8C5800) !important;
 }
 html.light .hero-trust-count {
-  color: #000000 !important;
+  color: var(--bm-heading, #250C00) !important;
   font-weight: 800 !important;
 }
 html.light .hero-trust-sub {
-  color: #000000 !important;
+  color: var(--bm-secondary-text, #6B3E00) !important;
   font-weight: 700 !important;
 }
 
@@ -318,26 +343,26 @@ html.light .hero-avail-dot {
 
 /* Hero CTA primary */
 html.light .hero-btn-primary {
-  background: linear-gradient(135deg, #C59B27 0%, #E5BE53 50%, #A67300 100%) !important;
-  color: #000000 !important;
+  background: var(--bm-shape-btn, #E2AA00) !important;
+  color: var(--bm-btn-text, #250C00) !important;
   font-weight: 800 !important;
-  box-shadow: 0 4px 20px rgba(166, 115, 0, 0.3), 0 2px 6px rgba(0,0,0,0.06) !important;
+  box-shadow: 0 4px 20px rgba(140, 88, 0, 0.28), 0 2px 6px rgba(37, 12, 0, 0.08) !important;
 }
 
 /* Hero CTA secondary */
 html.light .hero-btn-secondary {
   background: #FFFFFF !important;
-  color: #000000 !important;
-  border: 1.5px solid rgba(168, 109, 0, 0.35) !important;
+  color: var(--bm-secondary, #8C5800) !important;
+  border: 1.5px solid var(--bm-secondary, #8C5800) !important;
   font-weight: 800 !important;
-  box-shadow: 0 2px 10px rgba(0,0,0,0.04) !important;
+  box-shadow: 0 2px 10px rgba(37,12,0,0.04) !important;
 }
 html.light .hero-btn-secondary:hover {
-  border-color: #A86D00 !important;
-  background: rgba(168, 109, 0, 0.06) !important;
+  border-color: var(--bm-primary, #E2AA00) !important;
+  background: #FFF9E8 !important;
 }
 html.light .hero-btn-secondary .text-\[\#D4AF37\] {
-  color: #8C5900 !important;
+  color: var(--bm-secondary, #8C5800) !important;
 }
 
 /* Hero trust bar border */
@@ -402,22 +427,22 @@ html.light .marquee-dot {
 
 /* ── SECTION TAGS ── */
 html.light .section-tag {
-  background: rgba(168, 109, 0, 0.08) !important;
-  border-color: rgba(168, 109, 0, 0.28) !important;
-  color: #7A4900 !important;
+  background: rgba(226, 170, 0, 0.12) !important;
+  border-color: var(--bm-border, #C38C00) !important;
+  color: var(--bm-secondary, #8C5800) !important;
   font-weight: 800 !important;
 }
 html.light .section-tag::before {
-  background: #7A4900 !important;
+  background: var(--bm-secondary, #8C5800) !important;
 }
 
 /* ── PAGE HEADINGS & CORE TEXT ── */
 html.light h1, html.light h2, html.light h3, html.light h4, html.light h5, html.light h6 {
-  color: #000000 !important;
+  color: var(--bm-heading, #250C00) !important;
   font-weight: 800 !important;
 }
 html.light p {
-  color: #000000 !important;
+  color: var(--bm-body, #250C00) !important;
 }
 
 /* Specific Tailwind text color overrides in Light Mode */
@@ -428,43 +453,43 @@ html.light .text-\[\#f5f0e8\],
 html.light .text-\[\#E5E1D8\],
 html.light .text-\[\#e5e1d8\],
 html.light .text-warmWhite {
-  color: #000000 !important;
+  color: var(--bm-heading, #250C00) !important;
 }
 html.light .text-\[\#8A8A8A\],
 html.light .text-\[\#8a8a8a\] {
-  color: #000000 !important;
+  color: var(--bm-secondary-text, #6B3E00) !important;
 }
 html.light .text-\[\#5A5A5A\],
 html.light .text-\[\#5a5a5a\] {
-  color: #1A1A1A !important;
+  color: var(--bm-secondary-text, #6B3E00) !important;
 }
-html.light .text-\[\#F5D77A\] { color: #8C5900 !important; }
-html.light strong.text-\[\#F5F1E8\] { color: #000000 !important; font-weight: 900 !important; }
-html.light strong.text-\[\#D4AF37\] { color: #8C5900 !important; font-weight: 800 !important; }
+html.light .text-\[\#F5D77A\] { color: var(--bm-secondary, #8C5800) !important; }
+html.light strong.text-\[\#F5F1E8\] { color: var(--bm-heading, #250C00) !important; font-weight: 900 !important; }
+html.light strong.text-\[\#D4AF37\] { color: var(--bm-secondary, #8C5800) !important; font-weight: 800 !important; }
 
 /* ── STAT ITEMS ── */
 html.light .stat-item {
   background: #FFFFFF !important;
-  border-color: rgba(0,0,0,0.07) !important;
-  box-shadow: 0 4px 20px rgba(0,0,0,0.04) !important;
+  border-color: rgba(195,140,0,0.22) !important;
+  box-shadow: 0 4px 20px rgba(37,12,0,0.04) !important;
 }
 html.light .stat-item:hover {
-  border-color: rgba(168, 109, 0, 0.4) !important;
-  box-shadow: 0 12px 30px rgba(168, 109, 0, 0.08) !important;
+  border-color: var(--bm-primary, #E2AA00) !important;
+  box-shadow: 0 12px 30px rgba(140, 88, 0, 0.1) !important;
 }
 html.light .stat-icon-wrap {
-  background: rgba(168, 109, 0, 0.08) !important;
-  border-color: rgba(168, 109, 0, 0.25) !important;
+  background: rgba(226, 170, 0, 0.1) !important;
+  border-color: var(--bm-border, #C38C00) !important;
 }
-html.light .stat-icon { color: #8C5900 !important; }
+html.light .stat-icon { color: var(--bm-icon, #8C5800) !important; }
 html.light .stat-number {
-  background: linear-gradient(135deg, #A86D00 0%, #C98A12 50%, #6E3F00 100%) !important;
+  background: linear-gradient(135deg, var(--bm-secondary, #8C5800) 0%, var(--bm-accent, #C38C00) 50%, var(--bm-primary, #E2AA00) 100%) !important;
   -webkit-background-clip: text !important;
   -webkit-text-fill-color: transparent !important;
   font-weight: 900 !important;
 }
 html.light .stat-label {
-  color: #000000 !important;
+  color: var(--bm-body, #250C00) !important;
   font-weight: 700 !important;
 }
 
@@ -532,19 +557,19 @@ html.light .philosophy-closing {
 /* ── SERVICES & GLASS CARDS ── */
 html.light .glass-card {
   background: #FFFFFF !important;
-  border: 1px solid rgba(0,0,0,0.07) !important;
-  box-shadow: 0 4px 20px rgba(0,0,0,0.04);
+  border: 1px solid rgba(195,140,0,0.22) !important;
+  box-shadow: 0 4px 20px rgba(37,12,0,0.04);
 }
 html.light .glass-card:hover {
-  border-color: rgba(168, 109, 0, 0.4) !important;
-  box-shadow: 0 16px 40px rgba(168, 109, 0, 0.09) !important;
+  border-color: var(--bm-primary, #E2AA00) !important;
+  box-shadow: 0 16px 40px rgba(140, 88, 0, 0.1) !important;
 }
 html.light .glass-card h3 {
-  color: #000000 !important;
+  color: var(--bm-heading, #250C00) !important;
   font-weight: 800;
 }
 html.light .glass-card p {
-  color: #000000 !important;
+  color: var(--bm-body, #250C00) !important;
   line-height: 1.7;
 }
 
@@ -561,14 +586,14 @@ html.light .bg-\[\#0A0A0A\]\/95 { background: var(--navbar-bg) !important; }
 
 /* Service icon */
 html.light .icon-glow-badge {
-  background: #F0E8DC !important;
-  border: 1.5px solid rgba(168, 109, 0, 0.3) !important;
-  color: #8C5900 !important;
+  background: #FFF9E8 !important;
+  border: 1.5px solid var(--bm-border, #C38C00) !important;
+  color: var(--bm-icon, #8C5800) !important;
 }
 html.light .group:hover .icon-glow-badge {
-  background: rgba(168, 109, 0, 0.15) !important;
-  color: #573500 !important;
-  box-shadow: 0 0 20px rgba(168, 109, 0, 0.3), inset 0 0 12px rgba(168, 109, 0, 0.08);
+  background: rgba(226, 170, 0, 0.18) !important;
+  color: var(--bm-heading, #250C00) !important;
+  box-shadow: 0 0 20px rgba(226, 170, 0, 0.3), inset 0 0 12px rgba(226, 170, 0, 0.08);
 }
 
 /* Tag/badge pill in light mode */
@@ -674,34 +699,34 @@ html.light .back-to-top-arrow {
 
 /* ── FOOTER ── */
 html.light footer {
-  background: #EDE6DA !important;
-  color: #000000 !important;
-  border-top: 1px solid rgba(0,0,0,0.07) !important;
+  background: #FFF9E8 !important;
+  color: var(--bm-body, #250C00) !important;
+  border-top: 1px solid var(--bm-border, #C38C00) !important;
 }
-html.light footer .text-\[\#8A8A8A\] { color: #000000 !important; }
-html.light footer .text-\[\#F5F1E8\] { color: #000000 !important; }
-html.light footer h4 { color: #000000 !important; font-weight: 800; }
-html.light footer a { color: #000000 !important; }
-html.light footer a:hover { color: #8C5900 !important; }
-html.light footer button { color: #000000 !important; }
-html.light footer button:hover { color: #8C5900 !important; }
+html.light footer .text-\[\#8A8A8A\] { color: var(--bm-secondary-text, #6B3E00) !important; }
+html.light footer .text-\[\#F5F1E8\] { color: var(--bm-heading, #250C00) !important; }
+html.light footer h4 { color: var(--bm-heading, #250C00) !important; font-weight: 800; }
+html.light footer a { color: var(--bm-body, #250C00) !important; }
+html.light footer a:hover { color: var(--bm-secondary, #8C5800) !important; }
+html.light footer button { color: var(--bm-body, #250C00) !important; }
+html.light footer button:hover { color: var(--bm-secondary, #8C5800) !important; }
 html.light footer .bg-\[\#121212\] {
   background: #FFFFFF !important;
-  border: 1px solid rgba(0,0,0,0.08) !important;
-  color: #000000 !important;
+  border: 1px solid var(--bm-border, #C38C00) !important;
+  color: var(--bm-icon, #8C5800) !important;
 }
 html.light footer .bg-\[\#121212\]:hover {
-  border-color: rgba(168, 109, 0, 0.4) !important;
-  color: #8C5900 !important;
+  border-color: var(--bm-primary, #E2AA00) !important;
+  color: var(--bm-secondary, #8C5800) !important;
 }
-html.light footer .border-white\/5 { border-color: rgba(0,0,0,0.06) !important; }
-html.light footer .border-white\/10 { border-color: rgba(0,0,0,0.08) !important; }
+html.light footer .border-white\/5 { border-color: rgba(195,140,0,0.22) !important; }
+html.light footer .border-white\/10 { border-color: rgba(195,140,0,0.3) !important; }
 html.light footer .absolute.top-0.h-\[1px\] {
-  background: linear-gradient(to right, transparent, rgba(168, 109, 0, 0.3), transparent) !important;
+  background: linear-gradient(to right, transparent, var(--bm-primary, #E2AA00), transparent) !important;
 }
 html.light footer .bg-\[\#121212\].border.border-\[\#D4AF37\]\/30 {
   background: #FFFFFF !important;
-  border-color: rgba(168, 109, 0, 0.3) !important;
+  border-color: var(--bm-secondary, #8C5800) !important;
 }
 
 /* ── GALLERY PAGE ── */
@@ -843,7 +868,7 @@ html.light .mag-card:hover {
 }
 
 /* ── CheckCircle icon ── */
-html.light .text-\[\#D4AF37\] { color: #B8860B !important; }
+html.light .text-\[\#D4AF37\] { color: var(--bm-secondary, #8C5800) !important; }
 
 /* ── PAGE CONTENT areas ── */
 html.light .relative.z-10 {

@@ -4,16 +4,25 @@
 
 body {
   background-color: var(--bg, #0A0A0A);
-  color: var(--text-primary, #FFFFFF);
+  color: var(--bm-body, #FFFFFF);
   font-family: 'Inter', sans-serif;
   overflow-x: hidden;
   transition: background-color 0.4s ease, color 0.4s ease;
 }
 
-/* ── HIGH CONTRAST TYPOGRAPHY SYSTEM ─────────────────────────
- * Dark Mode: Pure White (#FFFFFF) for maximum visual punch
- * Light Mode: Pure Black (#000000) for razor-sharp editorial contrast
- * ─────────────────────────────────────────────────────────── */
+/* ── CENTRALIZED BM GRAPHIX BRAND TYPOGRAPHY & COLOUR SYSTEM ─────────
+ * Driven by CSS Custom Properties (--bm-*) set by AtmosphereSync
+ * Dark Mode defaults: Heading #FFFFFF, Body #FFFFFF, Gold #E2AA00, Secondary #FECD00
+ * Light Mode defaults: Heading #250C00, Body #250C00, Gold #8C5800, Secondary #6B3E00
+ * ─────────────────────────────────────────────────────────────────── */
+h1, h2, h3, h4, h5, h6 {
+  color: var(--bm-heading, #FFFFFF);
+}
+
+p {
+  color: var(--bm-body, #FFFFFF);
+}
+
 .text-\[\#F5F1E8\],
 .text-\[\#f5f1e8\],
 .text-\[\#F5F0E8\],
@@ -21,17 +30,27 @@ body {
 .text-\[\#E5E1D8\],
 .text-\[\#e5e1d8\],
 .text-warmWhite {
-  color: #FFFFFF !important;
+  color: var(--bm-heading, #FFFFFF) !important;
 }
 
 .text-\[\#8A8A8A\],
 .text-\[\#8a8a8a\] {
-  color: #D4D4D8;
+  color: var(--bm-secondary-text, #FECD00);
 }
 
 .text-\[\#5A5A5A\],
 .text-\[\#5a5a5a\] {
-  color: #A3A3A3;
+  color: var(--bm-secondary, #C38C00);
+}
+
+/* Gold text tokens mapped to centralized BM variables */
+.text-\[\#D4AF37\],
+.text-\[\#d4af37\] {
+  color: var(--bm-primary, #E2AA00);
+}
+.text-\[\#F5D77A\],
+.text-\[\#f5d77a\] {
+  color: var(--bm-accent, #FECD00);
 }
 
 html.light .text-\[\#F5F1E8\],
@@ -41,22 +60,22 @@ html.light .text-\[\#f5f0e8\],
 html.light .text-\[\#E5E1D8\],
 html.light .text-\[\#e5e1d8\],
 html.light .text-warmWhite {
-  color: #000000 !important;
+  color: var(--bm-heading, #250C00) !important;
 }
 
 html.light .text-\[\#8A8A8A\],
 html.light .text-\[\#8a8a8a\] {
-  color: #000000 !important;
+  color: var(--bm-secondary-text, #6B3E00) !important;
 }
 
 html.light .text-\[\#5A5A5A\],
 html.light .text-\[\#5a5a5a\] {
-  color: #1A1A1A !important;
+  color: var(--bm-secondary-text, #6B3E00) !important;
 }
 
 html.light body,
 html.light .theme-root {
-  color: #000000 !important;
+  color: var(--bm-body, #250C00) !important;
 }
 
 html.light h1,
@@ -65,11 +84,25 @@ html.light h3,
 html.light h4,
 html.light h5,
 html.light h6 {
-  color: #000000 !important;
+  color: var(--bm-heading, #250C00) !important;
 }
 
 html.light p {
-  color: #000000;
+  color: var(--bm-body, #250C00);
+}
+
+/* Keep Admin Portal dark-themed regardless of public light/dark toggle */
+.admin-dark,
+html.light .admin-dark {
+  color: #FFFFFF !important;
+}
+.admin-dark h1, .admin-dark h2, .admin-dark h3, .admin-dark h4,
+html.light .admin-dark h1, html.light .admin-dark h2, html.light .admin-dark h3, html.light .admin-dark h4 {
+  color: #FFFFFF !important;
+}
+.admin-dark p,
+html.light .admin-dark p {
+  color: #D4D4D8 !important;
 }
 
 /* Custom Scrollbar */
@@ -89,7 +122,7 @@ html.light p {
 
 /* Luxury Gold Utilities */
 .gold-gradient-text {
-  background: linear-gradient(135deg, #F5D77A 0%, #D4AF37 50%, #B8860B 100%);
+  background: linear-gradient(135deg, var(--bm-accent, #FECD00) 0%, var(--bm-primary, #E2AA00) 55%, var(--bm-secondary, #C38C00) 100%);
   -webkit-background-clip: text;
   -webkit-text-fill-color: transparent;
 }
@@ -206,12 +239,12 @@ html.light p {
 }
 .scroll-progress-bar {
   height: 100%;
-  background: linear-gradient(90deg, #B8860B, #D4AF37, #F5D77A, #D4AF37);
+  background: linear-gradient(90deg, var(--bm-secondary, #8C5800), var(--bm-primary, #E2AA00), var(--bm-accent, #FECD00), var(--bm-primary, #E2AA00));
   background-size: 200% 100%;
   animation: shimmer-bar 2s linear infinite;
   border-radius: 0 2px 2px 0;
   transition: width 0.08s linear;
-  box-shadow: 0 0 10px rgba(212,175,55,0.7);
+  box-shadow: 0 0 10px var(--bm-primary, #E2AA00);
 }
 @keyframes shimmer-bar {
   0%   { background-position: 0% 0%; }
@@ -406,17 +439,17 @@ html.light p {
   display: inline-flex; align-items: center; gap: 0.5rem;
   font-size: 0.62rem; font-weight: 700;
   letter-spacing: 0.25em; text-transform: uppercase;
-  color: #D4AF37;
+  color: var(--bm-primary, #E2AA00);
   padding: 0.3rem 0.85rem;
   border-radius: 999px;
-  background: rgba(212,175,55,0.07);
-  border: 1px solid rgba(212,175,55,0.22);
+  background: rgba(226,170,0,0.08);
+  border: 1px solid var(--bm-border, #6B3E00);
   margin-bottom: 1rem;
 }
 .section-tag::before {
   content: '';
   width: 6px; height: 6px; border-radius: 50%;
-  background: #D4AF37;
+  background: var(--bm-primary, #E2AA00);
   animation: pulse-dot 2s ease-in-out infinite;
 }
 @keyframes pulse-dot {
@@ -640,7 +673,7 @@ html.light p {
   font-weight: 900;
   line-height: 1.06;
   letter-spacing: -0.03em;
-  color: #FFFFFF;
+  color: var(--bm-heading, #FFFFFF);
 }
 
 /* Typewriter row */
@@ -655,18 +688,18 @@ html.light p {
   font-weight: 600;
   letter-spacing: 0.1em;
   text-transform: uppercase;
-  color: #A3A3A3;
+  color: var(--bm-secondary-text, #FECD00);
 }
 .hero-typewriter-text {
   font-size: 0.95rem;
   font-weight: 700;
-  color: #D4AF37;
+  color: var(--bm-primary, #E2AA00);
   min-width: 180px;
 }
 .hero-cursor {
   display: inline-block;
   width: 2px;
-  background: #D4AF37;
+  background: var(--bm-primary, #E2AA00);
   margin-left: 2px;
   animation: blink 0.9s step-end infinite;
 }
@@ -678,7 +711,7 @@ html.light p {
 /* Subtitle */
 .hero-subtitle {
   font-size: clamp(0.9rem, 1.5vw, 1.05rem);
-  color: #FFFFFF;
+  color: var(--bm-body, #FFFFFF);
   line-height: 1.75;
   max-width: 520px;
   text-shadow: 0 2px 10px rgba(0,0,0,0.85);
@@ -700,16 +733,16 @@ html.light p {
   font-weight: 800;
   letter-spacing: 0.12em;
   text-transform: uppercase;
-  color: #000;
-  background: linear-gradient(135deg, #D4AF37, #F5D77A, #B8860B);
+  color: var(--bm-btn-text, #250C00);
+  background: var(--bm-shape-btn, #E2AA00);
   background-size: 200%;
   border: none;
   cursor: pointer;
-  box-shadow: 0 0 24px rgba(212,175,55,0.4), 0 4px 16px rgba(0,0,0,0.5);
+  box-shadow: 0 0 24px rgba(226,170,0,0.35), 0 4px 16px rgba(0,0,0,0.5);
   transition: box-shadow 0.3s, transform 0.25s, background-position 0.4s;
 }
 .hero-btn-primary:hover {
-  box-shadow: 0 0 40px rgba(212,175,55,0.6), 0 6px 24px rgba(0,0,0,0.6);
+  box-shadow: 0 0 40px rgba(226,170,0,0.55), 0 6px 24px rgba(0,0,0,0.6);
   transform: translateY(-2px) scale(1.02);
   background-position: right;
 }
@@ -723,16 +756,16 @@ html.light p {
   font-weight: 700;
   letter-spacing: 0.12em;
   text-transform: uppercase;
-  color: #FFFFFF;
-  background: rgba(18,18,18,0.8);
-  border: 1px solid rgba(212,175,55,0.3);
+  color: var(--bm-primary, #E2AA00);
+  background: rgba(18,18,18,0.6);
+  border: 1.5px solid var(--bm-primary, #E2AA00);
   cursor: pointer;
   backdrop-filter: blur(8px);
   transition: border-color 0.3s, background 0.3s, transform 0.25s;
 }
 .hero-btn-secondary:hover {
-  border-color: rgba(212,175,55,0.7);
-  background: rgba(212,175,55,0.06);
+  border-color: var(--bm-accent, #FECD00);
+  background: rgba(226,170,0,0.1);
   transform: translateY(-2px);
 }
 

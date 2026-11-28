@@ -43,7 +43,7 @@ export default function BackToTop() {
         />
         {/* Progress ring */}
         <circle
-          stroke="#D4AF37"
+          stroke="var(--bm-primary, #E2AA00)"
           strokeWidth="3"
           fill="transparent"
           r={radius}

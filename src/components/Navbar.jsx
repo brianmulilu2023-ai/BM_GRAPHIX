@@ -9,8 +9,9 @@ export default function Navbar({ currentPath, navigate }) {
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const { isDark } = useTheme();
 
-  const textPrimary    = isDark ? '#FFFFFF' : '#000000';
-  const textSecondary  = isDark ? '#FFFFFF' : '#000000';
+  const textPrimary    = 'var(--bm-nav-link, ' + (isDark ? '#FFFFFF' : '#250C00') + ')';
+  const textSecondary  = 'var(--bm-nav-link, ' + (isDark ? '#FFFFFF' : '#250C00') + ')';
+  const navActiveColor = 'var(--bm-nav-active, ' + (isDark ? '#E2AA00' : '#8C5800') + ')';
   useEffect(() => {
     const handleScroll = () => {
       setIsScrolled(window.scrollY > 25);
@@ -61,22 +62,26 @@ export default function Navbar({ currentPath, navigate }) {
                     scale: [0.95, 1.1, 0.95],
                   }}
                   transition={{ duration: 3.5, repeat: Infinity, ease: 'easeInOut' }}
-                  className="absolute -inset-1 rounded-full bg-[#D4AF37]/25 blur-md pointer-events-none"
+                  className="absolute -inset-1 rounded-full blur-md pointer-events-none"
+                  style={{ backgroundColor: 'var(--bm-primary, #E2AA00)', opacity: 0.25 }}
                 />
 
                 {/* Rotating Luxury Golden Halo Ring */}
                 <motion.div
                   animate={{ rotate: 360 }}
                   transition={{ duration: 14, repeat: Infinity, ease: 'linear' }}
-                  className="absolute inset-0 rounded-full p-[1.5px] bg-gradient-to-tr from-[#D4AF37] via-[#F5D77A]/50 to-transparent"
+                  className="absolute inset-0 rounded-full p-[1.5px]"
+                  style={{
+                    background: 'linear-gradient(45deg, var(--bm-primary, #E2AA00), var(--bm-accent, #FECD00), transparent)',
+                  }}
                 />
 
                 {/* Inner Dark Glass Disc */}
                 <div
                   className="relative w-full h-full rounded-full backdrop-blur-md p-1.5 flex items-center justify-center transition-colors"
                   style={{
-                    background: isDark ? 'rgba(14,14,14,0.90)' : 'rgba(253,250,245,0.95)',
-                    border: isDark ? '1px solid rgba(212,175,55,0.40)' : '1px solid rgba(212,175,55,0.50)',
+                    background: isDark ? 'rgba(14,14,14,0.90)' : 'rgba(255,249,232,0.96)',
+                    border: '1px solid var(--bm-border, ' + (isDark ? '#6B3E00' : '#C38C00') + ')',
                   }}
                 >
                   <img
@@ -93,8 +98,8 @@ export default function Navbar({ currentPath, navigate }) {
                   className="font-display font-extrabold text-base sm:text-lg md:text-xl tracking-wider bg-clip-text text-transparent group-hover:brightness-110 transition-all duration-300 leading-none"
                   style={{
                     backgroundImage: isDark
-                      ? 'linear-gradient(135deg, #F5D77A, #E5C158, #D4AF37)'
-                      : 'linear-gradient(135deg, #A86D00, #C98A12, #6E3F00)',
+                      ? 'linear-gradient(135deg, var(--bm-accent, #FECD00), var(--bm-primary, #E2AA00), var(--bm-secondary, #C38C00))'
+                      : 'linear-gradient(135deg, var(--bm-secondary, #8C5800), var(--bm-accent, #C38C00), var(--bm-heading, #250C00))',
                   }}
                 >
                   BM GRAPHIX
@@ -104,13 +109,13 @@ export default function Navbar({ currentPath, navigate }) {
                     animate={{ scale: [1, 1.35, 1], opacity: [0.6, 1, 0.6] }}
                     transition={{ duration: 2.2, repeat: Infinity, ease: 'easeInOut' }}
                     className="text-[8px]"
-                    style={{ color: isDark ? '#F5D77A' : '#A86D00' }}
+                    style={{ color: isDark ? 'var(--bm-accent, #FECD00)' : 'var(--bm-secondary, #8C5800)' }}
                   >
                     ✦
                   </motion.span>
                   <span
                     className="text-[9px] sm:text-[10px] tracking-[0.26em] uppercase font-bold leading-none"
-                    style={{ color: isDark ? '#D4AF37' : '#7A4900' }}
+                    style={{ color: isDark ? 'var(--bm-primary, #E2AA00)' : 'var(--bm-secondary, #8C5800)' }}
                   >
                     Motion & Visual Art
                   </span>
@@ -127,15 +132,19 @@ export default function Navbar({ currentPath, navigate }) {
                     key={link.path}
                     onClick={() => handleNavClick(link.path)}
                     className="relative text-xs uppercase tracking-[0.2em] font-bold transition-colors duration-300"
-                    style={{ color: isActive ? '#D4AF37' : textSecondary }}
-                    onMouseEnter={e => { if (!isActive) e.currentTarget.style.color = textPrimary; }}
+                    style={{ color: isActive ? navActiveColor : textSecondary }}
+                    onMouseEnter={e => { if (!isActive) e.currentTarget.style.color = navActiveColor; }}
                     onMouseLeave={e => { if (!isActive) e.currentTarget.style.color = textSecondary; }}
                   >
                     {link.label}
                     {isActive && (
                       <motion.div
                         layoutId="navIndicator"
-                        className="absolute -bottom-1.5 left-0 right-0 h-[2px] bg-gradient-to-r from-[#D4AF37] to-[#F5D77A] rounded-full shadow-[0_0_8px_#D4AF37]"
+                        className="absolute -bottom-1.5 left-0 right-0 h-[2px] rounded-full"
+                        style={{
+                          background: 'linear-gradient(90deg, var(--bm-primary, #E2AA00), var(--bm-accent, #FECD00))',
+                          boxShadow: '0 0 8px var(--bm-primary, #E2AA00)',
+                        }}
                         transition={{ type: 'spring', stiffness: 350, damping: 30 }}
                       />
                     )}
@@ -151,7 +160,11 @@ export default function Navbar({ currentPath, navigate }) {
 
               <button
                 onClick={() => handleNavClick('/contact')}
-                className="relative group overflow-hidden px-5 py-2.5 rounded-full text-xs font-semibold uppercase tracking-wider text-black bg-gradient-to-r from-[#D4AF37] via-[#F5D77A] to-[#B8860B] shadow-[0_0_20px_rgba(212,175,55,0.3)] hover:shadow-[0_0_30px_rgba(212,175,55,0.5)] transition-all duration-300 active:scale-95"
+                className="relative group overflow-hidden px-5 py-2.5 rounded-full text-xs font-semibold uppercase tracking-wider shadow-[0_0_20px_rgba(226,170,0,0.28)] hover:shadow-[0_0_30px_rgba(226,170,0,0.48)] transition-all duration-300 active:scale-95"
+                style={{
+                  background: 'var(--bm-shape-btn, #E2AA00)',
+                  color: 'var(--bm-btn-text, #250C00)',
+                }}
               >
                 <span className="relative z-10 flex items-center gap-1.5">
                   Hire Me
@@ -195,8 +208,8 @@ export default function Navbar({ currentPath, navigate }) {
                     key={link.path}
                     onClick={() => handleNavClick(link.path)}
                     className="text-left text-lg font-display uppercase tracking-wider font-semibold py-1 transition-colors"
-                    style={{ color: isActive ? '#D4AF37' : textSecondary }}
-                    onMouseEnter={e => { if (!isActive) e.currentTarget.style.color = textPrimary; }}
+                    style={{ color: isActive ? navActiveColor : textSecondary }}
+                    onMouseEnter={e => { if (!isActive) e.currentTarget.style.color = navActiveColor; }}
                     onMouseLeave={e => { if (!isActive) e.currentTarget.style.color = textSecondary; }}
                   >
                     {link.label}
@@ -204,10 +217,14 @@ export default function Navbar({ currentPath, navigate }) {
                 );
               })}
 
-              <div className="pt-4 flex flex-col gap-3" style={{ borderTop: `1px solid ${isDark ? 'rgba(255,255,255,0.1)' : 'rgba(0,0,0,0.08)'}` }}>
+              <div className="pt-4 flex flex-col gap-3" style={{ borderTop: '1px solid var(--bm-border, ' + (isDark ? '#6B3E00' : '#C38C00') + ')' }}>
                 <button
                   onClick={() => handleNavClick('/contact')}
-                  className="w-full py-3 rounded-xl text-center text-xs font-bold uppercase tracking-wider text-black bg-gradient-to-r from-[#D4AF37] via-[#F5D77A] to-[#B8860B] shadow-lg shadow-[#D4AF37]/25"
+                  className="w-full py-3 rounded-xl text-center text-xs font-bold uppercase tracking-wider shadow-lg"
+                  style={{
+                    background: 'var(--bm-shape-btn, #E2AA00)',
+                    color: 'var(--bm-btn-text, #250C00)',
+                  }}
                 >
                   Hire Me Now
                 </button>

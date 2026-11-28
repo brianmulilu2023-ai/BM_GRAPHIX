@@ -22,9 +22,21 @@ import Contact from './pages/Contact';
 import AdminLogin from './pages/AdminLogin';
 import AdminDashboard from './pages/AdminDashboard';
 
-// Real-time synchronization of background visibility & branding variables
+import { DEFAULT_BRAND_THEME } from './services/adminService';
+
+// Real-time synchronization of background visibility & centralized brand theme CSS variables
 function AtmosphereSync({ currentPath }) {
   const { siteSettings } = useProjects();
+  const { isDark } = useTheme();
+  const [previewBrandTheme, setPreviewBrandTheme] = useState(null);
+
+  useEffect(() => {
+    const handlePreview = (e) => {
+      setPreviewBrandTheme(e?.detail || null);
+    };
+    window.addEventListener('bm-brand-preview', handlePreview);
+    return () => window.removeEventListener('bm-brand-preview', handlePreview);
+  }, []);
 
   useEffect(() => {
     if (!siteSettings) return;
@@ -62,17 +74,32 @@ function AtmosphereSync({ currentPath }) {
     const partOp = typeof siteSettings.particlesVisibility === 'number' ? siteSettings.particlesVisibility / 100 : 0.55;
     root.style.setProperty('--particles-visibility', partOp.toString());
 
-    // Dynamic brand colors
-    if (siteSettings.brandPrimaryColor) {
-      root.style.setProperty('--gold-primary', siteSettings.brandPrimaryColor);
-    }
-    if (siteSettings.brandSecondaryColor) {
-      root.style.setProperty('--gold-light', siteSettings.brandSecondaryColor);
-    }
-    if (siteSettings.brandDarkColor) {
-      root.style.setProperty('--gold-dark', siteSettings.brandDarkColor);
-    }
-  }, [siteSettings, currentPath]);
+    // Centralized Brand & Theme Colours (Light Mode & Dark Mode independent)
+    const activeBrandTheme = previewBrandTheme || siteSettings.brandTheme || DEFAULT_BRAND_THEME;
+    const modeKey = isDark ? 'dark' : 'light';
+    const modeDefaults = DEFAULT_BRAND_THEME[modeKey];
+    const activeColors = { ...modeDefaults, ...(activeBrandTheme?.[modeKey] || {}) };
+
+    root.style.setProperty('--bm-primary', activeColors.primary);
+    root.style.setProperty('--bm-secondary', activeColors.secondary);
+    root.style.setProperty('--bm-accent', activeColors.accent);
+    root.style.setProperty('--bm-heading', activeColors.heading);
+    root.style.setProperty('--bm-body', activeColors.body);
+    root.style.setProperty('--bm-shape-btn', activeColors.shapeButton);
+    root.style.setProperty('--bm-btn-text', activeColors.buttonText || '#250C00');
+    root.style.setProperty('--bm-secondary-text', activeColors.secondaryText || (isDark ? activeColors.accent : '#6B3E00'));
+    root.style.setProperty('--bm-icon', isDark ? activeColors.primary : activeColors.secondary);
+    root.style.setProperty('--bm-border', isDark ? (activeColors.border || '#6B3E00') : activeColors.accent);
+    root.style.setProperty('--bm-nav-link', activeColors.heading);
+    root.style.setProperty('--bm-nav-active', isDark ? activeColors.primary : activeColors.secondary);
+
+    // Sync legacy gold & text tokens so all components inherit centralized brand palette
+    root.style.setProperty('--gold-primary', activeColors.primary);
+    root.style.setProperty('--gold-light', activeColors.accent);
+    root.style.setProperty('--gold-dark', activeColors.secondary);
+    root.style.setProperty('--text-primary', activeColors.body);
+    root.style.setProperty('--text-secondary', activeColors.secondaryText || (isDark ? activeColors.accent : '#6B3E00'));
+  }, [siteSettings, currentPath, isDark, previewBrandTheme]);
 
   return null;
 }
@@ -150,10 +177,10 @@ export default function App() {
     <ProjectProvider>
       <AtmosphereSync currentPath={currentPath} />
       <div
-        className="theme-root relative min-h-screen font-sans overflow-x-hidden selection:bg-[#D4AF37] selection:text-black"
+        className="theme-root relative min-h-screen font-sans overflow-x-hidden selection:bg-[#E2AA00] selection:text-[#250C00]"
         style={{
           backgroundColor: isDark ? '#0A0A0A' : '#F5F0E8',
-          color: isDark ? '#FFFFFF' : '#000000',
+          color: 'var(--bm-body, ' + (isDark ? '#FFFFFF' : '#250C00') + ')',
           transition: 'background-color 0.4s ease, color 0.4s ease',
         }}
       >
