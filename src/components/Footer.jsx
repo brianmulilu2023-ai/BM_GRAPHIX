@@ -202,23 +202,7 @@ export default function Footer({ navigate }) {
           className="pt-8 flex flex-col md:flex-row items-center justify-between gap-4 text-xs"
           style={{ borderTop: `1px solid ${borderColor}` }}
         >
-          <p className="flex items-center gap-1.5 flex-wrap justify-center md:justify-start" style={{ color: bodyColor }}>
-            <span>&copy; {new Date().getFullYear()} BM Graphix. All rights reserved.</span>
-            <span
-              onClick={handleSecretDotClick}
-              className="inline-block mx-1 select-none cursor-default transition"
-              style={{ color: accentColor }}
-              title=""
-            >
-              •
-            </span>
-            <span>Crafted with</span>
-            <Heart className="w-3.5 h-3.5" style={{ color: accentColor, fill: accentColor }} />
-            <span>in Nairobi</span>
-          </p>
-
-          <div className="flex items-center gap-4 flex-wrap justify-center">
-            {/* Powered by Computer Wizard */}
+          <div className="flex items-center gap-4 flex-wrap justify-center md:justify-start">
             <div
               className="inline-flex items-center gap-1.5 px-3.5 py-1.5 rounded-full text-xs transition group"
               style={{
@@ -226,13 +210,27 @@ export default function Footer({ navigate }) {
                 border: `1px solid ${borderColor}`,
               }}
             >
-              <Sparkles className="w-3.5 h-3.5 group-hover:rotate-12 transition-transform duration-300" style={{ color: iconColor }} />
-              <span style={{ color: secondaryTextColor }}>Powered by</span>
-              <span className="font-semibold tracking-wide" style={{ color: accentColor }}>
-                Computer Wizard
+              <span className="font-medium" style={{ color: bodyColor }}>
+                &copy; {new Date().getFullYear()} BM Graphix. All rights reserved.
               </span>
             </div>
 
+            <p className="flex items-center gap-1.5 text-xs" style={{ color: secondaryTextColor }}>
+              <span
+                onClick={handleSecretDotClick}
+                className="inline-block mx-0.5 select-none cursor-default transition"
+                style={{ color: accentColor }}
+                title=""
+              >
+                •
+              </span>
+              <span>Crafted with</span>
+              <Heart className="w-3.5 h-3.5" style={{ color: accentColor, fill: accentColor }} />
+              <span>in Nairobi</span>
+            </p>
+          </div>
+
+          <div className="flex items-center gap-4 flex-wrap justify-center">
             <button
               onClick={scrollToTop}
               className="w-8 h-8 rounded-full flex items-center justify-center transition"
