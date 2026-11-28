@@ -383,22 +383,40 @@ html.light .hero-chip {
   box-shadow: 0 4px 16px rgba(0,0,0,0.07) !important;
 }
 
-/* Hero showcase card */
-html.light .hero-showcase-card {
-  background: var(--hero-showcase-bg);
-  border-color: rgba(212,175,55,0.3);
+/* Hero showcase card - Luxury iPhone frame */
+html.light .hero-iphone-container {
+  filter: drop-shadow(0 20px 45px rgba(0, 0, 0, 0.16)) drop-shadow(0 0 30px rgba(226, 170, 0, 0.15)) !important;
+}
+html.light .hero-iphone-frame {
+  background: linear-gradient(155deg, #F5EFE6 0%, #EDE4D4 30%, #DFD1BC 65%, #F7F3EC 100%) !important;
+  border-color: rgba(195, 140, 0, 0.45) !important;
   box-shadow:
-    0 0 0 1px rgba(212,175,55,0.12),
-    0 24px 60px rgba(0,0,0,0.12),
-    0 0 80px rgba(212,175,55,0.07);
+    inset 0 0 0 1px rgba(255, 255, 255, 0.9),
+    inset 0 0 0 2.5px rgba(140, 88, 0, 0.12),
+    0 0 0 1px rgba(140, 88, 0, 0.18),
+    0 24px 60px rgba(37, 12, 0, 0.15),
+    0 0 45px rgba(226, 170, 0, 0.12) !important;
+}
+html.light .hero-iphone-screen {
+  background: #000000 !important;
+  border-color: rgba(0, 0, 0, 0.15) !important;
+}
+html.light .hero-iphone-bottom {
+  background: rgba(14, 14, 14, 0.96) !important;
+  border-top-color: rgba(255, 255, 255, 0.08) !important;
+}
+html.light .hero-showcase-card {
+  border-color: rgba(212,175,55,0.3);
 }
 html.light .hero-card-dots {
-  background: var(--hero-card-dots-bg);
+  background: transparent !important;
 }
 html.light .hero-card-dot {
-  background: rgba(0,0,0,0.12);
+  background: rgba(255, 255, 255, 0.25) !important;
 }
-html.light .hero-card-dot--active { background: #D4AF37; }
+html.light .hero-card-dot--active {
+  background: #E2AA00 !important;
+}
 
 /* Hero scroll cue */
 html.light .hero-scroll-cue {
