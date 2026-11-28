@@ -4811,55 +4811,91 @@ export default function AdminDashboard({ navigate }) {
 
                 {/* Simulated Showcase Card matching HeroSection.jsx */}
                 <div className="pt-2 flex justify-center">
-                  <div className="hero-showcase-card w-full max-w-[340px]">
-                    <div className="hero-card-beam" />
-                    <div className="hero-card-image-wrap aspect-[3/4]">
-                      <AnimatePresence mode="wait">
+                  <div className="hero-iphone-container max-w-[280px]">
+                    <div className="hero-iphone-frame hero-showcase-card">
+                      <div className="hero-iphone-btn-action" aria-hidden="true" />
+                      <div className="hero-iphone-btn-volume-up" aria-hidden="true" />
+                      <div className="hero-iphone-btn-volume-down" aria-hidden="true" />
+                      <div className="hero-iphone-btn-power" aria-hidden="true" />
+                      <div className="hero-card-beam" />
+
+                      <div className="hero-iphone-screen">
+                        {/* Status Bar & Dynamic Island */}
+                        <div className="hero-iphone-status-bar" aria-hidden="true">
+                          <span className="hero-iphone-time">9:41</span>
+                          <div className="hero-iphone-dynamic-island">
+                            <span className="hero-iphone-camera-dot" />
+                            <span className="hero-iphone-sensor-dot" />
+                          </div>
+                          <div className="hero-iphone-status-icons">
+                            <div className="hero-iphone-signal">
+                              <span /><span /><span /><span />
+                            </div>
+                            <div className="hero-iphone-battery">
+                              <div className="hero-iphone-battery-level" />
+                            </div>
+                          </div>
+                        </div>
+
+                        {/* Ambient dynamic glow */}
                         {showcaseItems[previewSlideIdx] && (
-                          <motion.img
-                            key={showcaseItems[previewSlideIdx].id || showcaseItems[previewSlideIdx].src || previewSlideIdx}
-                            src={showcaseItems[previewSlideIdx].src}
-                            alt={showcaseItems[previewSlideIdx].label}
-                            initial={{ opacity: 0, scale: 1.07 }}
-                            animate={{ opacity: 1, scale: 1 }}
-                            exit={{ opacity: 0, scale: 0.95 }}
-                            transition={{ duration: 0.65, ease: 'easeInOut' }}
-                            className="hero-card-img w-full h-full object-cover"
+                          <div
+                            className="hero-iphone-ambient-bg"
+                            style={{ backgroundImage: `url(${showcaseItems[previewSlideIdx].src})` }}
                           />
                         )}
-                      </AnimatePresence>
-                      <div className="hero-card-overlay" />
-                      <AnimatePresence mode="wait">
+
+                        {/* Active Artwork Display Area - Scaled & Fitted */}
+                        <div className="hero-iphone-art-stage">
+                          <AnimatePresence mode="wait">
+                            {showcaseItems[previewSlideIdx] && (
+                              <motion.div
+                                key={showcaseItems[previewSlideIdx].id || showcaseItems[previewSlideIdx].src || previewSlideIdx}
+                                initial={{ opacity: 0, scale: 0.94 }}
+                                animate={{ opacity: 1, scale: 1 }}
+                                exit={{ opacity: 0, scale: 1.04 }}
+                                transition={{ duration: 0.55 }}
+                                className="hero-iphone-art-card"
+                              >
+                                <img
+                                  src={showcaseItems[previewSlideIdx].src}
+                                  alt={showcaseItems[previewSlideIdx].label}
+                                  className="hero-iphone-art-img"
+                                  loading="eager"
+                                />
+                                <div className="hero-iphone-art-shine" />
+                              </motion.div>
+                            )}
+                          </AnimatePresence>
+                        </div>
+
+                        {/* Category label */}
                         {showcaseItems[previewSlideIdx] && (
-                          <motion.div
-                            key={showcaseItems[previewSlideIdx].id || showcaseItems[previewSlideIdx].label || previewSlideIdx}
-                            initial={{ opacity: 0, y: 8 }}
-                            animate={{ opacity: 1, y: 0 }}
-                            exit={{ opacity: 0, y: -6 }}
-                            transition={{ duration: 0.35 }}
-                            className="hero-card-label"
-                          >
+                          <div className="hero-card-label">
                             <span className="hero-card-label-dot" />
                             {showcaseItems[previewSlideIdx].label}
-                          </motion.div>
+                          </div>
                         )}
-                      </AnimatePresence>
-                    </div>
 
-                    {/* Interactive Dots Navigation */}
-                    {showcaseItems.length > 1 && (
-                      <div className="hero-card-dots">
-                        {showcaseItems.map((_, i) => (
-                          <button
-                            key={i}
-                            type="button"
-                            onClick={() => setPreviewSlideIdx(i)}
-                            className={`hero-card-dot${i === previewSlideIdx ? ' hero-card-dot--active' : ''}`}
-                            title={`Jump to slide #${i + 1}`}
-                          />
-                        ))}
+                        {/* Bottom bar with dots & home indicator */}
+                        <div className="hero-iphone-bottom">
+                          {showcaseItems.length > 1 && (
+                            <div className="hero-card-dots">
+                              {showcaseItems.map((_, i) => (
+                                <button
+                                  key={i}
+                                  type="button"
+                                  onClick={() => setPreviewSlideIdx(i)}
+                                  className={`hero-card-dot${i === previewSlideIdx ? ' hero-card-dot--active' : ''}`}
+                                  title={`Jump to slide #${i + 1}`}
+                                />
+                              ))}
+                            </div>
+                          )}
+                          <div className="hero-iphone-home-bar" aria-hidden="true" />
+                        </div>
                       </div>
-                    )}
+                    </div>
                   </div>
                 </div>
 

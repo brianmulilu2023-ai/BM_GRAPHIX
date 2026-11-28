@@ -194,35 +194,55 @@ function ShowcaseCard() {
             </div>
           </div>
 
-          {/* Active Artwork Display Area */}
-          <div className="hero-card-image-wrap">
-            <AnimatePresence mode="wait">
-              <motion.img
-                key={activeSlide.id || activeSlide.src || activeIndex}
-                src={activeSlide.src}
-                alt={activeSlide.label || 'BM Graphix Masterpiece'}
-                initial={{ opacity: 0, scale: 1.06 }}
-                animate={{ opacity: 1, scale: 1 }}
-                exit={{ opacity: 0, scale: 0.96 }}
-                transition={{ duration: 0.65, ease: 'easeInOut' }}
-                className="hero-card-img"
-              />
-            </AnimatePresence>
-            <div className="hero-card-overlay" />
+          {/* Ambient dynamic glow matching active artwork */}
+          <AnimatePresence mode="wait">
+            <motion.div
+              key={`ambient-${activeSlide.id || activeSlide.src || activeIndex}`}
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 0.55 }}
+              exit={{ opacity: 0 }}
+              transition={{ duration: 0.6 }}
+              className="hero-iphone-ambient-bg"
+              style={{ backgroundImage: `url(${activeSlide.src})` }}
+            />
+          </AnimatePresence>
+
+          {/* Active Artwork Display Area — Scaled & Fitted to iPhone Screen */}
+          <div className="hero-iphone-art-stage">
             <AnimatePresence mode="wait">
               <motion.div
-                key={activeSlide.id || activeSlide.label || activeIndex}
-                initial={{ opacity: 0, y: 8 }}
-                animate={{ opacity: 1, y: 0 }}
-                exit={{ opacity: 0, y: -6 }}
-                transition={{ duration: 0.35 }}
-                className="hero-card-label"
+                key={activeSlide.id || activeSlide.src || activeIndex}
+                initial={{ opacity: 0, scale: 0.94 }}
+                animate={{ opacity: 1, scale: 1 }}
+                exit={{ opacity: 0, scale: 1.04 }}
+                transition={{ duration: 0.55, ease: [0.16, 1, 0.3, 1] }}
+                className="hero-iphone-art-card"
               >
-                <span className="hero-card-label-dot" />
-                {activeSlide.label}
+                <img
+                  src={activeSlide.src}
+                  alt={activeSlide.label || 'BM Graphix Masterpiece'}
+                  className="hero-iphone-art-img"
+                  loading="eager"
+                />
+                <div className="hero-iphone-art-shine" />
               </motion.div>
             </AnimatePresence>
           </div>
+
+          {/* Active Artwork Category Pill */}
+          <AnimatePresence mode="wait">
+            <motion.div
+              key={activeSlide.id || activeSlide.label || activeIndex}
+              initial={{ opacity: 0, y: 8, scale: 0.95 }}
+              animate={{ opacity: 1, y: 0, scale: 1 }}
+              exit={{ opacity: 0, y: -6, scale: 0.95 }}
+              transition={{ duration: 0.35 }}
+              className="hero-card-label"
+            >
+              <span className="hero-card-label-dot" />
+              {activeSlide.label}
+            </motion.div>
+          </AnimatePresence>
 
           {/* Bottom Controls: Slide Dots & Apple Home Indicator Bar */}
           <div className="hero-iphone-bottom">
